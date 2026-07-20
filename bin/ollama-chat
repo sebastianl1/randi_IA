@@ -1,0 +1,30 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# RANDI Chat - Wrapper directo para el chat TUI
+
+RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
+
+CHAT_SCRIPT=""
+for candidate in \
+    "$RANDI_DIR/lib/ollama_chat.py" \
+    "$(cd "$(dirname "$0")" && pwd)/lib/ollama_chat.py" \
+    "$PWD/lib/ollama_chat.py"; do
+    if [ -f "$candidate" ]; then
+        CHAT_SCRIPT="$candidate"
+        break
+    fi
+done
+
+if [ -z "$CHAT_SCRIPT" ]; then
+    echo "Error: No se encuentra ollama_chat.py"
+    echo "Asegurate de haber ejecutado install-ollama.sh"
+    exit 1
+fi
+
+if ! curl -sf "${OLLAMA_HOST:-http://localhost:11434}/api/tags" > /dev/null 2>&1; then
+    echo "Iniciando servidor Ollama..."
+    nohup ollama serve > /dev/null 2>&1 &
+    disown 2>/dev/null || true
+    sleep 3
+fi
+
+python3 "$CHAT_SCRIPT" "$@"

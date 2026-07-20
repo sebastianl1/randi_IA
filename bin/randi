@@ -1,0 +1,555 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
+OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
+RANDI_VERSION="1.2.0"
+RANDI_AUTHOR="Sebastian Laguna"
+RANDI_REPO="${RANDI_REPO:-https://github.com/TU_USUARIO/randi.git}"
+REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+
+R='\033[0m'; B='\033[1m'; D='\033[2m'; I='\033[3m'
+RED='\033[0;31m'; GRN='\033[0;32m'; YLW='\033[1;33m'; BLU='\033[0;34m'
+CYN='\033[0;36m'; MGN='\033[0;35m'
+
+info()  { echo -e "${BLU}${B}[*]${R} $1"; }
+ok()    { echo -e "${GRN}${B}[+]${R} $1"; }
+warn()  { echo -e "${YLW}${B}[!]${R} $1"; }
+err()   { echo -e "${RED}${B}[x]${R} $1"; }
+dim()   { echo -e "${D}$1${R}"; }
+title() { echo -e "\n${BLU}${B}== $1 ==${R}\n"; }
+hr()    { echo -e "${D}----------------------------------------${R}"; }
+
+find_chat_script() {
+    local script
+    script="$RANDI_DIR/lib/ollama_chat.py"
+    if [ -f "$script" ]; then
+        echo "$script"
+        return 0
+    fi
+    script="$(cd "$(dirname "$0")" && pwd)/lib/ollama_chat.py"
+    if [ -f "$script" ]; then
+        echo "$script"
+        return 0
+    fi
+    script="$PWD/lib/ollama_chat.py"
+    if [ -f "$script" ]; then
+        echo "$script"
+        return 0
+    fi
+    return 1
+}
+
+server_running() {
+    curl -sf "$OLLAMA_HOST/api/tags" > /dev/null 2>&1
+}
+
+cmd_serve() {
+    if server_running; then
+        ok "Servidor Ollama ya esta corriendo en $OLLAMA_HOST"
+        return 0
+    fi
+    info "Iniciando servidor Ollama..."
+    nohup ollama serve > /dev/null 2>&1 &
+    local pid=$!
+    disown "$pid" 2>/dev/null || true
+    for i in $(seq 1 15); do
+        sleep 1
+        if server_running; then
+            ok "Servidor Ollama iniciado (PID: $pid)"
+            return 0
+        fi
+    done
+    err "No se pudo iniciar el servidor"
+    return 1
+}
+
+cmd_stop() {
+    local pids
+    pids=$(pgrep -f "ollama serve" 2>/dev/null || true)
+    if [ -z "$pids" ]; then
+        warn "El servidor no esta corriendo"
+        return 0
+    fi
+    kill $pids 2>/dev/null || true
+    ok "Servidor detenido"
+}
+
+check_ram() {
+    if [ -f /proc/meminfo ]; then
+        local mem_total_kb mem_avail_kb mem_total_gb mem_avail_gb
+        mem_total_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        mem_avail_kb=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+        mem_total_gb=$((mem_total_kb / 1024 / 1024))
+        mem_avail_gb=$((mem_avail_kb / 1024 / 1024))
+
+        local model="${1:-}"
+        local needed=4
+        case "$model" in
+            *70b*) needed=40 ;;
+            *13b*) needed=8 ;;
+            *8b*) needed=6 ;;
+            *7b*) needed=6 ;;
+            *4b*) needed=3 ;;
+            *3.8b*|*3b*) needed=2.5 ;;
+            *2b*|*phi3:mini*) needed=2 ;;
+            *1.5b*) needed=1.5 ;;
+            *0.5b*|*1b*) needed=1 ;;
+        esac
+        local needed_int
+        needed_int=$(printf "%.0f" "$needed" 2>/dev/null || echo "$needed")
+
+        if [ "$mem_avail_gb" -lt "$needed_int" ] 2>/dev/null; then
+            warn "RAM disponible: ~${mem_avail_gb}GB de ${mem_total_gb}GB"
+            warn "El modelo '$model' puede necesitar ~${needed}GB de RAM"
+            dim "  Recomendados para tu dispositivo:"
+            dim "    randi chat -m deepseek-r1:1.5b  (1.1GB)"
+            dim "    randi chat -m gemma4:2b        (1.5GB)"
+            dim "    randi chat -m qwen2.5-coder:0.5b (0.4GB)"
+            echo ""
+            echo -n "Continuar de todas formas? (s/N): "
+            read -r confirm
+            if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
+                err "Cancelado"
+                return 1
+            fi
+        fi
+    fi
+    return 0
+}
+
+cmd_chat() {
+    local model="${1:-}"
+    local chat_script
+    chat_script=$(find_chat_script) || {
+        err "No se encuentra ollama_chat.py"
+        exit 1
+    }
+
+    # Determinar el modelo a usar para la verificacion de RAM
+    local check_model="$model"
+    if [ -z "$check_model" ] && [ -f "$HOME/.config/randi/config.json" ]; then
+        check_model=$(python3 -c "import json; print(json.load(open('$HOME/.config/randi/config.json')).get('model',''))" 2>/dev/null || echo "")
+    fi
+    if [ -n "$check_model" ]; then
+        check_ram "$check_model" || return 1
+    fi
+
+    if ! server_running; then
+        info "Iniciando servidor Ollama..."
+        nohup ollama serve > /dev/null 2>&1 &
+        local pid=$!
+        disown "$pid" 2>/dev/null || true
+        sleep 3
+    fi
+    if [ -n "$model" ]; then
+        python3 "$chat_script" -m "$model"
+    else
+        python3 "$chat_script"
+    fi
+}
+
+cmd_run() {
+    if ! server_running; then
+        cmd_serve
+    fi
+    local model="${1:-}"
+    if [ -z "$model" ]; then
+        local models
+        models=$(ollama list 2>/dev/null | tail -n +2 | awk '{print $1}')
+        if [ -z "$models" ]; then
+            err "No hay modelos instalados. Usa: randi pull"
+            return 1
+        fi
+        echo "Selecciona un modelo:"
+        select model in $models; do
+            if [ -n "$model" ]; then
+                break
+            fi
+        done
+    fi
+    if [ -z "$model" ]; then
+        return 1
+    fi
+    ollama run "$model"
+}
+
+cmd_pull() {
+    if ! server_running; then
+        cmd_serve
+    fi
+    if [ -n "$1" ]; then
+        ollama pull "$1"
+        return $?
+    fi
+    echo ""
+    echo -e "${BLU}${B}Selecciona modelos para descargar:${R}"
+    hr
+    echo -e "  ${GRN}Bajo consumo (< 2GB RAM):${R}"
+    echo "   1) gemma4:2b            (1.5GB) - Rapido y ligero"
+    echo "   2) deepseek-r1:1.5b     (1.1GB) - Razonamiento ligero"
+    echo "   3) qwen2.5-coder:1.5b   (0.9GB) - Codigo ligero"
+    echo "   4) qwen2.5-coder:0.5b   (0.4GB) - Super ligero"
+    echo "   5) phi3:mini            (2.0GB) - Microsoft Phi-3"
+    echo ""
+    echo -e "  ${YLW}Consumo medio (2-4GB RAM):${R}"
+    echo "   6) llama3.2:3b          (2.0GB) - Meta Llama 3.2"
+    echo "   7) qwen3:4b             (2.5GB) - Chat ligero"
+    echo "   8) phi3:3.8b            (2.3GB) - Microsoft Phi-3"
+    echo ""
+    echo -e "  ${RED}Consumo alto (4-8GB RAM):${R}"
+    echo "   9) deepseek-r1:7b       (4.7GB) - Razonamiento y logica"
+    echo "  10) qwen2.5-coder:7b     (4.7GB) - Codigo y programacion"
+    echo "  11) qwen3:8b             (4.5GB) - Chat general"
+    echo "  12) mistral:7b           (4.1GB) - Mistral v0.3"
+    echo "   0) Cancelar"
+    hr
+    echo "Ejemplo: 1 2 3 (separados por espacio)"
+    echo -n "Selecciona: "
+    read -r -a selections
+    for opt in "${selections[@]}"; do
+        case "$opt" in
+            1) ollama pull gemma4:2b ;;
+            2) ollama pull deepseek-r1:1.5b ;;
+            3) ollama pull qwen2.5-coder:1.5b ;;
+            4) ollama pull qwen2.5-coder:0.5b ;;
+            5) ollama pull phi3:mini ;;
+            6) ollama pull llama3.2:3b ;;
+            7) ollama pull qwen3:4b ;;
+            8) ollama pull phi3:3.8b ;;
+            9) ollama pull deepseek-r1:7b ;;
+            10) ollama pull qwen2.5-coder:7b ;;
+            11) ollama pull qwen3:8b ;;
+            12) ollama pull mistral:7b ;;
+            0) ;;
+            *) warn "Opcion invalida: $opt, ignorada" ;;
+        esac
+    done
+}
+
+cmd_list() {
+    if server_running; then
+        echo -e "\n${BLU}${B}Modelos instalados:${R}"
+        hr
+        curl -sf "$OLLAMA_HOST/api/tags" | python3 -c "
+import json,sys
+data=json.load(sys.stdin)
+for m in data.get('models',[]):
+    s=m.get('size',0)
+    if s>1e9:
+        sz=f'{s/1e9:.1f}GB'
+    elif s>1e6:
+        sz=f'{s/1e6:.1f}MB'
+    else:
+        sz=f'{s:.0f}B'
+    print(f'  {m[\"name\"]:<35} {sz:>8}')
+" 2>/dev/null || ollama list
+    else
+        ollama list 2>/dev/null || warn "No hay modelos o servidor no disponible"
+    fi
+}
+
+cmd_ps() {
+    if server_running; then
+        echo -e "\n${BLU}${B}Modelos en RAM:${R}"
+        hr
+        curl -sf "$OLLAMA_HOST/api/ps" | python3 -c "
+import json,sys
+data=json.load(sys.stdin)
+for m in data.get('models',[]):
+    s=m.get('size',0)
+    if s>1e9:
+        sz=f'{s/1e9:.1f}GB'
+    elif s>1e6:
+        sz=f'{s/1e6:.1f}MB'
+    else:
+        sz=f'{s:.0f}B'
+    print(f'  {m[\"name\"]:<35} {sz:>8}')
+" 2>/dev/null || echo "  (ninguno)"
+    else
+        warn "Servidor no disponible"
+    fi
+}
+
+cmd_models() {
+    echo ""
+    echo -e "${BLU}${B}Catalogo RANDI - Modelos recomendados:${R}"
+    hr
+    echo -e "  ${GRN}╭── Bajo consumo (< 2GB RAM) ─────────────────╮${R}"
+    echo -e "  ${GRN}│${R}  gemma4:2b          1.5GB  Rapido y ligero    ${GRN}│${R}"
+    echo -e "  ${GRN}│${R}  deepseek-r1:1.5b    1.1GB  Razonamiento      ${GRN}│${R}"
+    echo -e "  ${GRN}│${R}  qwen2.5-coder:1.5b  0.9GB  Codigo            ${GRN}│${R}"
+    echo -e "  ${GRN}│${R}  qwen2.5-coder:0.5b  0.4GB  Codigo ultra      ${GRN}│${R}"
+    echo -e "  ${GRN}│${R}  phi3:mini           2.0GB  Microsoft Phi-3   ${GRN}│${R}"
+    echo -e "  ${GRN}╰────────────────────────────────────────────╯${R}"
+    echo ""
+    echo -e "  ${YLW}╭── Consumo medio (2-4GB RAM) ────────────────╮${R}"
+    echo -e "  ${YLW}│${R}  llama3.2:3b        2.0GB  Meta Llama 3.2    ${YLW}│${R}"
+    echo -e "  ${YLW}│${R}  qwen3:4b           2.5GB  Chat ligero       ${YLW}│${R}"
+    echo -e "  ${YLW}│${R}  phi3:3.8b          2.3GB  Microsoft Phi-3   ${YLW}│${R}"
+    echo -e "  ${YLW}╰────────────────────────────────────────────╯${R}"
+    echo ""
+    echo -e "  ${RED}╭── Consumo alto (4-8GB RAM) ────────────────╮${R}"
+    echo -e "  ${RED}│${R}  deepseek-r1:7b     4.7GB  Razonamiento      ${RED}│${R}"
+    echo -e "  ${RED}│${R}  qwen2.5-coder:7b   4.7GB  Codigo            ${RED}│${R}"
+    echo -e "  ${RED}│${R}  qwen3:8b          4.5GB  Chat general      ${RED}│${R}"
+    echo -e "  ${RED}│${R}  mistral:7b         4.1GB  Mistral v0.3      ${RED}│${R}"
+    echo -e "  ${RED}╰────────────────────────────────────────────╯${R}"
+    echo ""
+    echo -e "  ${GRN}Instalar:${R}    randi pull"
+    echo -e "  ${GRN}Chat:${R}        randi chat -m <modelo>"
+}
+
+cmd_config() {
+    echo ""
+    echo -e "${BLU}${B}Configuracion RANDI:${R}"
+    hr
+    echo "  RANDI_DIR:    ${RANDI_DIR:-$HOME/.local/share/randi}"
+    echo "  OLLAMA_HOST:  $OLLAMA_HOST"
+    echo "  Version:      $RANDI_VERSION"
+    echo "  Repositorio:  $RANDI_REPO"
+    echo ""
+    if [ -f "$HOME/.config/randi/config.json" ]; then
+        echo "  Config JSON:"
+        cat "$HOME/.config/randi/config.json" 2>/dev/null || echo "    (no disponible)"
+    fi
+    echo ""
+    echo -e "${BLU}${B}OpenCode:${R}"
+    hr
+    if command -v opencode &>/dev/null; then
+        echo "  opencode --version: $(opencode --version 2>/dev/null || echo '?')"
+        echo "  Integracion: Configurado en opencode.jsonc"
+        echo "  Uso: opencode -m ollama/modelo"
+    else
+        echo "  OpenCode no instalado"
+    fi
+}
+
+cmd_update() {
+    echo ""
+    echo -e "${BLU}${B}Actualizar RANDI${R}"
+    hr
+
+    local local_repo=""
+    # Detectar si estamos en el repo local
+    if [ -f "$REPO_DIR/bin/randi" ] && [ -f "$REPO_DIR/install-ollama.sh" ]; then
+        local_repo="$REPO_DIR"
+    elif [ -f "$HOME/storage/proyectos/randi/bin/randi" ]; then
+        local_repo="$HOME/storage/proyectos/randi"
+    fi
+
+    echo "  Version actual:  ${CYN}${B}$RANDI_VERSION${R}"
+    echo ""
+    echo "  Origen del repo: $RANDI_REPO"
+    echo ""
+    echo "  1) Actualizar desde GitHub"
+    echo "  2) Actualizar desde repositorio local"
+    echo "  3) Configurar URL del repositorio"
+    echo "  0) Cancelar"
+    echo ""
+    echo -n "Selecciona: "
+    read -r update_opt
+
+    case "$update_opt" in
+        1)
+            echo ""
+            info "Clonando/actualizando desde GitHub..."
+            local tmp_dir
+            tmp_dir=$(mktemp -d)
+            if git clone --depth 1 "$RANDI_REPO" "$tmp_dir/randi" 2>/dev/null; then
+                ok "Repositorio clonado."
+                _do_update "$tmp_dir/randi"
+                rm -rf "$tmp_dir"
+            else
+                err "No se pudo clonar el repositorio."
+                err "Verifica la URL o tu conexion."
+                echo ""
+                dim "  URL actual: $RANDI_REPO"
+                dim "  Para cambiarla: randi config repo <url>"
+                rm -rf "$tmp_dir"
+                return 1
+            fi
+            ;;
+        2)
+            if [ -z "$local_repo" ]; then
+                err "No se encontro el repositorio local."
+                err "Ejecuta desde el directorio del repo o usa opcion 1 (GitHub)."
+                return 1
+            fi
+            echo ""
+            info "Actualizando desde: $local_repo"
+            # Verificar si hay cambios locales sin commit
+            if [ -d "$local_repo/.git" ]; then
+                info "Obteniendo ultimos cambios del repositorio local..."
+                (cd "$local_repo" && git pull 2>/dev/null) && ok "Repo local actualizado." || warn "No se pudo hacer pull (continuando con archivos actuales)."
+            fi
+            _do_update "$local_repo"
+            ;;
+        3)
+            echo ""
+            echo -n "Nueva URL del repositorio GitHub: "
+            read -r new_url
+            if [ -n "$new_url" ]; then
+                # Save to config
+                local config_file="$HOME/.config/randi/config.json"
+                mkdir -p "$HOME/.config/randi"
+                python3 -c "
+import json
+cfg = {}
+if __import__('os').path.exists('$config_file'):
+    cfg = json.load(open('$config_file'))
+cfg['repo_url'] = '$new_url'
+json.dump(cfg, open('$config_file', 'w'), indent=2)
+" 2>/dev/null || true
+                echo "export RANDI_REPO=\"$new_url\"" >> "$HOME/.bashrc" 2>/dev/null || true
+                echo "export RANDI_REPO=\"$new_url\"" >> "$HOME/.zshrc" 2>/dev/null || true
+                ok "URL del repositorio actualizada a: $new_url"
+                dim "  Vuelve a ejecutar 'randi update' para usar la nueva URL."
+            fi
+            ;;
+        0|*) ;;
+    esac
+}
+
+_do_update() {
+    local src="$1"
+    if [ ! -f "$src/bin/randi" ] || [ ! -f "$src/install-ollama.sh" ]; then
+        err "El directorio no contiene un repositorio RANDI valido."
+        return 1
+    fi
+
+    echo ""
+    info "Actualizando scripts..."
+
+    # Copiar scripts principales
+    cp "$src/bin/randi" "$RANDI_DIR/../bin/randi" 2>/dev/null || \
+    cp "$src/bin/randi" "$HOME/bin/randi" 2>/dev/null || {
+        err "No se pudo instalar el script randi."
+        return 1
+    }
+    chmod +x "$HOME/bin/randi" 2>/dev/null || true
+
+    cp "$src/bin/ollama-chat" "$HOME/bin/ollama-chat" 2>/dev/null || true
+    chmod +x "$HOME/bin/ollama-chat" 2>/dev/null || true
+
+    # Copiar libreria Python
+    mkdir -p "$RANDI_DIR/lib"
+    cp "$src/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
+    chmod +x "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
+
+    # Leer nueva version
+    local new_ver
+    new_ver=$(grep '^RANDI_VERSION=' "$HOME/bin/randi" 2>/dev/null | cut -d'"' -f2)
+    echo ""
+    ok "Actualizacion completada!"
+    if [ -n "$new_ver" ]; then
+        ok "Version: $new_ver"
+    fi
+    dim "  Los cambios estan activos en la proxima ejecucion."
+    echo ""
+}
+
+cmd_status() {
+    echo ""
+    echo -e "${BLU}${B}Estado de RANDI:${R}"
+    hr
+    if server_running; then
+        ok "Servidor Ollama activo en $OLLAMA_HOST"
+        local models
+        models=$(ollama list 2>/dev/null | tail -n +2 | wc -l)
+        echo "  Modelos instalados: $models"
+        cmd_ps
+    else
+        err "Servidor Ollama no disponible"
+        warn "Ejecuta: randi serve"
+    fi
+}
+
+show_menu() {
+    while true; do
+        clear
+        echo ""
+        echo -e "${BLU}${B}╔══════════════════════════════════════╗${R}"
+        echo -e "${BLU}${B}║${R}       ${CYN}RANDI - Local AI Terminal      ${R}${BLU}${B}║${R}"
+        echo -e "${BLU}${B}║${R}       Asistente IA en Termux         ${R}${BLU}${B}║${R}"
+        echo -e "${BLU}${B}║${R}       por Sebastian Laguna           ${R}${BLU}${B}║${R}"
+        echo -e "${BLU}${B}╚══════════════════════════════════════╝${R}"
+        echo ""
+
+        if server_running; then
+            ok "Servidor activo"
+            local loaded
+            loaded=$(curl -sf "$OLLAMA_HOST/api/ps" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo "0")
+            echo -e "  ${GRN}Modelos cargados:${R} $loaded"
+        else
+            err "Servidor detenido"
+        fi
+        echo ""
+        echo "  1)  Chat TUI       - Interfaz interactiva"
+        echo "  2)  Run modelo     - Ejecuta modelo directo"
+        echo "  3)  Descargar modelo"
+        echo "  4)  Listar modelos instalados"
+        echo "  5)  Estado del servidor"
+        echo "  6)  Servidor       - Iniciar/Detener"
+        echo "  7)  Catalogo       - Modelos recomendados"
+        echo "  8)  Configuracion"
+        echo "  9)  Actualizar     - Update desde GitHub o local"
+        echo "  0)  Salir"
+        echo ""
+        echo -n "Selecciona [0-9]: "
+        read -r opt
+        case "$opt" in
+            1) cmd_chat ;;
+            2) cmd_run ;;
+            3) cmd_pull ;;
+            4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            6)
+                if server_running; then
+                    cmd_stop
+                else
+                    cmd_serve
+                fi
+                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            7) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            8) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            9) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
+            *) err "Opcion invalida"; sleep 1 ;;
+        esac
+    done
+}
+
+case "${1:-}" in
+    chat|serve|stop|run|pull|list|ps|models|config|status|update)
+        cmd="$1"
+        shift
+        "cmd_$cmd" "$@"
+        ;;
+    -h|--help|help)
+        echo "RANDI v$RANDI_VERSION - Asistente IA local en Termux"
+        echo "Creado por $RANDI_AUTHOR"
+        echo ""
+        echo "Uso: randi <comando> [opciones]"
+        echo ""
+        echo "Comandos:"
+        echo "  randi                    Menu interactivo"
+        echo "  randi chat [modelo]      Chat TUI"
+        echo "  randi run [modelo]       Ejecuta modelo directamente"
+        echo "  randi serve              Inicia servidor Ollama"
+        echo "  randi stop               Detiene servidor Ollama"
+        echo "  randi pull [modelo]      Descarga modelo(s)"
+        echo "  randi list               Lista modelos instalados"
+        echo "  randi ps                 Muestra modelos en RAM"
+        echo "  randi models             Catalogo recomendado"
+        echo "  randi status             Estado del sistema"
+        echo "  randi config             Ver configuracion"
+        echo "  randi update             Actualizar RANDI (GitHub/local)"
+        ;;
+    *)
+        if [ -n "${1:-}" ]; then
+            cmd_run "$*"
+        else
+            show_menu
+        fi
+        ;;
+esac
