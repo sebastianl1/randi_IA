@@ -25,7 +25,7 @@ pkg update && pkg upgrade -y
 pkg install git -y
 
 # 3. Clonar el repositorio
-git clone https://github.com/TU_USUARIO/randi.git
+git clone https://github.com/sebastianl1/randi_IA.git
 cd randi
 
 # 4. Ejecutar el instalador
@@ -36,7 +36,7 @@ El instalador guiara todo el proceso:
 - Instalacion de dependencias
 - Instalacion de Ollama para Termux
 - Configuracion del shell
-- Descarga de modelos (a eleccion del usuario)
+- Descarga de modelos
 - Integracion con OpenCode (si esta instalado)
 
 ## Uso rapido
@@ -140,7 +140,7 @@ Modelos disponibles en OpenCode:
 
 | Variable | Default | Descripcion |
 |----------|---------|-------------|
-| `OLLAMA_HOST` | `http://localhost:11434` | URL del servidor Ollama |
+| `OLLAMA_HOST` | `http://localhost:11434` | URL del: servidor Ollama |
 | `OLLAMA_KEEP_ALIVE` | `-1` | Mantener modelo en RAM (-1 = siempre) |
 | `RANDI_DIR` | `~/.local/share/randi` | Directorio de datos de RANDI |
 
@@ -186,3 +186,5 @@ free -h      # Memoria disponible
 ## Licencia
 
 MIT
+
+## HECHO POR SEBASTIAN LAGUNA
