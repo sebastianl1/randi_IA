@@ -11,13 +11,13 @@ R='\033[0m'; B='\033[1m'; D='\033[2m'; I='\033[3m'
 RED='\033[0;31m'; GRN='\033[0;32m'; YLW='\033[1;33m'; BLU='\033[0;34m'
 CYN='\033[0;36m'; MGN='\033[0;35m'
 
-info()  { echo -e "${BLU}${B}[*]${R} $1"; }
-ok()    { echo -e "${GRN}${B}[+]${R} $1"; }
-warn()  { echo -e "${YLW}${B}[!]${R} $1"; }
-err()   { echo -e "${RED}${B}[x]${R} $1"; }
+info()  { echo -e "${BLU}${B}◆${R} $1"; }
+ok()    { echo -e "${GRN}${B}◆${R} $1"; }
+warn()  { echo -e "${YLW}${B}◆${R} $1"; }
+err()   { echo -e "${RED}${B}◆${R} $1"; }
 dim()   { echo -e "${D}$1${R}"; }
-title() { echo -e "\n${BLU}${B}== $1 ==${R}\n"; }
-hr()    { echo -e "${D}----------------------------------------${R}"; }
+title() { echo -e "\n${BLU}${B}── $1 ──${R}\n"; }
+hr()    { echo -e "${D}────────────────────────────────────────${R}"; }
 
 find_chat_script() {
     local script
@@ -61,6 +61,42 @@ cmd_serve() {
     done
     err "No se pudo iniciar el servidor"
     return 1
+}
+
+cmd_web() {
+    local port="${1:-8080}"
+    local script=""
+
+    local repo_parent
+    repo_parent="$(cd "$REPO_DIR/.." 2>/dev/null && pwd)"
+
+    # Buscar server.py
+    if [ -f "$repo_parent/web/server.py" ]; then
+        script="$repo_parent/web/server.py"
+    elif [ -f "$PWD/web/server.py" ]; then
+        script="$PWD/web/server.py"
+    elif [ -f "$RANDI_DIR/lib/web_server.py" ]; then
+        script="$RANDI_DIR/lib/web_server.py"
+    elif [ -f "$HOME/.local/share/randi/lib/web_server.py" ]; then
+        script="$HOME/.local/share/randi/lib/web_server.py"
+    fi
+
+    if [ -z "$script" ]; then
+        err "No se encuentra web/server.py"
+        err "Asegurate de tener los archivos web en el repositorio RANDI"
+        exit 1
+    fi
+
+    echo ""
+    echo -e "${BLU}${B}╭────────────────────────────────────────╮${R}"
+    echo -e "${BLU}${B}│${R}  ${CYN}RANDI Web${R} - Interfaz web local         ${BLU}${B}│${R}"
+    echo -e "${BLU}${B}│${R}  Modelos via Ollama + WebGPU           ${BLU}${B}│${R}"
+    echo -e "${BLU}${B}╰────────────────────────────────────────╯${R}"
+    echo ""
+
+    info "Iniciando servidor web..."
+
+    python3 "$script" --port "$port"
 }
 
 cmd_stop() {
@@ -201,6 +237,16 @@ cmd_pull() {
     echo "  10) qwen2.5-coder:7b     (4.7GB) - Codigo y programacion"
     echo "  11) qwen3:8b             (4.5GB) - Chat general"
     echo "  12) mistral:7b           (4.1GB) - Mistral v0.3"
+    echo ""
+    echo -e "  ${CYN}WebGPU (modelos para navegador):${R}"
+    echo -e "  ${D}  Se descargan al usarlos en randi web${R}"
+    echo "  13) Qwen2.5 0.5B Instruct    (300MB) - Super ligero"
+    echo "  14) Qwen2.5 Coder 0.5B       (300MB) - Codigo ligero"
+    echo "  15) TinyLlama 1.1B Chat      (700MB) - Ligero"
+    echo "  16) Qwen2.5 1.5B Instruct    (900MB) - Balanceado"
+    echo "  17) Qwen2.5 Coder 1.5B       (900MB) - Codigo"
+    echo "  18) Phi-3.5 Mini Instruct    (2.0GB) - Microsoft"
+    echo "  19) Phi-3 Mini 4K            (2.0GB) - Microsoft"
     echo "   0) Cancelar"
     hr
     echo "Ejemplo: 1 2 3 (separados por espacio)"
@@ -220,6 +266,27 @@ cmd_pull() {
             10) ollama pull qwen2.5-coder:7b ;;
             11) ollama pull qwen3:8b ;;
             12) ollama pull mistral:7b ;;
+            13|14|15|16|17|18|19)
+                local wgpu_models
+                wgpu_models=(
+                    "Qwen2.5 0.5B Instruct"
+                    "Qwen2.5 Coder 0.5B"
+                    "TinyLlama 1.1B Chat"
+                    "Qwen2.5 1.5B Instruct"
+                    "Qwen2.5 Coder 1.5B"
+                    "Phi-3.5 Mini Instruct"
+                    "Phi-3 Mini 4K"
+                )
+                local idx=$((opt - 13))
+                local name="${wgpu_models[$idx]}"
+                echo ""
+                info "Modelo WebGPU: ${CYN}${name}${R}"
+                dim "  Este modelo se descarga automaticamente al usarlo"
+                dim "  en la interfaz web. Ejecuta:"
+                dim "    randi web"
+                dim "  Luego selecciona WebGPU como backend y elige este modelo."
+                echo ""
+                ;;
             0) ;;
             *) warn "Opcion invalida: $opt, ignorada" ;;
         esac
@@ -272,31 +339,28 @@ for m in data.get('models',[]):
 
 cmd_models() {
     echo ""
-    echo -e "${BLU}${B}Catalogo RANDI - Modelos recomendados:${R}"
-    hr
-    echo -e "  ${GRN}╭── Bajo consumo (< 2GB RAM) ─────────────────╮${R}"
-    echo -e "  ${GRN}│${R}  gemma4:2b          1.5GB  Rapido y ligero    ${GRN}│${R}"
-    echo -e "  ${GRN}│${R}  deepseek-r1:1.5b    1.1GB  Razonamiento      ${GRN}│${R}"
-    echo -e "  ${GRN}│${R}  qwen2.5-coder:1.5b  0.9GB  Codigo            ${GRN}│${R}"
-    echo -e "  ${GRN}│${R}  qwen2.5-coder:0.5b  0.4GB  Codigo ultra      ${GRN}│${R}"
-    echo -e "  ${GRN}│${R}  phi3:mini           2.0GB  Microsoft Phi-3   ${GRN}│${R}"
-    echo -e "  ${GRN}╰────────────────────────────────────────────╯${R}"
+    echo -e "  ${BLU}${B}Catalogo de modelos recomendados${R}"
     echo ""
-    echo -e "  ${YLW}╭── Consumo medio (2-4GB RAM) ────────────────╮${R}"
-    echo -e "  ${YLW}│${R}  llama3.2:3b        2.0GB  Meta Llama 3.2    ${YLW}│${R}"
-    echo -e "  ${YLW}│${R}  qwen3:4b           2.5GB  Chat ligero       ${YLW}│${R}"
-    echo -e "  ${YLW}│${R}  phi3:3.8b          2.3GB  Microsoft Phi-3   ${YLW}│${R}"
-    echo -e "  ${YLW}╰────────────────────────────────────────────╯${R}"
+    echo -e "  ${GRN}Bajo consumo${R} ${D}(< 2GB RAM)${R}"
+    echo -e "    ${B}gemma4:2b${R}         ${D}1.5GB${R}   Rapido y ligero"
+    echo -e "    ${B}deepseek-r1:1.5b${R}   ${D}1.1GB${R}   Razonamiento ligero"
+    echo -e "    ${B}qwen2.5-coder:1.5b${R} ${D}0.9GB${R}   Codigo ligero"
+    echo -e "    ${B}qwen2.5-coder:0.5b${R} ${D}0.4GB${R}   Super ligero"
+    echo -e "    ${B}phi3:mini${R}          ${D}2.0GB${R}   Microsoft Phi-3"
     echo ""
-    echo -e "  ${RED}╭── Consumo alto (4-8GB RAM) ────────────────╮${R}"
-    echo -e "  ${RED}│${R}  deepseek-r1:7b     4.7GB  Razonamiento      ${RED}│${R}"
-    echo -e "  ${RED}│${R}  qwen2.5-coder:7b   4.7GB  Codigo            ${RED}│${R}"
-    echo -e "  ${RED}│${R}  qwen3:8b          4.5GB  Chat general      ${RED}│${R}"
-    echo -e "  ${RED}│${R}  mistral:7b         4.1GB  Mistral v0.3      ${RED}│${R}"
-    echo -e "  ${RED}╰────────────────────────────────────────────╯${R}"
+    echo -e "  ${YLW}Consumo medio${R} ${D}(2-4GB RAM)${R}"
+    echo -e "    ${B}llama3.2:3b${R}       ${D}2.0GB${R}   Meta Llama 3.2"
+    echo -e "    ${B}qwen3:4b${R}          ${D}2.5GB${R}   Chat ligero"
+    echo -e "    ${B}phi3:3.8b${R}         ${D}2.3GB${R}   Microsoft Phi-3"
     echo ""
-    echo -e "  ${GRN}Instalar:${R}    randi pull"
-    echo -e "  ${GRN}Chat:${R}        randi chat -m <modelo>"
+    echo -e "  ${RED}Consumo alto${R} ${D}(4-8GB RAM)${R}"
+    echo -e "    ${B}deepseek-r1:7b${R}    ${D}4.7GB${R}   Razonamiento"
+    echo -e "    ${B}qwen2.5-coder:7b${R}  ${D}4.7GB${R}   Codigo"
+    echo -e "    ${B}qwen3:8b${R}          ${D}4.5GB${R}   Chat general"
+    echo -e "    ${B}mistral:7b${R}        ${D}4.1GB${R}   Mistral"
+    echo ""
+    echo -e "  ${GRN}Instalar:${R}  randi pull"
+    echo -e "  ${GRN}Chat:${R}      randi chat -m <modelo>"
 }
 
 cmd_config() {
@@ -448,6 +512,61 @@ _do_update() {
     echo ""
 }
 
+cmd_uninstall() {
+    echo ""
+    echo -e "${YLW}${B}╔══════════════════════════════════════╗${R}"
+    echo -e "${YLW}${B}║${R}     Desinstalar RANDI               ${YLW}${B}║${R}"
+    echo -e "${YLW}${B}╚══════════════════════════════════════╝${R}"
+    echo ""
+    warn "Esto eliminara RANDI y todos sus componentes."
+    warn "Los modelos de Ollama se conservaran (aprox 1-8GB)."
+    echo ""
+    echo "Se eliminara:"
+    echo "  - ~/bin/randi"
+    echo "  - ~/bin/ollama-chat"
+    echo "  - $RANDI_DIR/"
+    echo "  - $HOME/.config/randi/"
+    echo "  - $HOME/.config/opencode/opencode.jsonc"
+    echo "  - Entradas RANDI en ~/.bashrc, ~/.zshrc, config.fish"
+    echo ""
+    echo -n "Eliminar tambien Ollama? (s/N): "
+    read -r remove_ollama
+    echo ""
+    echo -n "Confirmar desinstalacion? (s/N): "
+    read -r confirm
+    if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
+        echo ""
+        ok "Desinstalacion cancelada."
+        return
+    fi
+
+    echo ""
+    info "Desinstalando..."
+
+    rm -f "$HOME/bin/randi" 2>/dev/null || true
+    rm -f "$HOME/bin/ollama-chat" 2>/dev/null || true
+    rm -rf "$RANDI_DIR" 2>/dev/null || true
+    rm -rf "$HOME/.config/randi" 2>/dev/null || true
+    rm -f "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null || true
+
+    for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
+        [ -f "$f" ] && sed -i '/# RANDI/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/RANDI_REPO/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/OLLAMA_KEEP_ALIVE/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/OLLAMA_HOST/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i 's|export PATH="$HOME/bin:\$PATH"||g' "$f" 2>/dev/null || true
+    done
+
+    if [ "$remove_ollama" = "s" ] || [ "$remove_ollama" = "S" ]; then
+        info "Eliminando Ollama..."
+        npm uninstall -g @mmmbuto/ollama-termux 2>/dev/null || true
+        rm -f "$(command -v ollama 2>/dev/null)" 2>/dev/null || true
+    fi
+
+    echo ""
+    ok "RANDI desinstalado correctamente."
+}
+
 cmd_status() {
     echo ""
     echo -e "${BLU}${B}Estado de RANDI:${R}"
@@ -468,82 +587,86 @@ show_menu() {
     while true; do
         clear
         echo ""
-        echo -e "${BLU}${B}╔══════════════════════════════════════╗${R}"
-        echo -e "${BLU}${B}║${R}       ${CYN}RANDI - Local AI Terminal      ${R}${BLU}${B}║${R}"
-        echo -e "${BLU}${B}║${R}       Asistente IA en Termux         ${R}${BLU}${B}║${R}"
-        echo -e "${BLU}${B}║${R}       por Sebastian Laguna           ${R}${BLU}${B}║${R}"
-        echo -e "${BLU}${B}╚══════════════════════════════════════╝${R}"
+        echo -e "${BLU}${B}  ┌─────────────────────────────────────────┐${R}"
+        echo -e "${BLU}${B}  │${R}  ${CYN}RANDI${R} — ${GRN}Local AI Terminal${R}           ${BLU}${B}│${R}"
+        echo -e "${BLU}${B}  │${R}  Asistente IA en Termux               ${BLU}${B}│${R}"
+        echo -e "${BLU}${B}  │${R}  por ${D}Sebastian Laguna${R}                  ${BLU}${B}│${R}"
+        echo -e "${BLU}${B}  └─────────────────────────────────────────┘${R}"
         echo ""
 
         if server_running; then
-            ok "Servidor activo"
             local loaded
-            loaded=$(curl -sf "$OLLAMA_HOST/api/ps" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo "0")
-            echo -e "  ${GRN}Modelos cargados:${R} $loaded"
+            loaded=$(curl -sf "$OLLAMA_HOST/api/ps" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo "0")
+            echo -e "  ${GRN}●${R} Servidor activo    ${D}|${R}  ${GRN}Modelos cargados:${R} $loaded"
         else
-            err "Servidor detenido"
+            echo -e "  ${RED}●${R} Servidor detenido"
         fi
         echo ""
-        echo "  1)  Chat TUI       - Interfaz interactiva"
-        echo "  2)  Run modelo     - Ejecuta modelo directo"
-        echo "  3)  Descargar modelo"
-        echo "  4)  Listar modelos instalados"
-        echo "  5)  Estado del servidor"
-        echo "  6)  Servidor       - Iniciar/Detener"
-        echo "  7)  Catalogo       - Modelos recomendados"
-        echo "  8)  Configuracion"
-        echo "  9)  Actualizar     - Update desde GitHub o local"
-        echo "  0)  Salir"
-        echo ""
-        echo -n "Selecciona [0-9]: "
-        read -r opt
-        case "$opt" in
-            1) cmd_chat ;;
-            2) cmd_run ;;
-            3) cmd_pull ;;
-            4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            6)
-                if server_running; then
-                    cmd_stop
-                else
-                    cmd_serve
-                fi
-                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            7) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            8) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            9) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
-            *) err "Opcion invalida"; sleep 1 ;;
-        esac
+        echo -e "  ${B}1${R})  ${GRN}Chat TUI${R}       ${D}Interfaz interactiva${R}"
+        echo -e "  ${B}2${R})  ${CYN}Run modelo${R}     ${D}Ejecuta modelo directo${R}"
+        echo -e "  ${B}3${R})  ${YLW}Descargar${R}      ${D}Descargar modelo(s)${R}"
+        echo -e "  ${B}4${R})  ${D}Listar${R}          ${D}Modelos instalados${R}"
+        echo -e "  ${B}5${R})  ${D}Estado${R}          ${D}Servidor y recursos${R}"
+        echo -e "  ${B}6${R})  ${CYN}Servidor${R}       ${D}Iniciar/Detener${R}"
+        echo -e "  ${B}7${R})  ${CYN}Web UI${R}         ${D}Interfaz web local${R}"
+        echo -e "  ${B}8${R})  ${D}Catalogo${R}        ${D}Modelos recomendados${R}"
+        echo -e "  ${B}9${R})  ${D}Configuracion${R}   ${D}Ver configuracion${R}"
+         echo -e "  ${B}10${R}) ${YLW}Actualizar${R}     ${D}Update desde GitHub o local${R}"
+         echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
+         echo -e "  ${B}0${R})  ${RED}Salir${R}"
+         echo ""
+         echo -ne "  ${BLU}${B}❯${R} "
+         read -r opt
+         case "$opt" in
+             1) cmd_chat ;;
+             2) cmd_run ;;
+             3) cmd_pull ;;
+             4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             6)
+                 if server_running; then
+                     cmd_stop
+                 else
+                     cmd_serve
+                 fi
+                 echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             7) cmd_web ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             8) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             9) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             10) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             11) cmd_uninstall ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+             0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
+             *) err "Opcion invalida"; sleep 1 ;;
+         esac
     done
 }
 
 case "${1:-}" in
-    chat|serve|stop|run|pull|list|ps|models|config|status|update)
+    chat|serve|stop|run|pull|list|ps|models|config|status|update|web)
         cmd="$1"
         shift
         "cmd_$cmd" "$@"
         ;;
     -h|--help|help)
-        echo "RANDI v$RANDI_VERSION - Asistente IA local en Termux"
-        echo "Creado por $RANDI_AUTHOR"
         echo ""
-        echo "Uso: randi <comando> [opciones]"
+        echo -e "${BLU}${B}RANDI v$RANDI_VERSION${R} - ${GRN}Asistente IA local en Termux${R}"
+        echo -e "${D}Creado por $RANDI_AUTHOR${R}"
         echo ""
-        echo "Comandos:"
-        echo "  randi                    Menu interactivo"
-        echo "  randi chat [modelo]      Chat TUI"
-        echo "  randi run [modelo]       Ejecuta modelo directamente"
-        echo "  randi serve              Inicia servidor Ollama"
-        echo "  randi stop               Detiene servidor Ollama"
-        echo "  randi pull [modelo]      Descarga modelo(s)"
-        echo "  randi list               Lista modelos instalados"
-        echo "  randi ps                 Muestra modelos en RAM"
-        echo "  randi models             Catalogo recomendado"
-        echo "  randi status             Estado del sistema"
-        echo "  randi config             Ver configuracion"
-        echo "  randi update             Actualizar RANDI (GitHub/local)"
+        echo -e "${CYN}Uso:${R} randi ${D}<comando>${R} ${D}[opciones]${R}"
+        echo ""
+        echo -e "  ${B}randi${R}                  ${D}Menu interactivo${R}"
+        echo -e "  ${B}randi chat${R} ${D}[modelo]${R}    ${D}Chat TUI con Rich${R}"
+        echo -e "  ${B}randi run${R} ${D}[modelo]${R}     ${D}Ejecuta modelo directamente${R}"
+        echo -e "  ${B}randi serve${R}              ${D}Inicia servidor Ollama${R}"
+        echo -e "  ${B}randi stop${R}               ${D}Detiene servidor Ollama${R}"
+        echo -e "  ${B}randi pull${R} ${D}[modelo]${R}   ${D}Descarga modelo(s)${R}"
+        echo -e "  ${B}randi list${R}               ${D}Lista modelos instalados${R}"
+        echo -e "  ${B}randi ps${R}                 ${D}Modelos en RAM${R}"
+        echo -e "  ${B}randi models${R}             ${D}Catalogo recomendado${R}"
+        echo -e "  ${B}randi status${R}             ${D}Estado del sistema${R}"
+        echo -e "  ${B}randi config${R}             ${D}Ver configuracion${R}"
+        echo -e "  ${B}randi update${R}             ${D}Actualizar${R}"
+        echo -e "  ${B}randi web${R} ${D}[puerto]${R}      ${D}Interfaz web local${R}"
         ;;
     *)
         if [ -n "${1:-}" ]; then

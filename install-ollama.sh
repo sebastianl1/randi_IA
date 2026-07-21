@@ -84,6 +84,11 @@ install_deps() {
             warn "No se pudo instalar requests via pip, se intentara en tiempo de ejecucion"
         }
     }
+
+    info "Verificando rich para interfaz mejorada..."
+    pip install rich -q 2>/dev/null || {
+        warn "No se pudo instalar rich, la interfaz usara modo clasico"
+    }
 }
 
 # ─── Install Ollama ──────────────────────────────────────────────────────
@@ -472,69 +477,121 @@ show_summary() {
 }
 
 # ─── Main ────────────────────────────────────────────────────────────────
+cmd_uninstall() {
+    echo ""
+    echo -e "${YLW}${B}╔══════════════════════════════════════╗${R}"
+    echo -e "${YLW}${B}║${R}     Desinstalar RANDI               ${YLW}${B}║${R}"
+    echo -e "${YLW}${B}╚══════════════════════════════════════╝${R}"
+    echo ""
+    warn "Esto eliminara RANDI y todos sus componentes."
+    warn "Los modelos de Ollama se conservaran (aprox 1-8GB)."
+    echo ""
+    echo "Se eliminara:"
+    echo "  - ~/bin/randi"
+    echo "  - ~/bin/ollama-chat"
+    echo "  - $RANDI_DIR/"
+    echo "  - $HOME/.config/randi/"
+    echo "  - $HOME/.config/opencode/opencode.jsonc"
+    echo "  - Entradas RANDI en ~/.bashrc, ~/.zshrc, config.fish"
+    echo ""
+    echo -n "Eliminar tambien Ollama? (s/N): "
+    read -r remove_ollama
+    echo ""
+    echo -n "Confirmar desinstalacion? (s/N): "
+    read -r confirm
+    if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
+        echo ""
+        ok "Desinstalacion cancelada."
+        return
+    fi
+
+    echo ""
+    echo -e "${D}Preparando...${R}"
+
+    rm -f "$HOME/bin/randi" 2>/dev/null || true
+    rm -f "$HOME/bin/ollama-chat" 2>/dev/null || true
+    rm -rf "$RANDI_DIR" 2>/dev/null || true
+    rm -rf "$HOME/.config/randi" 2>/dev/null || true
+    rm -f "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null || true
+
+    for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
+        [ -f "$f" ] && sed -i '/# RANDI/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/RANDI_REPO/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/OLLAMA_KEEP_ALIVE/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/OLLAMA_HOST/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i 's|export PATH="$HOME/bin:\$PATH"||g' "$f" 2>/dev/null || true
+    done
+
+    if [ "$remove_ollama" = "s" ] || [ "$remove_ollama" = "S" ]; then
+        echo -e "${D}Eliminando Ollama...${R}"
+        npm uninstall -g @mmmbuto/ollama-termux 2>/dev/null || true
+        rm -f "$(command -v ollama 2>/dev/null)" 2>/dev/null || true
+    fi
+
+    echo ""
+    ok "RANDI desinstalado correctamente."
+    echo ""
+}
+
 main() {
     clear
-    echo -e "${CYN}${B}"
-    echo "╔══════════════════════════════════════╗"
-    echo "║                                      ║"
-    echo "║     RANDI - Local AI Terminal        ║"
-    echo "║     Instalador para Termux           ║"
-    echo "║     por Sebastian Laguna             ║"
-    echo "╚══════════════════════════════════════╝"
-    echo -e "${R}"
     echo ""
-    dim "Este script instalara Ollama y configurara RANDI"
-    dim "para ejecutar modelos de IA localmente en Termux."
+    echo -e "${CYN}${B}RANDI - Asistente IA local para Termux${R}"
+    echo -e "${D}por Sebastian Laguna${R}"
     echo ""
-    dim "Modelos recomendados:"
-    dim "  - gemma4:2b         (1.5GB - rapido, bajo consumo)"
-    dim "  - deepseek-r1:1.5b  (1.1GB - razonamiento ligero)"
-    dim "  - qwen2.5-coder:1.5b (0.9GB - codigo ligero)"
-    dim "  - deepseek-r1:7b    (4.7GB - razonamiento)"
-    dim "  - qwen2.5-coder:7b  (4.7GB - codigo)"
+    echo "1) Instalar RANDI completo"
+    echo "2) Desinstalar RANDI"
+    echo "0) Salir"
     echo ""
-    echo -n "Presiona Enter para continuar o Ctrl+C para cancelar..."
-    read -r
+    echo -n "Selecciona: "
+    read -r main_opt
+    case "$main_opt" in
+        1) ;;
+        2) cmd_uninstall; return ;;
+        0|*) echo ""; ok "Hasta luego!"; return ;;
+    esac
 
-    check_termux
-    install_deps
-    install_ollama
-    install_scripts
+    clear
+    echo ""
+    echo -e "${BLU}${B}Preparando app...${R}"
+    echo ""
 
-    # Hacer que randi esté disponible en la sesión actual inmediatamente
+    check_termux > /dev/null 2>&1
+    install_deps > /dev/null 2>&1
+    install_ollama > /dev/null 2>&1
+    install_scripts > /dev/null 2>&1
+
     export PATH="$HOME/bin:$PATH"
-    ok "Comando 'randi' disponible en esta terminal"
+    echo -e "${GRN}${B}✓${R} Preparando app..."
 
-    configure_shell
+    configure_shell > /dev/null 2>&1
+    echo -e "${GRN}${B}✓${R} Configurando shell..."
 
-    # Start server briefly for model operations
-    info "Iniciando servidor temporal..."
+    echo -e "${GRN}${B}✓${R} Iniciando servidor..."
     nohup ollama serve > /dev/null 2>&1 &
     local serve_pid=$!
     disown "$serve_pid" 2>/dev/null || true
     sleep 3
 
-    configure_opencode
+    configure_opencode > /dev/null 2>&1
+    echo -e "${GRN}${B}✓${R} Configurando OpenCode..."
+
     download_models
 
-    # Configurar URL del repositorio para actualizaciones
     _update_repo_url
 
-    # Stop temp server
     pkill -f "ollama serve" 2>/dev/null || true
     sleep 1
 
     show_summary
 
-    # Auto-recargar perfiles del shell
     for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
         [ -f "$f" ] && source "$f" 2>/dev/null || true
     done
 
     echo ""
-    ok "RANDI listo para usar."
+    echo -e "${GRN}${B}RANDI listo para usar.${R}"
     echo ""
-    echo -e "  ${CYN}Pruebalo:${R}"
     echo -e "  ${CYN}randi --help${R}"
     echo ""
 }

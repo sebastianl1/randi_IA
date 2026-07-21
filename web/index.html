@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RANDI</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top-bar">
+    <button id="btn-model" class="top-model">
+      <span id="model-name">RANDI</span>
+      <svg class="top-chevron" viewBox="0 0 12 12" width="10" height="10"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+    </button>
+    <span id="connection-dot" class="conn-dot offline"></span>
+  </header>
+
+  <div id="model-bar" class="model-bar hidden">
+    <span id="model-bar-icon" class="model-bar-icon"></span>
+    <span id="model-bar-text" class="model-bar-text"></span>
+    <button id="model-bar-close" class="model-bar-close">
+      <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+    </button>
+  </div>
+
+  <main id="main">
+    <div id="chat-container">
+      <div id="messages">
+        <div class="welcome-card" id="welcome-card">
+          <div class="welcome-logo">R</div>
+          <div class="welcome-sub">RANDI</div>
+          <p class="welcome-title">Toca arriba y elige un modelo para empezar</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="input-area">
+      <div id="context-bar" class="context-bar hidden">
+        <span id="ctx-indicator" class="ctx-indicator"></span>
+      </div>
+      <div class="input-row">
+        <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send"></textarea>
+        <button id="btn-send" class="btn-send" title="Enviar">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+        <button id="btn-stop" class="btn-stop hidden" title="Detener">
+          <svg viewBox="0 0 24 24" width="22" height="22"><rect fill="currentColor" x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div id="sheet-backdrop" class="sheet-backdrop hidden"></div>
+
+  <section id="settings-sheet" class="sheet hidden">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-brand">RANDI</span>
+      <h2>Configuración</h2>
+    </div>
+
+    <div class="sheet-body">
+      <div class="sheet-group">
+        <label>Backend</label>
+        <div class="btn-group">
+          <button class="backend-btn active" data-backend="ollama" id="btn-backend-ollama">Ollama</button>
+          <button class="backend-btn" data-backend="webgpu" id="btn-backend-webgpu">WebGPU</button>
+        </div>
+      </div>
+
+      <div class="sheet-group">
+        <div class="label-row">
+          <label>Modelo</label>
+          <span id="model-status" class="status-indicator"></span>
+        </div>
+        <select id="model-select" class="model-select">
+          <option value="">Seleccionar...</option>
+        </select>
+        <div id="webgpu-actions" class="webgpu-actions hidden">
+          <button id="btn-download-model" class="btn-primary btn-full">Descargar modelo</button>
+          <div id="model-loading" class="model-loading hidden">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <span id="progress-text" class="progress-text">Preparando...</span>
+          </div>
+        </div>
+        <div id="available-models-section" class="available-section hidden">
+          <div class="available-header">
+            <span class="available-title">Descargados</span>
+            <span id="available-count" class="available-count">0</span>
+          </div>
+          <div id="available-models-list" class="available-list"></div>
+        </div>
+      </div>
+
+      <div class="sheet-group">
+        <label for="temperature">Temp: <span id="temp-value">0.7</span></label>
+        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+      </div>
+
+      <div class="sheet-group sheet-actions">
+        <button id="btn-save-session" class="btn-secondary">Guardar</button>
+        <button id="btn-load-session" class="btn-secondary">Cargar</button>
+        <button id="btn-clear" class="btn-secondary">Limpiar</button>
+      </div>
+
+      <div class="sheet-group sheet-status">
+        <div class="status-row">
+          <span class="status-dot offline" id="ollama-dot"></span>
+          <span>Ollama: <span id="ollama-status-text">desconectado</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="session-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modal-title">Guardar sesión</h2>
+      <input type="text" id="modal-input" placeholder="Nombre de la sesión">
+      <div id="session-list" class="session-list"></div>
+      <div class="modal-actions">
+        <button id="modal-confirm" class="btn-primary">Aceptar</button>
+        <button id="modal-cancel" class="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.6/marked.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

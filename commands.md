@@ -17,6 +17,8 @@ randi models             # Ver catalogo recomendado
 randi status             # Ver estado del sistema
 randi config             # Ver configuracion
 randi update             # Actualizar RANDI (GitHub o local)
+randi web                # Interfaz web local (GPU + Ollama)
+randi web 9090           # Web en puerto especifico
 randi help               # Mostrar ayuda
 ```
 
@@ -81,6 +83,20 @@ opencode -m ollama/gemma4:2b
 opencode -m ollama/llama3.2:3b
 opencode -m ollama/qwen2.5-coder:1.5b
 ```
+
+## Web UI
+
+```bash
+randi web                    # Puerto por defecto (8080)
+randi web 3000               # Puerto especifico
+```
+
+- Abre automaticamente el navegador
+- Backend **Ollama**: modelos grandes via servidor local
+- Backend **WebGPU**: modelos pequenos (<2B) en GPU del navegador
+- Modelos WebGPU disponibles: Qwen2.5-0.5B, DeepSeek R1-1.5B, Gemma 2-2B
+- Se descargan una sola vez y se cachean en el navegador
+- Proxy automatico de `/api/*` al servidor Ollama
 
 ## Variables de entorno
 
