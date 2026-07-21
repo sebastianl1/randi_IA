@@ -622,6 +622,20 @@ document.querySelectorAll('.btn-secondary, .btn-primary').forEach(el => {
 
 /* ─── Model loading events ─── */
 
+function showToast(message, type) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
 window.addEventListener('randi-model-loading', (e) => {
   const { modelId } = e.detail;
   const info = getModelInfo(modelId);
@@ -643,6 +657,7 @@ window.addEventListener('randi-model-ready', (e) => {
   btnDownload.disabled = true;
   modelLoading.classList.add('hidden');
   modelName.textContent = name;
+  showToast(`${name} listo`, 'success');
   populateWebGPUModels();
   populateAvailableModels();
   updateWebGPUButtonState();
@@ -655,6 +670,7 @@ window.addEventListener('randi-model-error', (e) => {
   btnDownload.textContent = 'Descargar modelo';
   btnDownload.disabled = false;
   modelLoading.classList.add('hidden');
+  showToast(error, 'error');
 });
 
 modelBarClose.addEventListener('click', hideModelBar);

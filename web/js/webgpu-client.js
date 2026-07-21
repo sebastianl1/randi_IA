@@ -1,80 +1,73 @@
 export const WEBGPU_MODELS = [
   {
+    id: 'onnx-community/gemma-3-270m-it-ONNX',
+    name: 'Gemma 3 270M',
+    size: '~200 MB',
+    ram: '1 GB+',
+    description: 'Google Gemma 3 ultra ligero',
+  },
+  {
     id: 'onnx-community/Qwen2.5-0.5B-Instruct',
     name: 'Qwen2.5 0.5B Instruct',
     size: '~300 MB',
     ram: '1 GB+',
-    description: 'Super ligero, rapido',
+    description: 'Super ligero y rápido',
   },
   {
     id: 'onnx-community/Qwen2.5-Coder-0.5B-Instruct',
     name: 'Qwen2.5 Coder 0.5B',
     size: '~300 MB',
     ram: '1 GB+',
-    description: 'Codigo super ligero',
+    description: 'Código super ligero',
   },
   {
     id: 'Xenova/tinyllama-1.1b-chat-v1.0',
     name: 'TinyLlama 1.1B Chat',
     size: '~700 MB',
     ram: '2 GB+',
-    description: 'Ligero y versatil',
+    description: 'Ligero y versátil',
   },
   {
-    id: 'onnx-community/Qwen2.5-1.5B-Instruct',
-    name: 'Qwen2.5 1.5B Instruct',
-    size: '~900 MB',
-    ram: '2 GB+',
-    description: 'Balanceado',
-  },
-  {
-    id: 'onnx-community/Qwen2.5-Coder-1.5B-Instruct',
-    name: 'Qwen2.5 Coder 1.5B',
-    size: '~900 MB',
-    ram: '2 GB+',
-    description: 'Codigo balanceado',
-  },
-  {
-    id: 'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B',
-    name: 'DeepSeek R1 Distill 1.5B',
-    size: '~1 GB',
-    ram: '2 GB+',
-    description: 'Razonamiento profundo',
-  },
-  {
-    id: 'onnx-community/gemma-2-2b-it',
-    name: 'Gemma 2 2B IT',
-    size: '~1.5 GB',
-    ram: '3 GB+',
-    description: 'Google Gemma 2',
-  },
-  {
-    id: 'onnx-community/Llama-3.2-1B-Instruct',
+    id: 'onnx-community/Llama-3.2-1B-Instruct-ONNX',
     name: 'Llama 3.2 1B',
     size: '~700 MB',
     ram: '2 GB+',
     description: 'Meta Llama 3.2',
   },
   {
-    id: 'microsoft/Phi-3.5-mini-instruct-onnx',
-    name: 'Phi-3.5 Mini Instruct',
-    size: '~2 GB',
+    id: 'onnx-community/gemma-3-1b-it-ONNX-GQA',
+    name: 'Gemma 3 1B IT',
+    size: '~700 MB',
+    ram: '2 GB+',
+    description: 'Google Gemma 3',
+  },
+  {
+    id: 'onnx-community/Qwen2.5-1.5B-Instruct',
+    name: 'Qwen2.5 1.5B Instruct',
+    size: '~900 MB',
+    ram: '2 GB+',
+    description: 'Balanceado general',
+  },
+  {
+    id: 'onnx-community/Qwen2.5-Coder-1.5B-Instruct',
+    name: 'Qwen2.5 Coder 1.5B',
+    size: '~900 MB',
+    ram: '2 GB+',
+    description: 'Código balanceado',
+  },
+  {
+    id: 'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX',
+    name: 'DeepSeek R1 Distill 1.5B',
+    size: '~1 GB',
     ram: '3 GB+',
-    description: 'Microsoft Phi-3.5',
+    description: 'Razonamiento profundo',
   },
   {
     id: 'Xenova/phi-3-mini-4k-instruct',
     name: 'Phi-3 Mini 4K',
     size: '~2 GB',
-    ram: '3 GB+',
+    ram: '4 GB+',
     description: 'Microsoft Phi-3',
-  },
-  {
-    id: 'microsoft/Phi-3-mini-4k-instruct-onnx',
-    name: 'Phi-3 Mini 4K ONNX',
-    size: '~2 GB',
-    ram: '3 GB+',
-    description: 'Microsoft Phi-3 ONNX',
   },
 ];
 
@@ -157,58 +150,98 @@ export async function downloadModel(modelId, onProgress) {
   isLoading = true;
   window.dispatchEvent(new CustomEvent('randi-model-loading', { detail: { modelId } }));
 
-  onProgress?.({ status: 'download', percent: 0, text: 'Preparando todo...' });
+  const info = getModelInfo(modelId);
+  const modelName = info ? info.name : modelId;
 
-  let hasWebGPU = await webgpuAvailable();
+  const sendProgress = (pct, text) => {
+    onProgress?.({ status: 'download', percent: pct, text });
+  };
 
-  const { pipeline } = await loadTransformers();
-
-  if (!hasWebGPU) {
-    onProgress?.({ status: 'download', percent: 0, text: 'WebGPU no disponible, usando CPU...' });
-  }
-
-  async function tryLoad(device, dtype) {
-    const opts = {
-      device,
-      progress_callback: (progress) => {
-        if (progress.status === 'progress' || progress.status === 'download') {
-          const pct = progress.progress != null
-            ? Math.round(progress.progress)
-            : progress.total
-              ? Math.round((progress.loaded / progress.total) * 100)
-              : 0;
-          onProgress?.({ status: 'download', percent: Math.min(pct, 99), text: 'Preparando todo, por favor espera...' });
-        } else if (progress.status === 'load') {
-          onProgress?.({ status: 'load', percent: 50, text: 'Preparando todo, por favor espera...' });
-        } else if (progress.status === 'ready' || progress.status === 'done') {
-          onProgress?.({ status: 'ready', percent: 100, text: 'Modelo listo' });
-        }
-      }
-    };
-    if (dtype) opts.dtype = dtype;
-    return await pipeline('text-generation', modelId, opts);
-  }
-
-  let lastError = '';
+  sendProgress(0, 'Iniciando...');
+  let keepAlive;
 
   try {
-    transformersPipeline = await tryLoad(hasWebGPU ? 'webgpu' : 'cpu', 'q4');
-  } catch (e) {
-    lastError = e.message || 'Error al cargar con q4';
-    console.error('First attempt failed (q4):', e);
-    if (hasWebGPU) {
-      onProgress?.({ status: 'download', percent: 0, text: 'WebGPU falló, reintentando con CPU...' });
-      hasWebGPU = false;
+    sendProgress(2, 'Cargando Transformers.js...');
+    const { pipeline } = await loadTransformers();
+
+    sendProgress(5, 'Verificando WebGPU...');
+    const hasWebGPU = await webgpuAvailable();
+    if (!hasWebGPU) {
+      sendProgress(6, 'WebGPU no disponible, usando CPU');
     }
+
+    const device = hasWebGPU ? 'webgpu' : 'cpu';
+
+    keepAlive = setInterval(() => {
+      onProgress?.({ status: 'download', percent: 95, text: `Preparando todo, por favor espera...` });
+    }, 15000);
+
+    sendProgress(10, 'Descargando ' + modelName + '...');
+
+    let pipe;
     try {
-      transformersPipeline = await tryLoad('cpu', 'q4');
-    } catch (e2) {
-      lastError = e2.message || 'Error al cargar con CPU';
-      console.error('CPU attempt failed:', e2);
-      isLoading = false;
-      window.dispatchEvent(new CustomEvent('randi-model-error', { detail: { modelId, error: lastError } }));
-      throw new Error(`No se pudo cargar: ${lastError}`);
+      pipe = await pipeline('text-generation', modelId, {
+        device,
+        dtype: 'q4',
+        progress_callback: (p) => {
+          if (p.status === 'progress' || p.status === 'download') {
+            const pct = p.progress != null
+              ? Math.round(p.progress)
+              : p.total
+                ? Math.round((p.loaded / p.total) * 100)
+                : 0;
+            const scaled = 10 + Math.round(pct * 0.85);
+            onProgress?.({ status: 'download', percent: Math.min(scaled, 95), text: 'Preparando todo, por favor espera...' });
+          } else if (p.status === 'load') {
+            onProgress?.({ status: 'load', percent: 50, text: 'Cargando modelo en memoria...' });
+          } else if (p.status === 'ready' || p.status === 'done') {
+            clearInterval(keepAlive);
+            keepAlive = null;
+          }
+        }
+      });
+    } catch (e) {
+      console.error('WebGPU load failed:', e);
+      if (hasWebGPU) {
+        sendProgress(5, 'WebGPU falló, reintentando con CPU...');
+        try {
+          pipe = await pipeline('text-generation', modelId, {
+            device: 'cpu',
+            dtype: 'q4',
+            progress_callback: (p) => {
+              if (p.status === 'progress' || p.status === 'download') {
+                const pct = p.progress != null
+                  ? Math.round(p.progress)
+                  : p.total
+                    ? Math.round((p.loaded / p.total) * 100)
+                    : 0;
+                const scaled = 10 + Math.round(pct * 0.85);
+                onProgress?.({ status: 'download', percent: Math.min(scaled, 95), text: 'Preparando todo, por favor espera...' });
+              } else if (p.status === 'load') {
+                onProgress?.({ status: 'load', percent: 50, text: 'Cargando modelo en memoria...' });
+              } else if (p.status === 'ready' || p.status === 'done') {
+                clearInterval(keepAlive);
+                keepAlive = null;
+              }
+            }
+          });
+        } catch (e2) {
+          throw new Error(e2.message || 'Error al cargar con CPU');
+        }
+      } else {
+        throw e;
+      }
     }
+
+    clearInterval(keepAlive);
+    keepAlive = null;
+    transformersPipeline = pipe;
+  } catch (err) {
+    if (keepAlive) clearInterval(keepAlive);
+    isLoading = false;
+    const msg = err.message || 'Error desconocido';
+    window.dispatchEvent(new CustomEvent('randi-model-error', { detail: { modelId, error: msg } }));
+    throw new Error(msg);
   }
 
   loadedModelId = modelId;
