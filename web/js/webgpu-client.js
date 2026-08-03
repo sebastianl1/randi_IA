@@ -4,6 +4,8 @@ export const WEBGPU_MODELS = [
     name: 'Gemma 3 270M',
     size: '~200 MB',
     ram: '1 GB+',
+    context: 4096,
+    maxTokens: 1024,
     description: 'Google Gemma 3 ultra ligero',
   },
   {
@@ -11,6 +13,8 @@ export const WEBGPU_MODELS = [
     name: 'Qwen2.5 0.5B Instruct',
     size: '~300 MB',
     ram: '1 GB+',
+    context: 8192,
+    maxTokens: 1024,
     description: 'Super ligero y rápido',
   },
   {
@@ -18,6 +22,8 @@ export const WEBGPU_MODELS = [
     name: 'Qwen2.5 Coder 0.5B',
     size: '~300 MB',
     ram: '1 GB+',
+    context: 8192,
+    maxTokens: 1024,
     description: 'Código super ligero',
   },
   {
@@ -25,6 +31,8 @@ export const WEBGPU_MODELS = [
     name: 'TinyLlama 1.1B Chat',
     size: '~700 MB',
     ram: '2 GB+',
+    context: 2048,
+    maxTokens: 1024,
     description: 'Ligero y versátil',
   },
   {
@@ -32,6 +40,8 @@ export const WEBGPU_MODELS = [
     name: 'Llama 3.2 1B',
     size: '~700 MB',
     ram: '2 GB+',
+    context: 8192,
+    maxTokens: 1024,
     description: 'Meta Llama 3.2',
   },
   {
@@ -39,6 +49,8 @@ export const WEBGPU_MODELS = [
     name: 'Gemma 3 1B IT',
     size: '~700 MB',
     ram: '2 GB+',
+    context: 8192,
+    maxTokens: 1024,
     description: 'Google Gemma 3',
   },
   {
@@ -46,6 +58,8 @@ export const WEBGPU_MODELS = [
     name: 'Qwen2.5 1.5B Instruct',
     size: '~900 MB',
     ram: '2 GB+',
+    context: 16384,
+    maxTokens: 2048,
     description: 'Balanceado general',
   },
   {
@@ -53,6 +67,8 @@ export const WEBGPU_MODELS = [
     name: 'Qwen2.5 Coder 1.5B',
     size: '~900 MB',
     ram: '2 GB+',
+    context: 16384,
+    maxTokens: 2048,
     description: 'Código balanceado',
   },
   {
@@ -60,6 +76,8 @@ export const WEBGPU_MODELS = [
     name: 'DeepSeek R1 Distill 1.5B',
     size: '~1 GB',
     ram: '3 GB+',
+    context: 8192,
+    maxTokens: 1024,
     description: 'Razonamiento profundo',
   },
   {
@@ -67,12 +85,24 @@ export const WEBGPU_MODELS = [
     name: 'Phi-3 Mini 4K',
     size: '~2 GB',
     ram: '4 GB+',
+    context: 4096,
+    maxTokens: 1024,
     description: 'Microsoft Phi-3',
   },
 ];
 
 export function getModelInfo(modelId) {
-  return WEBGPU_MODELS.find(m => m.id === modelId) || null;
+  return WEBGPU_MODELS.find((m) => m.id === modelId) || null;
+}
+
+export function getModelContext(modelId) {
+  const info = getModelInfo(modelId);
+  return info?.context || 8192;
+}
+
+export function getModelMaxTokens(modelId) {
+  const info = getModelInfo(modelId);
+  return info?.maxTokens || 1024;
 }
 
 let transformersPipeline = null;
@@ -146,152 +176,183 @@ async function webgpuAvailable() {
   }
 }
 
+// Watchdog por fase: solo avisa si algo se estanca. NO cancela durante
+// carga/compilación de shaders, que puede tardar minutos sin progreso.
+function createWatchdog(phase, onStall) {
+  let lastActivity = Date.now();
+  let warned = {};
+
+  const limits = { init: 120, download: 1200, load: 1800 };
+  const messages = {
+    init: 'Conectando con Hugging Face...',
+    download: 'Descarga lenta, pero sigue en progreso...',
+    load: 'Compilando shaders WebGPU (la primera vez tarda varios minutos)...',
+  };
+
+  const timer = setInterval(() => {
+    const limit = limits[phase] || 300;
+    const elapsed = (Date.now() - lastActivity) / 1000;
+    if (elapsed > limit && !warned[phase]) {
+      warned[phase] = true;
+      onStall?.(messages[phase] || 'Preparando el modelo, por favor espera...');
+    }
+  }, 5000);
+
+  return { touch: () => { lastActivity = Date.now(); warned = {}; }, stop: () => clearInterval(timer) };
+}
+
+function computePercent(p) {
+  if (p.progress != null && !isNaN(p.progress)) return p.progress;
+  if (p.total && p.loaded != null && p.total > 0) return (p.loaded / p.total) * 100;
+  return 0;
+}
+
 export async function downloadModel(modelId, onProgress) {
+  if (isLoading) {
+    onProgress?.({ status: 'error', percent: 0, text: 'Ya hay una descarga en curso. Espera a que termine.' });
+    return;
+  }
   isLoading = true;
   window.dispatchEvent(new CustomEvent('randi-model-loading', { detail: { modelId } }));
 
   const info = getModelInfo(modelId);
   const modelName = info ? info.name : modelId;
 
-  const sendProgress = (pct, text) => {
-    onProgress?.({ status: 'download', percent: pct, text });
+  const sendProgress = (status, pct, text, detail) => {
+    onProgress?.({ status, percent: pct, text, loaded: detail?.loaded, total: detail?.total });
   };
+  const onStall = (text) => sendProgress('download', 50, text);
 
-  sendProgress(0, 'Iniciando...');
-  let keepAlive;
+  sendProgress('download', 0, 'Iniciando...');
 
+  let watchdog;
   try {
-    sendProgress(2, 'Cargando Transformers.js...');
+    watchdog = createWatchdog('init', onStall);
     const { pipeline } = await loadTransformers();
+    watchdog.stop();
+    watchdog = createWatchdog('init', onStall);
 
-    sendProgress(5, 'Verificando WebGPU...');
+    sendProgress('download', 3, 'Preparando componentes...');
+    watchdog.touch();
+
+    sendProgress('download', 5, 'Verificando WebGPU...');
+    watchdog.touch();
     const hasWebGPU = await webgpuAvailable();
-    if (!hasWebGPU) {
-      sendProgress(6, 'WebGPU no disponible, usando CPU');
-    }
-
     const device = hasWebGPU ? 'webgpu' : 'cpu';
+    if (!hasWebGPU) sendProgress('download', 6, 'WebGPU no disponible, usando CPU (más lento)');
 
-    keepAlive = setInterval(() => {
-      onProgress?.({ status: 'download', percent: 95, text: `Preparando todo, por favor espera...` });
-    }, 15000);
+    watchdog.stop();
+    watchdog = createWatchdog('download', onStall);
 
-    sendProgress(10, 'Descargando ' + modelName + '...');
+    // Fallback robusto de dtype para evitar colgarse en cuantización on-the-fly
+    const deviceAttempts = hasWebGPU
+      ? [{ device: 'webgpu', dtypes: ['q4', 'q8', 'fp16', 'fp32'] }, { device: 'cpu', dtypes: ['q8', 'fp32'] }]
+      : [{ device: 'cpu', dtypes: ['q8', 'fp32'] }];
+    let pipe = null;
+    let lastErr = null;
 
-    let pipe;
-    try {
-      pipe = await pipeline('text-generation', modelId, {
-        device,
-        dtype: 'q4',
-        progress_callback: (p) => {
-          if (p.status === 'progress' || p.status === 'download') {
-            const pct = p.progress != null
-              ? Math.round(p.progress)
-              : p.total
-                ? Math.round((p.loaded / p.total) * 100)
-                : 0;
-            const scaled = 10 + Math.round(pct * 0.85);
-            onProgress?.({ status: 'download', percent: Math.min(scaled, 95), text: 'Preparando todo, por favor espera...' });
-          } else if (p.status === 'load') {
-            onProgress?.({ status: 'load', percent: 50, text: 'Cargando modelo en memoria...' });
-          } else if (p.status === 'ready' || p.status === 'done') {
-            clearInterval(keepAlive);
-            keepAlive = null;
-          }
-        }
-      });
-    } catch (e) {
-      console.error('WebGPU load failed:', e);
-      if (hasWebGPU) {
-        sendProgress(5, 'WebGPU falló, reintentando con CPU...');
+    for (const attempt of deviceAttempts) {
+      for (const dtype of attempt.dtypes) {
+        watchdog.touch();
+        sendProgress('download', Math.min(10, 8 + Math.random() * 2), `Cargando componentes (${dtype})...`);
         try {
           pipe = await pipeline('text-generation', modelId, {
-            device: 'cpu',
-            dtype: 'q4',
+            device: attempt.device,
+            dtype,
             progress_callback: (p) => {
+              watchdog.touch();
               if (p.status === 'progress' || p.status === 'download') {
-                const pct = p.progress != null
-                  ? Math.round(p.progress)
-                  : p.total
-                    ? Math.round((p.loaded / p.total) * 100)
-                    : 0;
-                const scaled = 10 + Math.round(pct * 0.85);
-                onProgress?.({ status: 'download', percent: Math.min(scaled, 95), text: 'Preparando todo, por favor espera...' });
+                const pct = computePercent(p);
+                const scaled = Math.round(10 + pct * 0.85);
+                sendProgress('download', Math.min(scaled, 90), `Descargando ${modelName}...`, p);
               } else if (p.status === 'load') {
-                onProgress?.({ status: 'load', percent: 50, text: 'Cargando modelo en memoria...' });
+                sendProgress('load', 95, 'Cargando modelo en memoria...', p);
               } else if (p.status === 'ready' || p.status === 'done') {
-                clearInterval(keepAlive);
-                keepAlive = null;
+                sendProgress('load', 95, 'Modelo preparado, finalizando...');
               }
-            }
+            },
           });
-        } catch (e2) {
-          throw new Error(e2.message || 'Error al cargar con CPU');
+          break;
+        } catch (e) {
+          console.warn(`Fallo el intento con ${attempt.device}/${dtype}:`, e);
+          lastErr = e;
         }
-      } else {
-        throw e;
       }
+      if (pipe) break;
     }
 
-    clearInterval(keepAlive);
-    keepAlive = null;
+    if (!pipe) throw lastErr || new Error('No se pudo cargar el modelo');
+
+    watchdog.stop();
+
     transformersPipeline = pipe;
+    loadedModelId = modelId;
+    markModelCached(modelId);
+    isLoading = false;
+    window.dispatchEvent(new CustomEvent('randi-model-ready', { detail: { modelId } }));
+    onProgress?.({ status: 'ready', percent: 100, text: 'Modelo listo' });
   } catch (err) {
-    if (keepAlive) clearInterval(keepAlive);
+    watchdog?.stop();
     isLoading = false;
     const msg = err.message || 'Error desconocido';
     window.dispatchEvent(new CustomEvent('randi-model-error', { detail: { modelId, error: msg } }));
-    throw new Error(msg);
+    onProgress?.({ status: 'error', percent: 0, text: msg });
   }
-
-  loadedModelId = modelId;
-  markModelCached(modelId);
-  isLoading = false;
-  window.dispatchEvent(new CustomEvent('randi-model-ready', { detail: { modelId } }));
-  onProgress?.({ status: 'ready', percent: 100, text: 'Modelo listo' });
 }
 
-export async function generateStream(promptText, _systemPrompt, temperature, maxTokens, onToken, onDone, onError) {
+export async function generateStream(messages, temperature, maxTokens, onToken, onDone, onError) {
   if (!transformersPipeline) {
     onError?.('Modelo no cargado');
     return;
   }
-
   abortGeneration = false;
-
+  const t0 = performance.now();
   try {
-    const messages = [{ role: 'user', content: promptText }];
-
-    const result = await transformersPipeline(messages, {
-      max_new_tokens: maxTokens || 512,
+    const genOpts = {
+      max_new_tokens: maxTokens || 1024,
       temperature: temperature ?? 0.7,
       do_sample: true,
       top_p: 0.9,
       repetition_penalty: 1.1,
-    });
+    };
+
+    let out;
+    try {
+      out = await transformersPipeline(messages, genOpts);
+    } catch {
+      // Fallback a texto plano si el pipeline no soporta chat
+      const text = messages.map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n') + '\nAssistant:';
+      out = await transformersPipeline(text, genOpts);
+    }
 
     if (abortGeneration) {
       onDone?.({ aborted: true });
       return;
     }
 
-    let responseText = '';
-    const genText = result[0]?.generated_text;
-    if (Array.isArray(genText)) {
-      const last = genText[genText.length - 1];
-      responseText = last?.content || '';
-    } else if (typeof genText === 'string') {
-      responseText = genText;
-    }
-
+    const responseText = extractResponse(out);
     if (responseText) {
       onToken?.(responseText);
     }
-    onDone?.({ response: responseText });
+    onDone?.({ response: responseText, elapsedMs: performance.now() - t0 });
   } catch (err) {
     console.error('WebGPU generate error:', err);
     onError?.(err.message || 'Error en generacion');
   }
+}
+
+function extractResponse(out) {
+  if (out == null) return '';
+  if (typeof out === 'string') return out;
+  if (Array.isArray(out)) {
+    if (!out.length) return '';
+    const last = out[out.length - 1];
+    if (last && typeof last.generated_text === 'string') return last.generated_text;
+    if (last && typeof last.content === 'string') return last.content;
+    return '';
+  }
+  if (typeof out.generated_text === 'string') return out.generated_text;
+  return '';
 }
 
 export function abortGenerationWebGPU() {

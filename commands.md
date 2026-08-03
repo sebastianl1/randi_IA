@@ -94,8 +94,11 @@ randi web 3000               # Puerto especifico
 - Abre automaticamente el navegador
 - Backend **Ollama**: modelos grandes via servidor local
 - Backend **WebGPU**: modelos pequenos (<2B) en GPU del navegador
-- Modelos WebGPU disponibles: Qwen2.5-0.5B, DeepSeek R1-1.5B, Gemma 2-2B
+- Modelos WebGPU disponibles: Gemma 3 270M, Qwen2.5 0.5B, Qwen2.5 Coder 0.5B, TinyLlama 1.1B, Llama 3.2 1B, Gemma 3 1B, Qwen2.5 1.5B, Qwen2.5 Coder 1.5B, DeepSeek R1 1.5B, Phi-3 Mini 4K
 - Se descargan una sola vez y se cachean en el navegador
+- Descarga robusta: reintenta con distintos tipos de cuantizacion (q4/q8/fp16/fp32) y usa CPU si WebGPU falla
+- Conversacion multi-turno con historial y system prompt en ambos backends
+- Barra de contexto dinamica segun el modelo y estadisticas de tokens
 - Proxy automatico de `/api/*` al servidor Ollama
 
 ## Variables de entorno

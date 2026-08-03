@@ -1,16 +1,17 @@
 import { checkServer, listModels } from './ollama-client.js';
-import { getAvailableModels, downloadModel, isModelLoaded, getLoadedModelId, isModelCached, getCachedModelIds, getModelInfo, isLoading as isGPUModelLoading, removeCachedModel } from './webgpu-client.js';
+import { getAvailableModels, downloadModel, isModelLoaded, getLoadedModelId, isModelCached, getCachedModelIds, getModelInfo, getModelContext, isLoading as isGPUModelLoading, removeCachedModel } from './webgpu-client.js';
+import { getOllamaContext, DEFAULT_BACKEND, DEFAULT_TEMPERATURE, DEFAULT_SYSTEM_PROMPT } from './config.js';
 import {
   sendMessage, stopStreaming, clearMessages, setMessages,
   getMessages, updateContextBar, showTyping, hideTyping,
-  appendMessage, removeWelcome,
+  appendMessage, removeWelcome, setContextLimit,
 } from './chat-ui.js';
 
 const state = {
-  backend: 'ollama',
+  backend: DEFAULT_BACKEND,
   model: '',
-  temperature: 0.7,
-  systemPrompt: 'Eres RANDI, un asistente AI util, amigable y preciso. Respondes en el mismo idioma en que te hablan.',
+  temperature: DEFAULT_TEMPERATURE,
+  systemPrompt: DEFAULT_SYSTEM_PROMPT,
   ollamaOnline: false,
   messages: [],
 };
@@ -74,8 +75,8 @@ function loadSavedState() {
     const saved = localStorage.getItem('randi_state');
     if (saved) {
       const data = JSON.parse(saved);
-      state.backend = data.backend || 'ollama';
-      state.temperature = data.temperature ?? 0.7;
+      state.backend = data.backend || DEFAULT_BACKEND;
+      state.temperature = data.temperature ?? DEFAULT_TEMPERATURE;
       state.systemPrompt = data.systemPrompt || state.systemPrompt;
       state.model = data.model || '';
       tempSlider.value = state.temperature;
@@ -90,6 +91,7 @@ function loadSavedState() {
 
 async function init() {
   loadSavedState();
+  syncContextLimit();
   populateWebGPUModels();
   populateAvailableModels();
   await checkOllamaStatus();
@@ -112,6 +114,25 @@ async function init() {
   }
 }
 
+function formatSize(bytes) {
+  if (!bytes || bytes === 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(0) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+function formatProgress(pct, loaded, total) {
+  let s = pct + '%';
+  if (loaded != null && total != null && total > 0) {
+    const pct2 = Math.round((loaded / total) * 100);
+    s = pct2 + '% (' + formatSize(loaded) + ' / ' + formatSize(total) + ')';
+  } else if (loaded != null) {
+    s = pct + '% (' + formatSize(loaded) + ')';
+  }
+  return s;
+}
+
 async function loadCachedModel(modelId) {
   modelLoading.classList.remove('hidden');
   progressFill.style.width = '0%';
@@ -120,7 +141,8 @@ async function loadCachedModel(modelId) {
     await downloadModel(modelId, (progress) => {
       if (progress.status === 'download' || progress.status === 'load') {
         progressFill.style.width = `${Math.max(progress.percent, 5)}%`;
-        progressText.textContent = progress.text;
+        const detail = formatProgress(progress.percent, progress.loaded, progress.total);
+        progressText.textContent = detail;
       } else if (progress.status === 'ready') {
         progressFill.style.width = '100%';
         progressText.textContent = 'Modelo listo';
@@ -262,9 +284,17 @@ function updateTopBar() {
   modelName.textContent = state.model || 'RANDI';
 }
 
+function syncContextLimit() {
+  const limit = state.backend === 'webgpu'
+    ? getModelContext(state.model)
+    : getOllamaContext(state.model);
+  setContextLimit(limit);
+}
+
 async function switchBackend(backend) {
   state.backend = backend;
   saveState();
+  syncContextLimit();
 
   webgpuActions.classList.toggle('hidden', backend !== 'webgpu');
 
@@ -321,6 +351,7 @@ modelSelect.addEventListener('change', async () => {
   state.model = modelSelect.value;
   saveState();
   updateTopBar();
+  syncContextLimit();
 
   if (state.model) {
     removeWelcome();
@@ -355,7 +386,8 @@ btnDownload.addEventListener('click', async () => {
     await downloadModel(modelId, (progress) => {
       if (progress.status === 'download' || progress.status === 'load') {
         progressFill.style.width = `${Math.max(progress.percent, 5)}%`;
-        progressText.textContent = progress.text;
+        const detail = formatProgress(progress.percent, progress.loaded, progress.total);
+        progressText.textContent = detail;
       } else if (progress.status === 'ready') {
         progressFill.style.width = '100%';
         progressText.textContent = 'Modelo listo';
@@ -570,6 +602,7 @@ window.__loadSession = async (name) => {
     if (data.model) {
       modelName.textContent = data.model;
     }
+    syncContextLimit();
     saveState();
     appendMessage('system', `Sesión cargada: ${name}`);
   } catch {

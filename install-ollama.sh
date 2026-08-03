@@ -1,24 +1,21 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # ═══════════════════════════════════════════════════════════════════════════
-# RANDI - Local AI Terminal Installer
-# Asistente IA local para Termux con Ollama
-# Creado por Sebastian Laguna
-# Uso: source install-ollama.sh  (recomendado)
-#      bash install-ollama.sh
+#  RANDI — Instalador para Termux
+#  Asistente IA local con Ollama
+#  Creado por Sebastian Laguna
 # ═══════════════════════════════════════════════════════════════════════════
 
+# ─── Colors ─────────────────────────────────────────────────────────────
 R='\033[0m'; B='\033[1m'; D='\033[2m'
 RED='\033[0;31m'; GRN='\033[0;32m'; YLW='\033[1;33m'; BLU='\033[0;34m'
-CYN='\033[0;36m'; MGN='\033[0;35m'
+CYN='\033[0;36m'; MGN='\033[0;35m'; WHT='\033[1;37m'
 
-info()  { echo -e "${BLU}${B}[*]${R} $1"; }
-ok()    { echo -e "${GRN}${B}[+]${R} $1"; }
-warn()  { echo -e "${YLW}${B}[!]${R} $1"; }
-err()   { echo -e "${RED}${B}[x]${R} $1"; }
-dim()   { echo -e "${D}$1${R}"; }
-title() { echo -e "\n${BLU}${B}== $1 ==${R}\n"; }
-hr()    { echo -e "${D}----------------------------------------${R}"; }
+info()  { echo -e "  ${BLU}${B}::${R} $1"; }
+ok()    { echo -e "  ${GRN}${B}::${R} $1"; }
+warn()  { echo -e "  ${YLW}${B}::${R} $1"; }
+err()   { echo -e "  ${RED}${B}::${R} $1"; }
+dim()   { echo -e "  ${D}$1${R}"; }
 
 # ─── Config ───────────────────────────────────────────────────────────────
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,30 +27,23 @@ RANDI_REPO="${RANDI_REPO:-https://github.com/TU_USUARIO/randi.git}"
 # ─── Detect Shell ─────────────────────────────────────────────────────────
 detect_shell() {
     local shell_name
-    # Detectar el shell REAL del proceso actual
     shell_name=$(basename "$(ps -p $$ -o comm= 2>/dev/null)" 2>/dev/null)
     [ -z "$shell_name" ] && shell_name=$(basename "${SHELL:-bash}")
-    case "$shell_name" in
-        zsh)  echo "zsh" ;;
-        fish) echo "fish" ;;
-        bash|sh) echo "bash" ;;
-        *)    echo "bash" ;;
-    esac
+    case "$shell_name" in zsh|fish|bash|sh) echo "$shell_name" ;; *) echo "bash" ;; esac
 }
 
 get_profile() {
     case "$(detect_shell)" in
         zsh)  echo "$HOME/.zshrc" ;;
         fish) echo "$HOME/.config/fish/config.fish" ;;
-        bash) echo "$HOME/.bashrc" ;;
+        *)    echo "$HOME/.bashrc" ;;
     esac
 }
 
-# ─── Check Termux ────────────────────────────────────────────────────────
+# ─── Check ────────────────────────────────────────────────────────────────
 check_termux() {
     if [ ! -d "/data/data/com.termux" ] && [ ! -f "/data/data/com.termux/files/usr/bin/pkg" ]; then
-        err "Este instalador esta disenado para Termux en Android."
-        err "No se detecta un entorno Termux."
+        err "Este instalador requiere Termux en Android."
         return 2>/dev/null || exit 1
     fi
     ok "Entorno Termux detectado"
@@ -61,328 +51,166 @@ check_termux() {
 
 # ─── Install Dependencies ─────────────────────────────────────────────────
 install_deps() {
-    title "Instalando dependencias del sistema"
-
+    echo ""
     info "Actualizando paquetes..."
-    pkg update -y && pkg upgrade -y
+    pkg update -y > /dev/null 2>&1 && pkg upgrade -y > /dev/null 2>&1
 
-    info "Instalando paquetes necesarios..."
-    pkg install -y \
-        nodejs-lts \
-        python3 \
-        python-pip \
-        curl \
-        wget \
-        git \
-        jq
+    info "Instalando dependencias..."
+    pkg install -y nodejs-lts python3 python-pip curl wget git jq > /dev/null 2>&1
 
-    ok "Dependencias del sistema instaladas"
+    pip install requests rich -q > /dev/null 2>&1 || pkg install python-requests python-rich -y > /dev/null 2>&1 || true
 
-    info "Verificando requests para Python..."
-    pip install requests -q 2>/dev/null || {
-        pkg install python-requests -y 2>/dev/null || {
-            warn "No se pudo instalar requests via pip, se intentara en tiempo de ejecucion"
-        }
-    }
-
-    info "Verificando rich para interfaz mejorada..."
-    pip install rich -q 2>/dev/null || {
-        warn "No se pudo instalar rich, la interfaz usara modo clasico"
-    }
+    ok "Dependencias instaladas"
 }
 
 # ─── Install Ollama ──────────────────────────────────────────────────────
 install_ollama() {
-    title "Instalando Ollama para Termux"
-
     if command -v ollama &>/dev/null; then
-        ok "Ollama ya esta instalado: $(ollama --version 2>/dev/null || echo '?')"
+        ok "Ollama ya instalado"
         return 0
     fi
 
-    info "Instalando ollama-termux via npm..."
-    npm install -g @mmmbuto/ollama-termux@latest
-
-    info "Ejecutando instalador de ollama-termux..."
-    ollama-termux
+    echo ""
+    info "Instalando Ollama para Termux..."
+    npm install -g @mmmbuto/ollama-termux@latest > /dev/null 2>&1
+    ollama-termux > /dev/null 2>&1
 
     if command -v ollama &>/dev/null; then
         ok "Ollama instalado correctamente"
     else
-        err "La instalacion de Ollama fallo"
+        err "Falló la instalación de Ollama"
         return 2>/dev/null || exit 1
     fi
 }
 
-# ─── Install RANDI Scripts ───────────────────────────────────────────────
+# ─── Install Scripts ─────────────────────────────────────────────────────
 install_scripts() {
-    title "Instalando scripts de RANDI"
+    echo ""
+    info "Instalando scripts RANDI..."
 
-    # Create directories
-    mkdir -p "$BIN_DIR"
-    mkdir -p "$RANDI_DIR/lib"
-    mkdir -p "$RANDI_DIR/sessions"
+    mkdir -p "$BIN_DIR" "$RANDI_DIR/lib" "$RANDI_DIR/sessions"
 
-    # Copy files
-    info "Copiando scripts..."
-
-    # randi
     if [ -f "$REPO_DIR/bin/randi" ]; then
         cp "$REPO_DIR/bin/randi" "$BIN_DIR/randi"
         chmod +x "$BIN_DIR/randi"
-        # Symlink for backward compatibility
         ln -sf randi "$BIN_DIR/s-ollama" 2>/dev/null || true
-        ok "randi instalado en ~/bin/randi"
+        ok "Script principal: ~/bin/randi"
     else
-        err "No se encuentra bin/randi en el repositorio"
-        return 2>/dev/null || exit 1
+        err "Falta bin/randi en el repositorio"; return 2>/dev/null || exit 1
     fi
 
-    # ollama-chat
-    if [ -f "$REPO_DIR/bin/ollama-chat" ]; then
-        cp "$REPO_DIR/bin/ollama-chat" "$BIN_DIR/ollama-chat"
-        chmod +x "$BIN_DIR/ollama-chat"
-        ok "ollama-chat instalado en ~/bin/ollama-chat"
-    else
-        err "No se encuentra bin/ollama-chat en el repositorio"
-        return 2>/dev/null || exit 1
-    fi
-
-    # ollama_chat.py (Python lib)
     if [ -f "$REPO_DIR/bin/lib/ollama_chat.py" ]; then
         cp "$REPO_DIR/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py"
         chmod +x "$RANDI_DIR/lib/ollama_chat.py"
-        ok "ollama_chat.py instalado en $RANDI_DIR/lib/"
-    else
-        err "No se encuentra bin/lib/ollama_chat.py en el repositorio"
-        return 2>/dev/null || exit 1
     fi
 }
 
-# ─── Shell Configuration ─────────────────────────────────────────────────
-_add_to_bashrc() {
-    local file="$HOME/.bashrc"
-    touch "$file"
-    if ! grep -q 'PATH="\$HOME/bin' "$file" 2>/dev/null; then
-        echo "" >> "$file"
-        echo "# RANDI - Local AI" >> "$file"
-        echo 'export PATH="$HOME/bin:$PATH"' >> "$file"
-        echo 'export OLLAMA_KEEP_ALIVE="-1"' >> "$file"
-        echo "export OLLAMA_HOST=$OLLAMA_HOST" >> "$file"
-        echo "export RANDI_REPO=$RANDI_REPO" >> "$file"
-        info "PATH configurado en $file"
-    else
-        ok "PATH ya configurado en $file"
-    fi
-}
-
-_add_to_zshrc() {
-    local file="$HOME/.zshrc"
-    touch "$file"
-    if ! grep -q 'PATH="\$HOME/bin' "$file" 2>/dev/null; then
-        echo "" >> "$file"
-        echo "# RANDI - Local AI" >> "$file"
-        echo 'export PATH="$HOME/bin:$PATH"' >> "$file"
-        echo 'export OLLAMA_KEEP_ALIVE="-1"' >> "$file"
-        echo "export OLLAMA_HOST=$OLLAMA_HOST" >> "$file"
-        echo "export RANDI_REPO=$RANDI_REPO" >> "$file"
-        info "PATH configurado en $file"
-    else
-        ok "PATH ya configurado en $file"
-    fi
-}
-
-_add_to_fish() {
-    local file="$HOME/.config/fish/config.fish"
-    mkdir -p "$HOME/.config/fish"
-    touch "$file"
-    if ! grep -q 'fish_add_path.*bin' "$file" 2>/dev/null; then
-        local header=""
-        header+="# RANDI - Local AI\n"
-        header+="fish_add_path \$HOME/bin\n"
-        header+="set -gx OLLAMA_KEEP_ALIVE -1\n"
-        header+="set -gx OLLAMA_HOST $OLLAMA_HOST\n"
-        header+="set -gx RANDI_REPO $RANDI_REPO\n"
-        if grep -q 'if status is-interactive' "$file" 2>/dev/null; then
-            local content
-            content=$(cat "$file")
-            echo -e "$header" > "$file"
-            echo "$content" >> "$file"
-        else
-            echo "" >> "$file"
-            echo -e "$header" >> "$file"
-        fi
-        info "PATH configurado en $file"
-    else
-        ok "PATH ya configurado en $file"
-    fi
-}
-
-_update_repo_url() {
-    echo ""
-    echo -n "URL del repositorio GitHub (deja vacio para saltar): "
-    read -r repo_url
-    if [ -n "$repo_url" ]; then
-        # Update the variable for this session
-        RANDI_REPO="$repo_url"
-        # Save to shell configs
-        for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
-            if [ -f "$f" ]; then
-                if grep -q 'RANDI_REPO' "$f" 2>/dev/null; then
-                    sed -i "s|export RANDI_REPO=.*|export RANDI_REPO=$repo_url|g" "$f" 2>/dev/null || true
-                fi
-            fi
-        done
-        # Save to randi config
-        local config_file="$HOME/.config/randi/config.json"
-        mkdir -p "$HOME/.config/randi"
-        if [ -f "$config_file" ]; then
-            python3 -c "
-import json
-cfg = json.load(open('$config_file'))
-cfg['repo_url'] = '$repo_url'
-json.dump(cfg, open('$config_file', 'w'), indent=2)
-" 2>/dev/null || true
-        else
-            echo "{\"repo_url\": \"$repo_url\"}" > "$config_file"
-        fi
-        ok "URL del repositorio configurada: $repo_url"
-    fi
-}
-
+# ─── Shell Config ────────────────────────────────────────────────────────
 configure_shell() {
-    title "Configurando shell"
+    echo ""
+    info "Configurando shell..."
 
-    # Configurar en TODOS los shells posibles
-    _add_to_bashrc
-    _add_to_zshrc
-    _add_to_fish
+    for sf in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
+        touch "$sf" 2>/dev/null || continue
+        grep -q 'PATH.*HOME/bin' "$sf" 2>/dev/null && continue
 
-    # Export for current session
+        case "$(basename "$sf")" in
+            config.fish)
+                echo "" >> "$sf"
+                echo "# RANDI" >> "$sf"
+                echo "fish_add_path \$HOME/bin" >> "$sf"
+                echo "set -gx OLLAMA_KEEP_ALIVE -1" >> "$sf"
+                echo "set -gx OLLAMA_HOST $OLLAMA_HOST" >> "$sf"
+                ;;
+            *)
+                echo "" >> "$sf"
+                echo "# RANDI" >> "$sf"
+                echo 'export PATH="$HOME/bin:$PATH"' >> "$sf"
+                echo 'export OLLAMA_KEEP_ALIVE="-1"' >> "$sf"
+                echo "export OLLAMA_HOST=$OLLAMA_HOST" >> "$sf"
+                ;;
+        esac
+        ok "Configurado: $(basename $sf)"
+    done
+
     export PATH="$HOME/bin:$PATH"
     export OLLAMA_KEEP_ALIVE="-1"
 }
 
-# ─── Configure OpenCode ──────────────────────────────────────────────────
+# ─── OpenCode Config ─────────────────────────────────────────────────────
 configure_opencode() {
-    title "Configurando OpenCode"
-
     if ! command -v opencode &>/dev/null; then
-        warn "OpenCode no esta instalado. Se saltara la integracion."
-        warn "Si instalas OpenCode despues, ejecuta: randi config"
-        return 0
+        dim "  opencode no instalado — se omite integración"
+        return
     fi
 
-    local opencode_config
-    opencode_config="$HOME/.config/opencode/opencode.jsonc"
+    local config_dir="$HOME/.config/opencode"
+    mkdir -p "$config_dir"
 
-    if [ ! -f "$opencode_config" ]; then
-        mkdir -p "$HOME/.config/opencode"
-    fi
-
-    # Create/replace with Ollama provider
-    cat > "$opencode_config" << 'EOF'
+    cat > "$config_dir/opencode.jsonc" << 'EOF'
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "RANDI (Ollama Local)",
-      "options": {
-        "baseURL": "http://localhost:11434/v1",
-        "apiKey": "ollama"
-      },
+      "options": { "baseURL": "http://localhost:11434/v1", "apiKey": "ollama" },
       "models": {
-        "deepseek-r1:7b": {
-          "name": "DeepSeek R1 7B (Razonamiento)",
-          "limit": { "context": 32768, "output": 4096 }
-        },
-        "qwen2.5-coder:7b": {
-          "name": "Qwen 2.5 Coder 7B (Codigo)",
-          "limit": { "context": 32768, "output": 4096 }
-        },
-        "qwen3:8b": {
-          "name": "Qwen3 8B (General)",
-          "limit": { "context": 32768, "output": 4096 }
-        },
-        "gemma4:2b": {
-          "name": "Gemma 4 2B (Rapido)",
-          "limit": { "context": 16384, "output": 4096 }
-        },
-        "deepseek-r1:1.5b": {
-          "name": "DeepSeek R1 1.5B (Razonamiento ligero)",
-          "limit": { "context": 16384, "output": 4096 }
-        },
-        "qwen2.5-coder:1.5b": {
-          "name": "Qwen 2.5 Coder 1.5B (Codigo ligero)",
-          "limit": { "context": 16384, "output": 4096 }
-        },
-        "qwen2.5-coder:0.5b": {
-          "name": "Qwen 2.5 Coder 0.5B (Super ligero)",
-          "limit": { "context": 8192, "output": 2048 }
-        },
-        "llama3.2:3b": {
-          "name": "Llama 3.2 3B (General ligero)",
-          "limit": { "context": 16384, "output": 4096 }
-        },
-        "qwen3:4b": {
-          "name": "Qwen3 4B (Chat ligero)",
-          "limit": { "context": 16384, "output": 4096 }
-        },
-        "phi3:mini": {
-          "name": "Phi-3 Mini (Microsoft)",
-          "limit": { "context": 8192, "output": 4096 }
-        },
-        "phi3:3.8b": {
-          "name": "Phi-3 3.8B (Microsoft)",
-          "limit": { "context": 8192, "output": 4096 }
-        },
-        "mistral:7b": {
-          "name": "Mistral 7B v0.3",
-          "limit": { "context": 32768, "output": 4096 }
-        }
+        "deepseek-r1:7b":     { "name": "DeepSeek R1 7B", "limit": { "context": 32768, "output": 4096 } },
+        "qwen2.5-coder:7b":   { "name": "Qwen 2.5 Coder 7B", "limit": { "context": 32768, "output": 4096 } },
+        "qwen3:8b":           { "name": "Qwen3 8B", "limit": { "context": 32768, "output": 4096 } },
+        "gemma4:2b":          { "name": "Gemma 4 2B", "limit": { "context": 16384, "output": 4096 } },
+        "deepseek-r1:1.5b":   { "name": "DeepSeek R1 1.5B", "limit": { "context": 16384, "output": 4096 } },
+        "qwen2.5-coder:1.5b": { "name": "Qwen 2.5 Coder 1.5B", "limit": { "context": 16384, "output": 4096 } },
+        "qwen2.5-coder:0.5b": { "name": "Qwen 2.5 Coder 0.5B", "limit": { "context": 8192, "output": 2048 } },
+        "llama3.2:3b":        { "name": "Llama 3.2 3B", "limit": { "context": 16384, "output": 4096 } },
+        "qwen3:4b":           { "name": "Qwen3 4B", "limit": { "context": 16384, "output": 4096 } },
+        "phi3:mini":          { "name": "Phi-3 Mini", "limit": { "context": 8192, "output": 4096 } },
+        "phi3:3.8b":          { "name": "Phi-3 3.8B", "limit": { "context": 8192, "output": 4096 } },
+        "mistral:7b":         { "name": "Mistral 7B", "limit": { "context": 32768, "output": 4096 } }
       }
     }
   }
 }
 EOF
 
-    ok "OpenCode configurado en $opencode_config"
-    dim "  Para usar: opencode -m ollama/qwen2.5-coder:7b"
+    ok "OpenCode configurado"
+    dim "  Uso: opencode -m ollama/qwen2.5-coder:7b"
 }
 
 # ─── Model Download ──────────────────────────────────────────────────────
 download_models() {
-    title "Descarga de modelos"
+    echo ""
+    echo "  ─── Selección de modelos ───"
+    echo ""
 
-    echo "Selecciona los modelos que deseas descargar:"
+    echo "  Bajo consumo (< 2GB RAM):"
+    echo "    1)  gemma4:2b            (1.5 GB)"
+    echo "    2)  deepseek-r1:1.5b     (1.1 GB)"
+    echo "    3)  qwen2.5-coder:1.5b   (0.9 GB)"
+    echo "    4)  qwen2.5-coder:0.5b   (0.4 GB)"
+    echo "    5)  phi3:mini            (2.0 GB)"
     echo ""
-    echo -e "${GRN}Bajo consumo (< 2GB RAM):${R}"
-    echo "  1) gemma4:2b            (1.5GB) - Rapido y ligero"
-    echo "  2) deepseek-r1:1.5b     (1.1GB) - Razonamiento ligero"
-    echo "  3) qwen2.5-coder:1.5b   (0.9GB) - Codigo ligero"
-    echo "  4) qwen2.5-coder:0.5b   (0.4GB) - Super ligero"
-    echo "  5) phi3:mini            (2.0GB) - Microsoft Phi-3"
+    echo "  Consumo medio (2-4 GB RAM):"
+    echo "    6)  llama3.2:3b          (2.0 GB)"
+    echo "    7)  qwen3:4b             (2.5 GB)"
+    echo "    8)  phi3:3.8b            (2.3 GB)"
     echo ""
-    echo -e "${YLW}Consumo medio (2-4GB RAM):${R}"
-    echo "  6) llama3.2:3b          (2.0GB) - Meta Llama 3.2"
-    echo "  7) qwen3:4b             (2.5GB) - Chat ligero"
-    echo "  8) phi3:3.8b            (2.3GB) - Microsoft Phi-3"
+    echo "  Consumo alto (4-8 GB RAM):"
+    echo "    9)  deepseek-r1:7b       (4.7 GB)"
+    echo "    10) qwen2.5-coder:7b     (4.7 GB)"
+    echo "    11) qwen3:8b             (4.5 GB)"
+    echo "    12) mistral:7b           (4.1 GB)"
     echo ""
-    echo -e "${RED}Consumo alto (4-8GB RAM):${R}"
-    echo "  9)  deepseek-r1:7b       (4.7GB) - Razonamiento y logica"
-    echo "  10) qwen2.5-coder:7b     (4.7GB) - Codigo y programacion"
-    echo "  11) qwen3:8b             (4.5GB) - Chat general"
-    echo "  12) mistral:7b           (4.1GB) - Mistral v0.3"
-    echo "  0)  Ninguno (lo hare despues)"
+    echo "  0)  Ninguno"
     echo ""
-    echo "Ejemplo: 1 2 3 (separados por espacio)"
-    echo -n "Selecciona: "
+    echo -n "  Opción (ej: 1 3 6): "
     read -r -a selections
 
     local first_model=""
     local has_valid=0
     local skip=0
+
     for opt in "${selections[@]}"; do
         case "$opt" in
             1) model="gemma4:2b" ;;
@@ -398,219 +226,153 @@ download_models() {
             11) model="qwen3:8b" ;;
             12) model="mistral:7b" ;;
             0|13) skip=1; continue ;;
-            *) warn "Opcion invalida: $opt, ignorada"; continue ;;
+            *) warn "Opción inválida: $opt"; continue ;;
         esac
         has_valid=1
-        info "Descargando $model (esto puede tomar varios minutos)..."
+        echo ""
+        info "Descargando $model..."
         ollama pull "$model"
-        ok "Modelo $model descargado"
+        ok "$model descargado"
         [ -z "$first_model" ] && first_model="$model"
     done
 
     if [ "$has_valid" = "0" ] && [ "$skip" = "0" ] && [ ${#selections[@]} -gt 0 ]; then
-        err "No seleccionaste ninguna opcion valida"
+        err "No seleccionaste opciones válidas"
         download_models
         return
     fi
 
-    # Set first downloaded model as default
     if [ -n "$first_model" ]; then
-        local config_file="$HOME/.config/randi/config.json"
         mkdir -p "$HOME/.config/randi"
-        if [ -f "$config_file" ]; then
+        local cfg="$HOME/.config/randi/config.json"
+        if [ -f "$cfg" ]; then
             python3 -c "
 import json
-cfg = json.load(open('$config_file'))
-cfg['model'] = '$first_model'
-json.dump(cfg, open('$config_file', 'w'), indent=2)
+c=json.load(open('$cfg'))
+c['model']='$first_model'
+json.dump(c,open('$cfg','w'),indent=2)
 " 2>/dev/null || true
         else
-            echo "{\"model\": \"$first_model\", \"temperature\": 0.7, \"last_session\": \"\"}" > "$config_file"
+            echo "{\"model\":\"$first_model\",\"temperature\":0.7,\"last_session\":\"\"}" > "$cfg"
         fi
     fi
 
     if [ "$has_valid" = "1" ]; then
         echo ""
-        echo -n "Descargar mas modelos? (s/N): "
+        echo -n "  ¿Descargar más modelos? (s/N): "
         read -r more
-        if [ "$more" = "s" ] || [ "$more" = "S" ]; then
-            download_models
-        fi
+        [ "$more" = "s" ] || [ "$more" = "S" ] && download_models
     fi
 }
 
-# ─── Show Summary ────────────────────────────────────────────────────────
+# ─── Summary ──────────────────────────────────────────────────────────────
 show_summary() {
     clear
     echo ""
-    echo -e "${GRN}${B}╔══════════════════════════════════════════════╗${R}"
-    echo -e "${GRN}${B}║${R}          Instalacion completada!            ${GRN}${B}║${R}"
-    echo -e "${GRN}${B}╚══════════════════════════════════════════════╝${R}"
+    echo "  ──────────────────────────────────────────────"
+    echo "    RANDI — Instalación completada"
+    echo "  ──────────────────────────────────────────────"
     echo ""
-    ok "RANDI - Asistente IA local instalado"
-    dim "  Creado por Sebastian Laguna"
+    ok "RANDI instalado correctamente"
     echo ""
-    echo -e "${BLU}${B}Comandos disponibles:${R}"
+    echo "  Comandos:"
+    echo "    randi              Menú interactivo"
+    echo "    randi chat         Chat con IA local"
+    echo "    randi serve        Iniciar servidor Ollama"
+    echo "    randi pull         Descargar modelos"
+    echo "    randi update       Actualizar RANDI"
     echo ""
-    echo -e "  ${GRN}randi${R}              Menu interactivo"
-    echo -e "  ${GRN}randi chat${R}         Chat TUI con IA local"
-    echo -e "  ${GRN}randi serve${R}        Iniciar servidor Ollama"
-    echo -e "  ${GRN}randi pull${R}         Descargar modelos"
-    echo -e "  ${GRN}randi update${R}       Actualizar RANDI (GitHub)"
+    echo "  Para empezar:"
+    echo "    randi serve"
+    echo "    randi chat"
     echo ""
-    echo -e "${BLU}${B}Integraciones:${R}"
-    echo ""
-    if command -v opencode &>/dev/null; then
-        echo -e "  ${GRN}opencode -m ollama/qwen2.5-coder:7b${R}"
-        dim "  Usar OpenCode con modelo local de codigo"
-    fi
-    echo ""
-    echo -e "${YLW}${B}NOTA:${R} Cierra y vuelve a abrir Termux, o ejecuta:"
-    echo ""
-    echo -e "  ${CYN}source ~/.bashrc${R}   (bash/zsh)"
-    echo -e "  ${CYN}source ~/.config/fish/config.fish${R}  (fish)"
-    echo ""
-    echo -e "  Para comenzar a usar RANDI ahora mismo, ejecuta:"
-    echo -e "  ${CYN}randi serve${R}"
-    echo -e "  ${CYN}randi chat${R}"
+    echo "  Recargar PATH: source $(get_profile)"
     echo ""
 }
 
-# ─── Main ────────────────────────────────────────────────────────────────
+# ─── Uninstall ────────────────────────────────────────────────────────────
 cmd_uninstall() {
+    clear
     echo ""
-    echo -e "${YLW}${B}╔══════════════════════════════════════╗${R}"
-    echo -e "${YLW}${B}║${R}     Desinstalar RANDI               ${YLW}${B}║${R}"
-    echo -e "${YLW}${B}╚══════════════════════════════════════╝${R}"
+    echo "  ──────────────────────────────────────────────"
+    echo "    Desinstalar RANDI"
+    echo "  ──────────────────────────────────────────────"
     echo ""
-    warn "Esto eliminara RANDI y todos sus componentes."
-    warn "Los modelos de Ollama se conservaran (aprox 1-8GB)."
+    warn "Se eliminarán los componentes de RANDI."
+    echo "  Los modelos de Ollama se conservan (~1-8 GB)."
     echo ""
-    echo "Se eliminara:"
-    echo "  - ~/bin/randi"
-    echo "  - ~/bin/ollama-chat"
-    echo "  - $RANDI_DIR/"
-    echo "  - $HOME/.config/randi/"
-    echo "  - $HOME/.config/opencode/opencode.jsonc"
-    echo "  - Entradas RANDI en ~/.bashrc, ~/.zshrc, config.fish"
-    echo ""
-    echo -n "Eliminar tambien Ollama? (s/N): "
+    echo -n "  ¿Eliminar también Ollama? (s/N): "
     read -r remove_ollama
-    echo ""
-    echo -n "Confirmar desinstalacion? (s/N): "
+    echo -n "  ¿Confirmar desinstalación? (s/N): "
     read -r confirm
-    if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
-        echo ""
-        ok "Desinstalacion cancelada."
-        return
-    fi
+    [ "$confirm" != "s" ] && [ "$confirm" != "S" ] && { echo ""; ok "Cancelado."; return; }
 
     echo ""
-    echo -e "${D}Preparando...${R}"
-
-    rm -f "$HOME/bin/randi" 2>/dev/null || true
-    rm -f "$HOME/bin/ollama-chat" 2>/dev/null || true
-    rm -rf "$RANDI_DIR" 2>/dev/null || true
-    rm -rf "$HOME/.config/randi" 2>/dev/null || true
+    rm -f "$HOME/bin/randi" "$HOME/bin/ollama-chat" 2>/dev/null || true
+    rm -rf "$RANDI_DIR" "$HOME/.config/randi" 2>/dev/null || true
     rm -f "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null || true
 
     for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
         [ -f "$f" ] && sed -i '/# RANDI/d' "$f" 2>/dev/null || true
         [ -f "$f" ] && sed -i '/RANDI_REPO/d' "$f" 2>/dev/null || true
-        [ -f "$f" ] && sed -i '/OLLAMA_KEEP_ALIVE/d' "$f" 2>/dev/null || true
-        [ -f "$f" ] && sed -i '/OLLAMA_HOST/d' "$f" 2>/dev/null || true
+        [ -f "$f" ] && sed -i '/OLLAMA/d' "$f" 2>/dev/null || true
         [ -f "$f" ] && sed -i 's|export PATH="$HOME/bin:\$PATH"||g' "$f" 2>/dev/null || true
     done
 
-    if [ "$remove_ollama" = "s" ] || [ "$remove_ollama" = "S" ]; then
-        echo -e "${D}Eliminando Ollama...${R}"
+    [ "$remove_ollama" = "s" ] || [ "$remove_ollama" = "S" ] && {
         npm uninstall -g @mmmbuto/ollama-termux 2>/dev/null || true
         rm -f "$(command -v ollama 2>/dev/null)" 2>/dev/null || true
-    fi
+    }
 
     echo ""
-    ok "RANDI desinstalado correctamente."
-    echo ""
+    ok "RANDI desinstalado"
 }
 
+# ─── Main ─────────────────────────────────────────────────────────────────
 main() {
     clear
     echo ""
-    echo -e "${CYN}${B}RANDI - Asistente IA local para Termux${R}"
-    echo -e "${D}por Sebastian Laguna${R}"
+    echo "  RANDI — Asistente IA local para Termux"
+    echo "  por Sebastian Laguna"
     echo ""
-    echo "1) Instalar RANDI completo"
-    echo "2) Desinstalar RANDI"
-    echo "0) Salir"
+    echo "  1) Instalar"
+    echo "  2) Desinstalar"
+    echo "  0) Salir"
     echo ""
-    echo -n "Selecciona: "
+    echo -n "  Opción: "
     read -r main_opt
     case "$main_opt" in
         1) ;;
-        2) cmd_uninstall; return ;;
-        0|*) echo ""; ok "Hasta luego!"; return ;;
+        2) cmd_uninstall; exit 0 ;;
+        0|*) echo ""; ok "Hasta luego"; exit 0 ;;
     esac
 
     clear
     echo ""
-    echo -e "${BLU}${B}Preparando app...${R}"
+    echo "  ──────────────────────────────────────────────"
+    echo "    Instalando RANDI"
+    echo "  ──────────────────────────────────────────────"
+
+    check_termux
+    install_deps
+    install_ollama
+    install_scripts
+    configure_shell
+    configure_opencode
+
     echo ""
-
-    check_termux > /dev/null 2>&1
-    install_deps > /dev/null 2>&1
-    install_ollama > /dev/null 2>&1
-    install_scripts > /dev/null 2>&1
-
-    export PATH="$HOME/bin:$PATH"
-    echo -e "${GRN}${B}✓${R} Preparando app..."
-
-    configure_shell > /dev/null 2>&1
-    echo -e "${GRN}${B}✓${R} Configurando shell..."
-
-    echo -e "${GRN}${B}✓${R} Iniciando servidor..."
+    info "Iniciando servidor Ollama..."
     nohup ollama serve > /dev/null 2>&1 &
     local serve_pid=$!
     disown "$serve_pid" 2>/dev/null || true
     sleep 3
 
-    configure_opencode > /dev/null 2>&1
-    echo -e "${GRN}${B}✓${R} Configurando OpenCode..."
-
     download_models
-
-    _update_repo_url
 
     pkill -f "ollama serve" 2>/dev/null || true
     sleep 1
 
     show_summary
-
-    for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
-        [ -f "$f" ] && source "$f" 2>/dev/null || true
-    done
-
-    echo ""
-    echo -e "${GRN}${B}RANDI listo para usar.${R}"
-    echo ""
-    echo -e "  ${CYN}randi --help${R}"
-    echo ""
 }
 
 main "$@"
-
-# Detectar si el script fue sourceado o ejecutado
-# Si fue sourceado, el PATH ya quedo configurado en la terminal actual
-if [ "$0" = "$BASH_SOURCE" ] || [ -z "$BASH_SOURCE" ]; then
-    # Ejecutado con bash install-ollama.sh
-    # El PATH se configuro en el perfil, hay que recargarlo
-    echo ""
-    dim "NOTA: Para usar randi en esta terminal:"
-    dim "  - Si usas bash/zsh:  source ~/.bashrc"
-    dim "  - Si usas fish:      source ~/.config/fish/config.fish"
-    dim "  - O abre una nueva terminal"
-    echo -e "  ${CYN}randi serve${R}"
-    dim ""
-    dim "La proxima vez ejecuta con source para que sea automatico:"
-    echo -e "  ${CYN}source install-ollama.sh${R}"
-    echo ""
-fi

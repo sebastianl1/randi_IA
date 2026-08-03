@@ -136,6 +136,21 @@ Modelos disponibles en OpenCode:
 - `ollama/llama3.2:3b` — General ligero
 - `ollama/qwen3:4b` — Chat ligero
 
+## Interfaz web
+
+Ejecuta `randi web` para abrir la interfaz web local con dos backends:
+
+- **Ollama** — modelos grandes via el servidor local.
+- **WebGPU** — modelos pequenos (<2B) corriendo en la GPU del navegador con Transformers.js.
+
+Modelos WebGPU disponibles: `Gemma 3 270M`, `Qwen2.5 0.5B`, `Qwen2.5 Coder 0.5B`, `TinyLlama 1.1B`, `Llama 3.2 1B`, `Gemma 3 1B`, `Qwen2.5 1.5B`, `Qwen2.5 Coder 1.5B`, `DeepSeek R1 1.5B`, `Phi-3 Mini 4K`.
+
+Caracteristicas:
+- Los modelos se descargan una sola vez y se cachean en el navegador.
+- Descarga robusta: reintenta con cuantizaciones q4/q8/fp16/fp32 y cae a CPU si WebGPU falla.
+- Conversacion multi-turno con historial y system prompt en ambos backends.
+- Barra de contexto dinamica segun el modelo y estadisticas de tokens.
+
 ## Variables de entorno
 
 | Variable | Default | Descripcion |

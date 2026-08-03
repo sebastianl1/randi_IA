@@ -1,5 +1,6 @@
 import { chat as ollamaChat, abort as ollamaAbort } from './ollama-client.js';
-import { generateStream, abortGenerationWebGPU } from './webgpu-client.js';
+import { generateStream, abortGenerationWebGPU, getModelMaxTokens } from './webgpu-client.js';
+import { DEFAULT_CONTEXT } from './config.js';
 
 const messagesEl = document.getElementById('messages');
 const inputEl = document.getElementById('chat-input');
@@ -10,6 +11,12 @@ const ctxIndicator = document.getElementById('ctx-indicator');
 
 let currentAbort = null;
 let isStreaming = false;
+let contextLimit = DEFAULT_CONTEXT;
+
+export function setContextLimit(limit) {
+  if (limit > 0) contextLimit = limit;
+  updateContextBar(getMessages());
+}
 
 export function removeWelcome() {
   const card = document.getElementById('welcome-card');
@@ -153,6 +160,27 @@ export function updateStreamingContent(text) {
   scrollToBottom();
 }
 
+// Render de markdown con throttling para no re-renderizar en cada token
+function createThrottledRenderer(contentEl, renderFn) {
+  let pending = false;
+  let lastText = '';
+  const apply = () => {
+    pending = false;
+    if (lastText) renderFn(lastText);
+  };
+  return {
+    update(text) {
+      lastText = text;
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(apply);
+    },
+    flush() {
+      if (lastText) renderFn(lastText);
+    },
+  };
+}
+
 export function finalizeStreaming(role, fullText, stats) {
   hideTyping();
   const el = document.getElementById('streaming-msg');
@@ -215,17 +243,21 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
       let fullText = '';
       const streamingEl = appendStreamingMessage('assistant');
       const contentEl = streamingEl.querySelector('.msg-content');
+      const renderer = createThrottledRenderer(contentEl, (text) => {
+        contentEl.innerHTML = renderMarkdown(text);
+        contentEl.dataset.content = text;
+        scrollToBottom();
+      });
 
       ollamaChat(
         model,
         messages,
         (token) => {
           fullText += token;
-          contentEl.innerHTML = renderMarkdown(fullText);
-          contentEl.dataset.content = fullText;
-          scrollToBottom();
+          renderer.update(fullText);
         },
         (data) => {
+          renderer.flush();
           if (data.aborted) {
             if (fullText) {
               finalizeStreaming('assistant', fullText, null);
@@ -259,15 +291,16 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
     await new Promise((resolve) => {
       let fullText = '';
       const streamingEl = appendStreamingMessage('assistant');
+      const chatMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+      const maxTokens = getModelMaxTokens(model);
 
       generateStream(
-        trimmed,
-        systemPrompt,
+        chatMessages,
         temperature,
-        512,
+        maxTokens,
         (token) => {
-          fullText += token;
-          updateStreamingContent(fullText);
+          fullText = token;
+          updateStreamingContent(token);
         },
         (data) => {
           if (data.aborted) {
@@ -277,8 +310,14 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
               hideTyping();
             }
           } else {
-            const responseText = data.response || fullText;
-            finalizeStreaming('assistant', responseText, null);
+            const text = data.response || fullText;
+            let stats = null;
+            if (text && data.elapsedMs) {
+              const secs = data.elapsedMs / 1000;
+              const approxTokens = Math.max(1, Math.round(text.length / 4));
+              stats = `${approxTokens} tok · ${(approxTokens / secs).toFixed(0)} tok/s · ${secs.toFixed(1)}s`;
+            }
+            finalizeStreaming('assistant', text, stats);
           }
           setInputState(false);
           resolve();
@@ -377,7 +416,7 @@ export function updateContextBar(messages) {
 
   const totalChars = messages.reduce((sum, m) => sum + m.content.length, 0);
   const approxTokens = Math.round(totalChars * 0.3);
-  const limit = 8192;
+  const limit = contextLimit;
   const pct = Math.min(100, Math.round((approxTokens / limit) * 100));
 
   const color = pct < 50 ? 'var(--green)' : pct < 80 ? 'var(--yellow)' : 'var(--red)';
