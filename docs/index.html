@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO básico -->
+  <title>RANDI — Asistente de IA local en Termux para Android ARM64</title>
+  <meta name="description" content="Instala RANDI en Termux: asistente de IA 100% local para Android ARM64. Ejecuta DeepSeek, Qwen, Gemma, Mistral y más sin conexión a internet ni consumo de tokens. Chat TUI, interfaz web y WebGPU.">
+  <meta name="keywords" content="randi termux, ia local android, asistente ia termux, ollama termux, deepseek termux, qwen termux, gemma termux, mistral termux, llm local android, chat tui termux, randi ia, webgpu termux, modelos locales android, ia sin internet termux, ollama android arm64">
+  <meta name="author" content="Sebastian Laguna">
+  <meta name="robots" content="index, follow">
+  <meta name="revisit-after" content="7 days">
+  <meta name="language" content="Spanish">
+  <meta name="distribution" content="global">
+  <meta name="rating" content="general">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="canonical" href="https://sebastianl1.github.io/randi_IA/">
+
+  <!-- Hreflang (idiomas) -->
+  <link rel="alternate" hreflang="es" href="https://sebastianl1.github.io/randi_IA/">
+  <link rel="alternate" hreflang="en" href="https://sebastianl1.github.io/randi_IA/?lang=en">
+  <link rel="alternate" hreflang="pt" href="https://sebastianl1.github.io/randi_IA/?lang=pt">
+  <link rel="alternate" hreflang="fr" href="https://sebastianl1.github.io/randi_IA/?lang=fr">
+  <link rel="alternate" hreflang="de" href="https://sebastianl1.github.io/randi_IA/?lang=de">
+  <link rel="alternate" hreflang="zh" href="https://sebastianl1.github.io/randi_IA/?lang=zh">
+  <link rel="alternate" hreflang="x-default" href="https://sebastianl1.github.io/randi_IA/">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sebastianl1.github.io/randi_IA/">
+  <meta property="og:title" content="RANDI — Asistente de IA local en Termux para Android ARM64">
+  <meta property="og:description" content="Asistente de IA 100% local en Termux. Ejecuta DeepSeek, Qwen, Gemma, Mistral y más sin conexión a internet ni consumo de tokens.">
+  <meta property="og:image" content="https://sebastianl1.github.io/randi_IA/imagenes/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="RANDI funcionando dentro de Termux en Android ARM64">
+  <meta property="og:site_name" content="RANDI - Termux">
+  <meta property="og:locale" content="es_ES">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@sebastianl1">
+  <meta name="twitter:creator" content="@sebastianl1">
+  <meta name="twitter:title" content="RANDI — Asistente de IA local en Termux para Android ARM64">
+  <meta name="twitter:description" content="Asistente de IA 100% local en Termux. Sin conexión ni consumo de tokens.">
+  <meta name="twitter:image" content="https://sebastianl1.github.io/randi_IA/imagenes/og-image.jpg">
+  <meta name="twitter:image:alt" content="RANDI funcionando dentro de Termux en Android ARM64">
+
+  <!-- JSON-LD: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RANDI - Termux",
+    "operatingSystem": "Android (Termux, ARM64 aarch64)",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "AI Assistant",
+    "description": "Asistente de IA 100% local para Termux en Android ARM64. Ejecuta modelos LLM (DeepSeek, Qwen, Gemma, Mistral) sin conexión a internet ni consumo de tokens. Chat TUI, interfaz web con WebGPU y Ollama.",
+    "author": { "@type": "Person", "name": "Sebastian Laguna" },
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://github.com/sebastianl1/randi_IA",
+    "softwareVersion": "1.2.0",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" },
+    "featureList": "IA 100% local en Termux, sin conexión a internet, sin consumo de tokens, Ollama para Termux, modelos DeepSeek/Qwen/Gemma/Mistral, chat TUI con streaming, interfaz web con WebGPU (Transformers.js), integración con OpenCode, gestión de modelos"
+  }
+  </script>
+
+  <!-- JSON-LD: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es RANDI?",
+        "acceptedAnswer": { "@type": "Answer", "text": "RANDI es un asistente de IA 100% local para Termux en Android. Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y Mistral directamente en tu dispositivo, sin conexión a internet ni consumo de tokens." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Necesito internet para usarlo?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Solo se necesita internet la primera vez para descargar los modelos; después RANDI funciona completamente sin conexión a internet ni consumo de tokens." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuáles son los requisitos mínimos?",
+        "acceptedAnswer": { "@type": "Answer", "text": "4GB de RAM, 3GB de almacenamiento libre, Android 11+ y Termux desde F-Droid. Para los modelos grandes se recomienda 8GB+ de RAM. Solo dispositivos ARM64 (aarch64)." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Por qué debo instalar Termux desde F-Droid y no desde Google Play?",
+        "acceptedAnswer": { "@type": "Answer", "text": "La versión de Termux en Google Play está desactualizada y abandonada. La versión oficial se mantiene en F-Droid (https://f-droid.org/packages/com.termux/), la única compatible con este instalador." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo funciona la interfaz web y WebGPU?",
+        "acceptedAnswer": { "@type": "Answer", "text": "'randi web' abre una interfaz web local con dos backends: Ollama para modelos grandes y WebGPU para modelos pequeños (<2B) que corren en la GPU del navegador con Transformers.js. Los modelos se cachean en el navegador." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Puedo usar los modelos con OpenCode?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Sí. Si tienes OpenCode instalado, el instalador configura automáticamente el provider local. Usa 'opencode -m ollama/qwen2.5-coder:7b' o cualquier modelo como ollama/deepseek-r1:7b, ollama/qwen3:8b, ollama/gemma4:2b." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo actualizo RANDI?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ejecuta 'randi update' para actualizar desde GitHub o localmente. Para agregar más modelos usa 'randi pull'." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué pasa si me quedo sin memoria?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Usa modelos más pequeños. Revisa 'randi ps' para ver los modelos en RAM y 'free -h' para la memoria disponible." }
+      }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://sebastianl1.github.io/randi_IA/" },
+      { "@type": "ListItem", "position": 2, "name": "RANDI en Termux", "item": "https://sebastianl1.github.io/randi_IA/" }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: WebSite + Person -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "RANDI - Termux",
+    "url": "https://sebastianl1.github.io/randi_IA/",
+    "inLanguage": "es",
+    "author": { "@type": "Person", "name": "Sebastian Laguna", "url": "https://github.com/sebastianl1" }
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --bg2: #10131b;
+      --card: #151a23;
+      --border: #232a36;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --dim: #6b7280;
+      --purple: #3b82f6;
+      --pink: #22d3ee;
+      --cyan: #22d3ee;
+      --green: #22d3ee;
+      --grad: linear-gradient(90deg, #3b82f6, #22d3ee);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(59, 130, 246, .35); color: #fff; }
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #2b3342; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a4457; }
+    a { color: #22d3ee; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace; }
+
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+
+    /* Navbar */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px);
+      background: rgba(11, 13, 18, .82);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { max-width: 1080px; margin: 0 auto; padding: 0 22px; height: 62px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #fff; font-size: 1.02rem; }
+    .nav-logo:hover { text-decoration: none; }
+    .nav-logo svg { width: 24px; height: 24px; }
+    .nav-links { display: flex; align-items: center; gap: 22px; }
+    .nav-links a { color: var(--muted); font-size: .92rem; }
+    .nav-links a:hover { color: #fff; text-decoration: none; }
+    .btn {
+      display: inline-block; padding: 11px 24px; border-radius: 9px;
+      background: var(--grad); color: #fff; font-weight: 600; font-size: .95rem;
+      border: none; cursor: pointer; text-decoration: none; transition: transform .15s, box-shadow .15s;
+    }
+    .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,.35); }
+    .btn.ghost { background: transparent; border: 1px solid #374151; color: #d1d5db; box-shadow: none; }
+    .btn.ghost:hover { border-color: var(--purple); color: #fff; }
+    .btn.small { padding: 8px 16px; font-size: .85rem; }
+
+    /* Selector de idioma (dropdown custom) */
+    .lang-wrap { position: relative; }
+    .lang-btn {
+      display: flex; align-items: center; gap: 7px; cursor: pointer;
+      background: var(--card); color: #fff; border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 12px; font-size: .85rem; font-weight: 600; font-family: inherit;
+    }
+    .lang-btn:hover { border-color: rgba(59,130,246,.5); }
+    .lang-btn:focus-visible { outline: 2px solid var(--purple); outline-offset: 1px; }
+    .lang-btn svg { width: 16px; height: 16px; color: #60a5fa; flex-shrink: 0; }
+    .lang-btn .chev { width: 12px; height: 12px; transition: transform .25s; color: var(--muted); }
+    .lang-wrap.open .lang-btn .chev { transform: rotate(180deg); }
+    .lang-menu {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 300;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.5); padding: 5px; min-width: 148px; list-style: none;
+    }
+    .lang-menu.open { display: block; animation: fadeUp .2s ease; }
+    .lang-menu a {
+      display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 7px;
+      color: var(--muted); font-size: .85rem;
+    }
+    .lang-menu a:hover { background: rgba(59,130,246,.14); color: #fff; text-decoration: none; }
+    .lang-menu a[aria-selected="true"] { background: rgba(59,130,246,.14); color: #fff; }
+    .lang-menu .check { display: none; color: var(--green); font-weight: 700; }
+    .lang-menu a[aria-selected="true"] .check { display: inline; }
+
+    /* Hero */
+    .hero { position: relative; text-align: center; padding: 84px 22px 40px; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: -20% -10% auto; height: 420px; z-index: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,.22), transparent 62%);
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .badge-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 999px;
+      background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.35); color: #60a5fa; font-size: .8rem; font-weight: 600;
+    }
+    .pill.green { background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.3); color: #60a5fa; }
+    h1 { font-size: clamp(1.9rem, 5vw, 3.2rem); line-height: 1.15; color: #fff; font-weight: 800; letter-spacing: -.02em; }
+    h1 .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .tagline { color: var(--muted); font-size: 1.12rem; max-width: 640px; margin: 18px auto 0; }
+    .hero-cta { margin-top: 30px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .hero-meta { margin-top: 20px; color: var(--dim); font-size: .85rem; }
+
+    /* Terminal mockup */
+    .term-wrap { margin: 46px auto 0; max-width: 760px; text-align: left; }
+    .term {
+      background: #0d1017; border: 1px solid #2b3342; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(59,130,246,.08);
+    }
+    .term-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #141926; border-bottom: 1px solid #232a36; }
+    .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .term-bar span.title { margin-left: 8px; color: var(--dim); font-size: .8rem; }
+    .term-body img { width: 100%; display: block; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 64px 0; }
+    .stat {
+      text-align: center; padding: 22px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    }
+    .stat b { display: block; font-size: 1.5rem; color: #fff; }
+    .stat span { color: var(--muted); font-size: .85rem; }
+
+    /* Secciones */
+    section { padding: 72px 0; }
+    section.alt { background: linear-gradient(180deg, var(--bg), #0d1017); }
+    .sec-head { text-align: center; max-width: 640px; margin: 0 auto 46px; }
+    .sec-eyebrow { color: var(--purple); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; margin-bottom: 10px; }
+    .sec-head h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); color: #fff; font-weight: 800; }
+    .sec-head p { color: var(--muted); margin-top: 12px; }
+
+    /* Steps */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; counter-reset: step; }
+    .step { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 26px 22px; }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; top: -16px; left: 22px; width: 34px; height: 34px; border-radius: 50%;
+      background: var(--grad); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 18px rgba(59,130,246,.4);
+    }
+    .step h3 { color: #fff; font-size: 1.05rem; margin-bottom: 8px; }
+    .step p { color: var(--muted); font-size: .92rem; }
+
+    /* Features */
+    .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .feat { display: flex; gap: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: border-color .2s, transform .2s; }
+    .feat:hover { border-color: rgba(59,130,246,.5); transform: translateY(-2px); }
+    .feat-icon {
+      flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      background: rgba(59,130,246,.14); border: 1px solid rgba(59,130,246,.3); color: #60a5fa;
+    }
+    .feat-icon svg { width: 24px; height: 24px; }
+    .feat h3 { color: #fff; font-size: 1rem; margin-bottom: 6px; }
+    .feat p { color: var(--muted); font-size: .9rem; }
+
+    /* Terminal + copy */
+    .term-code { position: relative; margin: 14px 0; }
+    .term-code pre {
+      background: #0d1017; border: 1px solid #2b3342; border-radius: 12px; padding: 18px 52px 18px 18px;
+      overflow-x: auto; font-size: .88rem; line-height: 1.7;
+    }
+    .term-code .c-copy {
+      position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: .75rem;
+      background: #1a2130; color: var(--muted); border: 1px solid #2b3342; border-radius: 7px; cursor: pointer;
+    }
+    .term-code .c-copy:hover { color: #fff; border-color: var(--purple); }
+    .term-code .c-copy.ok { color: var(--green); border-color: rgba(52,211,153,.5); }
+    .cmd { color: #60a5fa; font-weight: 600; }
+    .cm { color: var(--muted); }
+
+    /* Tabs instalación */
+    .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; }
+    .tab {
+      padding: 9px 20px; border-radius: 9px; border: 1px solid var(--border); background: var(--card);
+      color: var(--muted); cursor: pointer; font-size: .9rem; font-weight: 600;
+    }
+    .tab.active { background: var(--grad); color: #fff; border-color: transparent; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeUp .35s ease; }
+
+    /* FAQ */
+    .faq { max-width: 760px; margin: 0 auto; }
+    .faq-item { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; background: var(--card); }
+    .faq-q {
+      width: 100%; text-align: left; background: none; border: none; color: #fff; font-size: 1rem; font-weight: 600;
+      padding: 18px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .faq-q .chev { transition: transform .25s; color: var(--purple); flex-shrink: 0; }
+    .faq-item.open .chev { transform: rotate(180deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+    .faq-a p { padding: 0 20px 18px; color: var(--muted); font-size: .92rem; }
+
+    /* opencode box */
+    .opencode-box { max-width: 760px; margin: 0 auto; }
+    .opencode-box h3 { color: #fff; font-size: 1.2rem; margin-bottom: 10px; }
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 8px; }
+    .model-card {
+      display: flex; flex-direction: column; gap: 8px; text-align: left;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+      cursor: pointer; transition: border-color .2s, transform .2s; color: inherit; font: inherit; line-height: inherit;
+    }
+    .model-card:hover { border-color: rgba(59,130,246,.5); transform: translateY(-2px); }
+    .model-card:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+    .model-card .model-name { color: #fff; font-weight: 600; font-size: .98rem; }
+    .model-card .model-id {
+      font-family: "SF Mono", "Cascadia Code", Consolas, monospace; font-size: .78rem;
+      color: #60a5fa; background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.25);
+      padding: 5px 10px; border-radius: 7px; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45;
+    }
+    .model-card .model-copy { color: var(--dim); font-size: .72rem; }
+    .model-card.ok { border-color: rgba(52,211,153,.5); }
+    .model-card.ok .model-copy { color: var(--green); }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 44px 0 56px; margin-top: 40px; }
+    .foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px; }
+    .foot-grid h4 { color: #fff; font-size: .9rem; margin-bottom: 12px; }
+    .foot-grid ul { list-style: none; }
+    .foot-grid li { margin: 8px 0; }
+    .foot-grid a { color: var(--muted); font-size: .88rem; }
+    .foot-grid a:hover { color: #fff; }
+    .foot-bottom { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--dim); font-size: .82rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .foot-tags { color: var(--dim); font-size: .78rem; line-height: 2; }
+
+    /* Animaciones */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+    /* Responsive */
+    img { max-width: 100%; height: auto; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    @media (max-width: 640px) {
+      .nav-links a:not(.btn) { display: none; }
+      .nav-links .lang-menu a { display: flex; }
+      .nav-inner { padding: 0 14px; height: 58px; }
+      .nav-links { gap: 10px; }
+      .nav-logo { font-size: .92rem; gap: 8px; }
+      .nav-logo svg { width: 22px; height: 22px; }
+      .lang-btn { padding: 6px 10px; }
+      .btn.small { padding: 7px 14px; font-size: .8rem; }
+      .hero { padding: 56px 16px 30px; }
+      section { padding: 56px 0; }
+      .hero-cta { flex-direction: column; align-items: stretch; max-width: 320px; margin-left: auto; margin-right: auto; }
+      .hero-cta .btn { text-align: center; }
+      .tabs { flex-direction: column; }
+      .tab { flex: 1; }
+      .foot-grid { grid-template-columns: 1fr; }
+      .term-bar span.title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    @media (max-width: 480px) {
+      .nav-logo .grad { display: none; }
+      .lang-label { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lang-menu { min-width: 150px; max-height: 60vh; overflow-y: auto; }
+      .term-code pre { font-size: .82rem; }
+      .stat { padding: 16px 8px; }
+      .stat b { font-size: 1.25rem; }
+      .tagline { font-size: 1rem; }
+      .btn { padding: 12px 20px; min-height: 44px; }
+      .step { padding: 22px 18px; }
+      .feat { padding: 18px; }
+      .badge-row { gap: 6px; }
+      .pill { padding: 5px 10px; font-size: .74rem; }
+      .hero-meta { font-size: .8rem; }
+      .model-card { padding: 14px; }
+    }
+  </style>
+
+  <!-- Cloudflare Web Analytics -->
+  <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TU_TOKEN_CF_RANDI"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 10h6M9 14h4"/></svg>
+        RANDI <span class="grad" style="-webkit-text-fill-color:initial">· Termux</span>
+      </a>
+      <div class="nav-links">
+        <a href="#funciona" data-i18n="nav.how">Cómo funciona</a>
+        <a href="#caracteristicas" data-i18n="nav.features">Características</a>
+        <a href="#instalacion" data-i18n="nav.install">Instalación</a>
+        <a href="#uso" data-i18n="nav.usage">Uso</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <div class="lang-wrap" id="langWrap">
+          <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Idioma / Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="lang-label" id="langLabel">Español</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <ul class="lang-menu" id="langMenu" role="listbox" aria-label="Idiomas">
+            <li><a role="option" aria-selected="true" data-lang="es" href="?lang=es"><span class="check">✓ </span>Español</a></li>
+            <li><a role="option" aria-selected="false" data-lang="en" href="?lang=en"><span class="check">✓ </span>English</a></li>
+            <li><a role="option" aria-selected="false" data-lang="pt" href="?lang=pt"><span class="check">✓ </span>Português</a></li>
+            <li><a role="option" aria-selected="false" data-lang="fr" href="?lang=fr"><span class="check">✓ </span>Français</a></li>
+            <li><a role="option" aria-selected="false" data-lang="de" href="?lang=de"><span class="check">✓ </span>Deutsch</a></li>
+            <li><a role="option" aria-selected="false" data-lang="zh" href="?lang=zh"><span class="check">✓ </span>中文</a></li>
+          </ul>
+        </div>
+        <a class="btn small" href="https://github.com/sebastianl1/randi_IA" rel="noopener" data-i18n="nav.github">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="badge-row">
+        <span class="pill">v1.2.0</span>
+        <span class="pill green" data-i18n="hero.badge_local">100% local</span>
+        <span class="pill" data-i18n="hero.badge_offline">Sin internet</span>
+        <span class="pill">ARM64</span>
+      </div>
+      <h1>RANDI <span class="grad" data-i18n="hero.title_span">en Termux</span></h1>
+      <p class="tagline" data-i18n="hero.tagline">Asistente de IA 100% local para Termux. Ejecuta DeepSeek, Qwen, Gemma y Mistral directamente en tu Android, sin conexión a internet ni consumo de tokens.</p>
+      <div class="hero-cta">
+        <a class="btn" href="#instalacion" data-i18n="hero.cta_install">Instalar ahora</a>
+        <a class="btn ghost" href="https://github.com/sebastianl1/randi_IA" rel="noopener" data-i18n="hero.cta_github">Ver en GitHub</a>
+      </div>
+      <p class="hero-meta"><span data-i18n="hero.meta_pre">Open Source · Licencia MIT · Por </span><a href="https://sebastianl1.github.io/Portafolio/" rel="noopener">Sebastian Laguna</a></p>
+
+      <div class="term-wrap">
+        <div class="term">
+          <div class="term-bar">
+            <span class="term-dot" style="background:#ff5f57"></span>
+            <span class="term-dot" style="background:#febc2e"></span>
+            <span class="term-dot" style="background:#28c840"></span>
+            <span class="title">Termux — randi</span>
+          </div>
+          <img src="imagenes/randi1.jpg" alt="Screenshot de RANDI ejecutándose en Termux dentro de Android ARM64">
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="wrap reveal">
+      <div class="stats">
+        <div class="stat"><b>100%</b><span data-i18n="stat.local">Local</span></div>
+        <div class="stat"><b>0</b><span data-i18n="stat.tokens">Consumo de tokens</span></div>
+        <div class="stat"><b>4GB</b><span data-i18n="stat.ram">RAM mínima</span></div>
+        <div class="stat"><b>MIT</b><span data-i18n="stat.oss">Open Source</span></div>
+      </div>
+    </div>
+
+    <!-- Cómo funciona -->
+    <section id="funciona" class="alt">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div class="sec-eyebrow" data-i18n="funcion.eyebrow">Cómo funciona</div>
+          <h2 data-i18n="funcion.title">IA local con Ollama en Termux</h2>
+          <p data-i18n="funcion.sub">RANDI instala Ollama nativo en Termux y descarga modelos de lenguaje para ejecutarlos en tu dispositivo. Sin nube, sin APIs, sin costos por uso.</p>
+        </div>
+        <div class="steps">
+          <div class="step reveal"><h3 data-i18n="funcion.step1_t">Ollama nativo en Termux</h3><p data-i18n="funcion.step1_d">El instalador instala Ollama directamente en Termux, sin proot ni máquinas virtuales.</p></div>
+          <div class="step reveal"><h3 data-i18n="funcion.step2_t">Modelos locales</h3><p data-i18n="funcion.step2_d">Descarga modelos como DeepSeek, Qwen, Gemma y Mistral. Una vez descargados, todo funciona sin conexión.</p></div>
+          <div class="step reveal"><h3 data-i18n="funcion.step3_t">Chat TUI y web</h3><p data-i18n="funcion.step3_d">Usa la terminal interactiva con streaming o abre una interfaz web con WebGPU para modelos pequeños.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Características -->
+    <section id="caracteristicas">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div class="sec-eyebrow" data-i18n="feat.eyebrow">Características</div>
+          <h2 data-i18n="feat.title">IA de verdad, sin conexión</h2>
+          <p data-i18n="feat.sub">Todo lo que necesitas para tener un asistente de IA funcionando en tu Android ARM64.</p>
+        </div>
+        <div class="feat-grid">
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+            <div><h3 data-i18n="feat1_t">100% local</h3><p data-i18n="feat1_d">Tus datos y conversaciones nunca salen de tu dispositivo. Sin nube ni terceros.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a.5.5 0 0 1 .48.74l-7.91 13.4a.5.5 0 0 1-.86-.47l1.92-6.02A1 1 0 0 0 13 17z"/></svg></div>
+            <div><h3 data-i18n="feat2_t">Sin consumo de tokens</h3><p data-i18n="feat2_d">Usa los modelos sin límites, sin cuentas y sin gastar en APIs o suscripciones.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></div>
+            <div><h3 data-i18n="feat3_t">WebGPU en el navegador</h3><p data-i18n="feat3_d">La interfaz web corre modelos pequeños (<2B) en la GPU con Transformers.js y los cachea en el navegador.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5a3 3 0 0 1 3-3h4l2 3h6a3 3 0 0 1 3 3v2"/><path d="M2 5v14a2 2 0 0 0 2 2h8"/><path d="M22 12l-7.5 7.5L11 22l.5-3.5L19 11z"/></svg></div>
+            <div><h3 data-i18n="feat4_t">Instalación con un clic</h3><p data-i18n="feat4_d">Un script interactivo verifica el entorno, instala Ollama y deja tu asistente listo en minutos.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div><h3 data-i18n="feat5_t">Compatibilidad con OpenCode</h3><p data-i18n="feat5_d">Con OpenCode instalado usa los modelos locales como provider, por ejemplo <code>opencode -m ollama/qwen2.5-coder:7b</code>.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></div>
+            <div><h3 data-i18n="feat6_t">Catálogo de modelos</h3><p data-i18n="feat6_d">Elige entre DeepSeek, Qwen, Gemma y Mistral en varios tamaños, de 0.5B a 8B, con un comando.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Instalación -->
+    <section id="instalacion" class="alt">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div class="sec-eyebrow" data-i18n="install.eyebrow">Instalación</div>
+          <h2 data-i18n="install.title">Listo en pocos minutos</h2>
+          <p data-i18n="install.sub">Elige tu nivel y copia el bloque de comandos.</p>
+        </div>
+
+        <div class="tabs reveal">
+          <button class="tab active" data-tab="nuevo" data-i18n="install.tab_nuevo">Nuevo en Termux</button>
+          <button class="tab" data-tab="experto" data-i18n="install.tab_experto">Ya uso Termux</button>
+        </div>
+
+        <div class="tab-pane active" id="pane-nuevo">
+          <div class="term-code reveal">
+            <pre><code><span class="cm" data-i18n="install.nuevo.c1"># 1. Actualizar e instalar dependencias</span>
+<span class="cmd">pkg update</span> <span class="cmd">&&</span> <span class="cmd">pkg upgrade</span> -y
+<span class="cmd">pkg install</span> git curl tar -y
+
+<span class="cm" data-i18n="install.nuevo.c2"># 2. Clonar e instalar</span>
+<span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
+<span class="cmd">cd</span> randi_IA
+<span class="cmd">bash</span> install-ollama.sh</code></pre>
+            <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
+          </div>
+          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.nuevo.hint">¿Primera vez con Termux? <a href="https://github.com/sebastianl1/randi_IA#requisitos">Lee los requisitos y la guía</a> antes de empezar.</p>
+        </div>
+
+        <div class="tab-pane" id="pane-experto">
+          <div class="term-code reveal">
+            <pre><code><span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
+<span class="cmd">cd</span> randi_IA
+<span class="cmd">bash</span> install-ollama.sh</code></pre>
+            <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
+          </div>
+          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.experto.hint">El instalador verifica el entorno (RAM, almacenamiento, ARM64), instala Ollama y configura OpenCode automáticamente.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Uso + proveedores -->
+    <section id="uso">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div class="sec-eyebrow" data-i18n="uso.eyebrow">Uso</div>
+          <h2 data-i18n="uso.title">Empieza a usar RANDI</h2>
+          <p data-i18n="uso.sub">Comandos principales para trabajar con tu asistente de IA desde Termux.</p>
+        </div>
+
+        <div class="term-code reveal" style="max-width:640px;margin:0 auto 46px">
+          <pre><code><span class="cmd">randi</span>                <span class="cm" data-i18n="uso.c1"># Iniciar el chat interactivo</span>
+<span class="cmd">randi chat -m model</span>  <span class="cm" data-i18n="uso.c2"># Chat con un modelo específico</span>
+<span class="cmd">randi web</span>           <span class="cm" data-i18n="uso.c3"># Abrir la interfaz web local</span>
+<span class="cmd">randi update</span>         <span class="cm" data-i18n="uso.c4"># Actualizar RANDI</span></code></pre>
+          <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
+        </div>
+
+        <div class="opencode-box reveal">
+          <h3 data-i18n="opencode.title">Compatibilidad con OpenCode</h3>
+          <p style="color:var(--muted)" data-i18n="opencode.desc">Si tienes <a href="https://github.com/anomalyco/opencode" rel="noopener">OpenCode</a> instalado, el instalador configura automáticamente los modelos locales de RANDI como provider:</p>
+          <div class="term-code" style="margin-top:14px">
+            <pre><code><span class="cmd">opencode -m ollama/qwen2.5-coder:7b</span> <span class="cm" data-i18n="opencode.example">"Crea un script en Python"</span></code></pre>
+            <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
+          </div>
+        </div>
+
+        <div class="reveal" style="max-width:760px;margin:44px auto 0">
+          <h3 style="color:#fff;font-size:1.2rem;margin-bottom:6px" data-i18n="models.title">Catálogo de modelos</h3>
+          <p style="color:var(--muted);font-size:.92rem;margin-bottom:18px" data-i18n="models.hint">Modelos optimizados para Android ARM64, de 0.5B a 8B de parámetros.</p>
+          <div class="model-grid">
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">deepseek-r1:7b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5c0 1-.3 1.9-.8 2.7A5 5 0 0 1 17 14a5 5 0 0 1-5 5"/><path d="M12 2a5 5 0 0 0-5 5c0 1 .3 1.9.8 2.7A5 5 0 0 0 7 14a5 5 0 0 0 5 5"/><path d="M12 2v22"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">qwen2.5-coder:7b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">qwen3:8b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6" opacity=".5"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">gemma4:2b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">mistral:7b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">deepseek-r1:1.5b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">qwen2.5-coder:1.5b</h3></div></div>
+            <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div><h3 style="color:#fff;font-size:.98rem">qwen2.5-coder:0.5b</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="alt">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div class="sec-eyebrow" data-i18n="faq.eyebrow">FAQ</div>
+          <h2 data-i18n="faq.title">Preguntas frecuentes</h2>
+          <p data-i18n="faq.sub">Resolvemos las dudas más comunes sobre RANDI en Termux.</p>
+        </div>
+        <div class="faq">
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq1.q">¿Qué es RANDI?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq1.a">RANDI es un asistente de IA 100% local para Termux en Android. Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y Mistral directamente en tu dispositivo, sin conexión a internet ni consumo de tokens.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq2.q">¿Necesito internet para usarlo?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq2.a">No. Solo se necesita internet la primera vez para descargar los modelos; después RANDI funciona completamente sin conexión a internet ni consumo de tokens.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq3.q">¿Cuáles son los requisitos mínimos?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq3.a"><strong>4GB</strong> de RAM, <strong>3GB</strong> de almacenamiento libre, <strong>Android 11+</strong> y Termux desde <a href="https://f-droid.org/packages/com.termux/">F-Droid</a>. Para los modelos grandes se recomienda 8GB+ de RAM. Solo dispositivos ARM64 (aarch64).</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq4.q">¿Por qué debo instalar Termux desde F-Droid y no desde Google Play?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq4.a">La versión de Termux en Google Play está desactualizada y abandonada. La versión oficial se mantiene en <a href="https://f-droid.org/packages/com.termux/">F-Droid</a>, que es la única compatible con este instalador.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq5.q">¿Cómo funciona la interfaz web y WebGPU?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq5.a"><code>randi web</code> abre una interfaz web local con dos backends: <strong>Ollama</strong> para modelos grandes y <strong>WebGPU</strong> para modelos pequeños (&lt;2B) que corren en la GPU del navegador con Transformers.js. Los modelos se cachean en el navegador.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq6.q">¿Puedo usar los modelos con OpenCode?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq6.a">Sí. Si tienes <a href="https://github.com/anomalyco/opencode" rel="noopener">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq7.q">¿Cómo actualizo RANDI?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq7.a">Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq8.q">¿Qué pasa si me quedo sin memoria?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq8.a">Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <h4 data-i18n="footer.about_h">RANDI · Termux</h4>
+          <p style="color:var(--muted);font-size:.88rem" data-i18n="footer.about_d">Asistente de IA 100% local para Termux en Android ARM64. Ejecuta DeepSeek, Qwen, Gemma y Mistral sin conexión a internet ni consumo de tokens.</p>
+        </div>
+        <div>
+          <h4 data-i18n="footer.res_h">Recursos</h4>
+          <ul>
+            <li><a href="#instalacion" data-i18n="footer.res.install">Instalación</a></li>
+            <li><a href="#uso" data-i18n="footer.res.commands">Comandos</a></li>
+            <li><a href="#faq" data-i18n="footer.res.faq">FAQ</a></li>
+            <li><a href="https://github.com/sebastianl1/randi_IA/blob/main/README.md" rel="noopener" data-i18n="footer.res.readme">README</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.links_h">Enlaces</h4>
+          <ul>
+            <li><a href="https://github.com/sebastianl1/randi_IA" rel="noopener" data-i18n="footer.links.repo">Repositorio</a></li>
+            <li><a href="https://sebastianl1.github.io/Portafolio/" rel="noopener" data-i18n="footer.links.portfolio">Portafolio del autor</a></li>
+            <li><a href="https://github.com/anomalyco/opencode" rel="noopener" data-i18n="footer.links.opencode">OpenCode (compatible)</a></li>
+            <li><a href="https://f-droid.org/packages/com.termux/" rel="noopener" data-i18n="footer.links.termux">Termux en F-Droid</a></li>
+            <li><a href="https://ollama.com/library" rel="noopener" data-i18n="footer.links.ollama">Modelos de Ollama</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.cred_h">Créditos</h4>
+          <ul>
+            <li><a href="https://sebastianl1.github.io/Portafolio/" rel="noopener">Sebastian Laguna</a> <span data-i18n="footer.cred.author">— Autor</span></li>
+            <li><a href="https://ollama.com" rel="noopener">Ollama</a> <span data-i18n="footer.cred.ollama">— Motor local</span></li>
+            <li><a href="https://f-droid.org/packages/com.termux/" rel="noopener">Termux</a> <span data-i18n="footer.cred.termux">— Entorno</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span data-i18n="footer.bottom">© 2026 RANDI · Termux — Licencia MIT</span>
+        <span data-i18n="footer.love">Hecho con ♥ para la comunidad Termux</span>
+      </div>
+      <div class="foot-tags" data-i18n="footer.tags">
+        randi termux · ia local android · deepseek qwen gemma mistral · ollama termux · llm local android · ai sin internet · chat tui termux · webgpu
+      </div>
+    </div>
+  </footer>
+
+  <script defer>
+    // Diccionario Español (fallback inline, sin necesidad de red)
+    window.I18N_ES = {
+      "nav.how": "Cómo funciona", "nav.features": "Características", "nav.install": "Instalación", "nav.usage": "Uso", "nav.faq": "FAQ", "nav.github": "GitHub",
+      "hero.badge_local": "100% local", "hero.badge_offline": "Sin internet", "hero.title_span": "en Termux",
+      "hero.tagline": "Asistente de IA 100% local para Termux. Ejecuta DeepSeek, Qwen, Gemma y Mistral directamente en tu Android, sin conexión a internet ni consumo de tokens.",
+      "hero.cta_install": "Instalar ahora", "hero.cta_github": "Ver en GitHub", "hero.meta_pre": "Open Source · Licencia MIT · Por ",
+      "stat.local": "Local", "stat.tokens": "Consumo de tokens", "stat.ram": "RAM mínima", "stat.oss": "Open Source",
+      "funcion.eyebrow": "Cómo funciona", "funcion.title": "IA local con Ollama en Termux",
+      "funcion.sub": "RANDI instala Ollama nativo en Termux y descarga modelos de lenguaje para ejecutarlos en tu dispositivo. Sin nube, sin APIs, sin costos por uso.",
+      "funcion.step1_t": "Ollama nativo en Termux", "funcion.step1_d": "El instalador instala Ollama directamente en Termux, sin proot ni máquinas virtuales.",
+      "funcion.step2_t": "Modelos locales", "funcion.step2_d": "Descarga modelos como DeepSeek, Qwen, Gemma y Mistral. Una vez descargados, todo funciona sin conexión.",
+      "funcion.step3_t": "Chat TUI y web", "funcion.step3_d": "Usa la terminal interactiva con streaming o abre una interfaz web con WebGPU para modelos pequeños.",
+      "feat.eyebrow": "Características", "feat.title": "IA de verdad, sin conexión",
+      "feat.sub": "Todo lo que necesitas para tener un asistente de IA funcionando en tu Android ARM64.",
+      "feat1_t": "100% local", "feat1_d": "Tus datos y conversaciones nunca salen de tu dispositivo. Sin nube ni terceros.",
+      "feat2_t": "Sin consumo de tokens", "feat2_d": "Usa los modelos sin límites, sin cuentas y sin gastar en APIs o suscripciones.",
+      "feat3_t": "WebGPU en el navegador", "feat3_d": "La interfaz web corre modelos pequeños (&lt;2B) en la GPU con Transformers.js y los cachea en el navegador.",
+      "feat4_t": "Instalación con un clic", "feat4_d": "Un script interactivo verifica el entorno, instala Ollama y deja tu asistente listo en minutos.",
+      "feat5_t": "Compatibilidad con OpenCode", "feat5_d": "Con OpenCode instalado usa los modelos locales como provider, por ejemplo <code>opencode -m ollama/qwen2.5-coder:7b</code>.",
+      "feat6_t": "Catálogo de modelos", "feat6_d": "Elige entre DeepSeek, Qwen, Gemma y Mistral en varios tamaños, de 0.5B a 8B, con un comando.",
+      "install.eyebrow": "Instalación", "install.title": "Listo en pocos minutos",
+      "install.sub": "Elige tu nivel y copia el bloque de comandos.",
+      "install.tab_nuevo": "Nuevo en Termux", "install.tab_experto": "Ya uso Termux",
+      "install.nuevo.c1": "# 1. Actualizar e instalar dependencias", "install.nuevo.c2": "# 2. Clonar e instalar",
+      "install.nuevo.hint": "¿Primera vez con Termux? <a href=\"https://github.com/sebastianl1/randi_IA#requisitos\">Lee los requisitos y la guía</a> antes de empezar.",
+      "install.experto.hint": "El instalador verifica el entorno (RAM, almacenamiento, ARM64), instala Ollama y configura OpenCode automáticamente.",
+      "uso.eyebrow": "Uso", "uso.title": "Empieza a usar RANDI",
+      "uso.sub": "Comandos principales para trabajar con tu asistente de IA desde Termux.",
+      "uso.c1": "# Iniciar el chat interactivo", "uso.c2": "# Chat con un modelo específico", "uso.c3": "# Abrir la interfaz web local", "uso.c4": "# Actualizar RANDI",
+      "opencode.title": "Compatibilidad con OpenCode",
+      "opencode.desc": "Si tienes <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> instalado, el instalador configura automáticamente los modelos locales de RANDI como provider:",
+      "opencode.example": "\"Crea un script en Python\"",
+      "models.title": "Catálogo de modelos", "models.hint": "Modelos optimizados para Android ARM64, de 0.5B a 8B de parámetros.",
+      "model.copy": "Click para copiar", "copy.btn": "Copiar", "copied": "¡Copiado!",
+      "faq.eyebrow": "FAQ", "faq.title": "Preguntas frecuentes",
+      "faq.sub": "Resolvemos las dudas más comunes sobre RANDI en Termux.",
+      "faq1.q": "¿Qué es RANDI?", "faq1.a": "RANDI es un asistente de IA 100% local para Termux en Android. Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y Mistral directamente en tu dispositivo, sin conexión a internet ni consumo de tokens.",
+      "faq2.q": "¿Necesito internet para usarlo?", "faq2.a": "No. Solo se necesita internet la primera vez para descargar los modelos; después RANDI funciona completamente sin conexión a internet ni consumo de tokens.",
+      "faq3.q": "¿Cuáles son los requisitos mínimos?", "faq3.a": "<strong>4GB</strong> de RAM, <strong>3GB</strong> de almacenamiento libre, <strong>Android 11+</strong> y Termux desde <a href=\"https://f-droid.org/packages/com.termux/\">F-Droid</a>. Para los modelos grandes se recomienda 8GB+ de RAM. Solo dispositivos ARM64 (aarch64).",
+      "faq4.q": "¿Por qué debo instalar Termux desde F-Droid y no desde Google Play?", "faq4.a": "La versión de Termux en Google Play está desactualizada y abandonada. La versión oficial se mantiene en <a href=\"https://f-droid.org/packages/com.termux/\">F-Droid</a>, que es la única compatible con este instalador.",
+      "faq5.q": "¿Cómo funciona la interfaz web y WebGPU?", "faq5.a": "<code>randi web</code> abre una interfaz web local con dos backends: <strong>Ollama</strong> para modelos grandes y <strong>WebGPU</strong> para modelos pequeños (&lt;2B) que corren en la GPU del navegador con Transformers.js. Los modelos se cachean en el navegador.",
+      "faq6.q": "¿Puedo usar los modelos con OpenCode?", "faq6.a": "Sí. Si tienes <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.",
+      "faq7.q": "¿Cómo actualizo RANDI?", "faq7.a": "Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.",
+      "faq8.q": "¿Qué pasa si me quedo sin memoria?", "faq8.a": "Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.",
+      "footer.about_h": "RANDI · Termux", "footer.about_d": "Asistente de IA 100% local para Termux en Android ARM64. Ejecuta DeepSeek, Qwen, Gemma y Mistral sin conexión a internet ni consumo de tokens.",
+      "footer.res_h": "Recursos", "footer.res.install": "Instalación", "footer.res.commands": "Comandos", "footer.res.faq": "FAQ", "footer.res.readme": "README",
+      "footer.links_h": "Enlaces", "footer.links.repo": "Repositorio", "footer.links.portfolio": "Portafolio del autor", "footer.links.opencode": "OpenCode (compatible)", "footer.links.termux": "Termux en F-Droid", "footer.links.ollama": "Modelos de Ollama",
+      "footer.cred_h": "Créditos", "footer.cred.author": "— Autor", "footer.cred.ollama": "— Motor local", "footer.cred.termux": "— Entorno",
+      "footer.bottom": "© 2026 RANDI · Termux — Licencia MIT", "footer.love": "Hecho con ♥ para la comunidad Termux",
+      "footer.tags": "randi termux · ia local android · deepseek qwen gemma mistral · ollama termux · llm local android · ai sin internet · chat tui termux · webgpu",
+      "meta.title": "RANDI — Asistente de IA local en Termux para Android ARM64",
+      "meta.description": "Asistente de IA 100% local en Termux. Ejecuta DeepSeek, Qwen, Gemma, Mistral y más sin conexión a internet ni consumo de tokens. Chat TUI, interfaz web y WebGPU.",
+      "meta.keywords": "randi termux, ia local android, asistente ia termux, ollama termux, deepseek termux, qwen termux, gemma termux, mistral termux, llm local android, randi ia, webgpu termux"
+    };
+
+    (function () {
+      var t = function (k) { return (window.I18N && window.I18N[k] != null) ? window.I18N[k] : (window.I18N_ES[k] || ''); };
+
+      // Copy buttons
+      document.querySelectorAll('.c-copy').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pre = btn.parentElement.querySelector('pre');
+          var text = pre ? pre.innerText : '';
+          function done() {
+            btn.textContent = t('copied');
+            btn.classList.add('ok');
+            setTimeout(function () { btn.textContent = t('copy.btn'); btn.classList.remove('ok'); }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(done);
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta); done();
+          }
+        });
+      });
+
+      // Model cards copy ID
+      document.querySelectorAll('.model-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          var id = card.dataset.model;
+          function done() {
+            card.classList.add('ok');
+            card.querySelector('.model-copy').textContent = t('copied');
+            setTimeout(function () {
+              card.classList.remove('ok');
+              card.querySelector('.model-copy').textContent = t('model.copy');
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(id).then(done).catch(done);
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = id; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta); done();
+          }
+        });
+      });
+
+      // FAQ accordion
+      document.querySelectorAll('.faq-q').forEach(function (q) {
+        q.addEventListener('click', function () {
+          var item = q.parentElement;
+          var answer = item.querySelector('.faq-a');
+          var isOpen = item.classList.contains('open');
+          document.querySelectorAll('.faq-item.open').forEach(function (it) {
+            it.classList.remove('open');
+            it.querySelector('.faq-a').style.maxHeight = null;
+          });
+          if (!isOpen) {
+            item.classList.add('open');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+          }
+        });
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          document.querySelectorAll('.tab').forEach(function (tt) { tt.classList.remove('active'); });
+          document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.remove('active'); });
+          tab.classList.add('active');
+          document.getElementById('pane-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+
+      // Reveal on scroll
+      var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { threshold: 0.12 }) : null;
+      document.querySelectorAll('.reveal').forEach(function (el) {
+        if (io) io.observe(el); else el.classList.add('in');
+      });
+
+      // ── i18n ──
+      var SUPPORTED = ['es', 'en', 'pt', 'fr', 'de', 'zh'];
+      var STORE_KEY = 'randi-lang';
+      var NAMES = { es: 'Español', en: 'English', pt: 'Português', fr: 'Français', de: 'Deutsch', zh: '中文' };
+      var dict = null;
+      var current = 'es';
+
+      function getInitial() {
+        var p = new URLSearchParams(location.search).get('lang');
+        if (p && SUPPORTED.indexOf(p) !== -1) return p;
+        try {
+          var s = localStorage.getItem(STORE_KEY);
+          if (s && SUPPORTED.indexOf(s) !== -1) return s;
+        } catch (e) {}
+        var nav = (navigator.language || 'es').slice(0, 2).toLowerCase();
+        return SUPPORTED.indexOf(nav) !== -1 ? nav : 'es';
+      }
+
+      function setMeta() {
+        if (!dict || !dict.meta) return;
+        if (dict.meta.title) {
+          document.title = dict.meta.title;
+          var ogT = document.querySelector('meta[property="og:title"]');
+          if (ogT) ogT.content = dict.meta.title;
+          var twT = document.querySelector('meta[name="twitter:title"]');
+          if (twT) twT.content = dict.meta.title;
+        }
+        if (dict.meta.description) {
+          var d = document.querySelector('meta[name="description"]');
+          if (d) d.content = dict.meta.description;
+          var ogD = document.querySelector('meta[property="og:description"]');
+          if (ogD) ogD.content = dict.meta.description;
+          var twD = document.querySelector('meta[name="twitter:description"]');
+          if (twD) twD.content = dict.meta.description;
+        }
+        if (dict.meta.keywords) {
+          var kw = document.querySelector('meta[name="keywords"]');
+          if (kw) kw.content = dict.meta.keywords;
+        }
+      }
+
+      function apply() {
+        document.documentElement.lang = current;
+        setMeta();
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var k = el.getAttribute('data-i18n');
+          if (dict && dict[k] != null) el.innerHTML = dict[k];
+        });
+        var label = document.getElementById('langLabel');
+        if (label) label.textContent = NAMES[current] || NAMES.es;
+        var menu = document.getElementById('langMenu');
+        if (menu) {
+          menu.querySelectorAll('a[data-lang]').forEach(function (a) {
+            a.setAttribute('aria-selected', a.dataset.lang === current ? 'true' : 'false');
+          });
+        }
+      }
+
+      function loadLang(lang, cb) {
+        if (lang === 'es') { dict = window.I18N_ES; cb && cb(); return; }
+        var s = document.createElement('script');
+        s.src = 'lang/' + lang + '.js';
+        s.onload = function () { dict = window.I18N || null; cb && cb(); };
+        s.onerror = function () { dict = null; cb && cb(); };
+        document.head.appendChild(s);
+      }
+
+      current = getInitial();
+      loadLang(current, function () {
+        if (current !== 'es' && !dict) { current = 'es'; dict = window.I18N_ES; }
+        apply();
+        try { localStorage.setItem(STORE_KEY, current); } catch (e) {}
+        var url = new URL(location.href);
+        url.searchParams.set('lang', current);
+        history.replaceState(null, '', url);
+      });
+
+      // ── Selector de idioma (dropdown custom) ──
+      var langWrap = document.getElementById('langWrap');
+      var langBtn = document.getElementById('langBtn');
+      var langMenu = document.getElementById('langMenu');
+
+      function closeLang() {
+        langWrap.classList.remove('open');
+        langMenu.classList.remove('open');
+        langBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      if (langBtn && langMenu) {
+        langBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var open = langWrap.classList.toggle('open');
+          langMenu.classList.toggle('open', open);
+          langBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (e) {
+          if (!langWrap.contains(e.target)) closeLang();
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeLang();
+        });
+        langMenu.addEventListener('click', function (e) {
+          var a = e.target.closest ? e.target.closest('a[data-lang]') : null;
+          if (a) {
+            e.preventDefault();
+            var lang = a.dataset.lang;
+            closeLang();
+            if (lang && lang !== current) {
+              var url = new URL(location.href);
+              url.searchParams.set('lang', lang);
+              location.href = url.toString();
+            }
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

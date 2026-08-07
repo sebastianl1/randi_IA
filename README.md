@@ -198,6 +198,14 @@ randi ps  # Modelos en RAM
 free -h      # Memoria disponible
 ```
 
+## Capturas
+
+![RANDI en Termux](imagenes/randi1.jpg)
+*Interfaz web de RANDI en Termux (Android).*
+
+![Chat y modelos de RANDI](imagenes/randi2.jpg)
+*Chat y seleccion de modelos de RANDI.*
+
 ## Licencia
 
 MIT
