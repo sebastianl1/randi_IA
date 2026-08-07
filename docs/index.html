@@ -66,7 +66,7 @@
     "author": { "@type": "Person", "name": "Sebastian Laguna" },
     "license": "https://opensource.org/licenses/MIT",
     "url": "https://github.com/sebastianl1/randi_IA",
-    "softwareVersion": "1.3.0",
+    "softwareVersion": "1.4.0",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" },
     "featureList": "IA 100% local en Termux, sin conexión a internet, sin consumo de tokens, Ollama para Termux, modelos DeepSeek/Qwen/Gemma/Mistral, chat TUI con streaming, interfaz web con WebGPU (Transformers.js), integración con OpenCode, gestión de modelos"
@@ -462,7 +462,7 @@
     <!-- Hero -->
     <section class="hero">
       <div class="badge-row">
-        <span class="pill">v1.3.0</span>
+        <span class="pill">v1.4.0</span>
         <span class="pill green" data-i18n="hero.badge_local">100% local</span>
         <span class="pill" data-i18n="hero.badge_offline">Sin internet</span>
         <span class="pill">ARM64</span>
@@ -544,8 +544,20 @@
             <div><h3 data-i18n="feat5_t">Compatibilidad con OpenCode</h3><p data-i18n="feat5_d">Con OpenCode instalado usa los modelos locales como provider, por ejemplo <code>opencode -m ollama/qwen2.5-coder:7b</code>.</p></div>
           </div>
           <div class="feat reveal">
-            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></div>
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
             <div><h3 data-i18n="feat6_t">Catálogo de modelos</h3><p data-i18n="feat6_d">Elige entre DeepSeek, Qwen, Gemma y Mistral en varios tamaños, de 0.5B a 8B, con un comando.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><circle cx="12" cy="12" r="10"/><path d="M12 7l2 4 4 .5-3 2.8.8 4.2L12 16.5 8.2 18.5 9 14.3l-3-2.8L10 11z"/></svg></div>
+            <div><h3 data-i18n="feat7_t">Visión y chat con imágenes</h3><p data-i18n="feat7_d">Sube imágenes en la web o con <code>/image ruta</code> en el TUI. Modelos llava, gemma3 y qwen2.5vl, 100% offline.</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></div>
+            <div><h3 data-i18n="feat8_t">Voz</h3><p data-i18n="feat8_d">Texto a voz con espeak-ng/piper (🔊 en la web) y voz a texto con whisper.cpp (🎤).</p></div>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>
+            <div><h3 data-i18n="feat9_t">Generación de imágenes</h3><p data-i18n="feat9_d">Crea imágenes con <code>randi img "prompt"</code> o 🎨 en la web, usando A1111/ComfyUI local (GPU).</p></div>
           </div>
         </div>
       </div>
@@ -561,33 +573,51 @@
         </div>
 
         <div class="tabs reveal">
-          <button class="tab active" data-tab="nuevo" data-i18n="install.tab_nuevo">Nuevo en Termux</button>
-          <button class="tab" data-tab="experto" data-i18n="install.tab_experto">Ya uso Termux</button>
+          <button class="tab active" data-tab="android" data-i18n="install.tab_android">Android (Termux)</button>
+          <button class="tab" data-tab="linux" data-i18n="install.tab_linux">Linux / macOS</button>
+          <button class="tab" data-tab="windows" data-i18n="install.tab_windows">Windows</button>
         </div>
 
-        <div class="tab-pane active" id="pane-nuevo">
+        <div class="tab-pane active" id="pane-android">
           <div class="term-code reveal">
-            <pre><code><span class="cm" data-i18n="install.nuevo.c1"># 1. Actualizar e instalar dependencias</span>
+            <pre><code><span class="cm" data-i18n="install.android.c1"># 1. Actualizar e instalar dependencias</span>
 <span class="cmd">pkg update</span> <span class="cmd">&&</span> <span class="cmd">pkg upgrade</span> -y
 <span class="cmd">pkg install</span> git curl tar -y
 
-<span class="cm" data-i18n="install.nuevo.c2"># 2. Clonar e instalar</span>
+<span class="cm" data-i18n="install.android.c2"># 2. Clonar e instalar</span>
 <span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
 <span class="cmd">cd</span> randi_IA
 <span class="cmd">bash</span> install-ollama.sh</code></pre>
             <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
           </div>
-          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.nuevo.hint">¿Primera vez con Termux? <a href="https://github.com/sebastianl1/randi_IA#requisitos">Lee los requisitos y la guía</a> antes de empezar.</p>
+          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.android.hint">Usa el paquete nativo de Ollama para Termux (fallback npm). Instala Termux desde F-Droid, no de Google Play.</p>
         </div>
 
-        <div class="tab-pane" id="pane-experto">
+        <div class="tab-pane" id="pane-linux">
           <div class="term-code reveal">
             <pre><code><span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
 <span class="cmd">cd</span> randi_IA
 <span class="cmd">bash</span> install-ollama.sh</code></pre>
             <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
           </div>
-          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.experto.hint">El instalador verifica el entorno (RAM, almacenamiento, ARM64), instala Ollama y configura OpenCode automáticamente.</p>
+          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.linux.hint">El instalador detecta la plataforma, verifica RAM/almacenamiento/arquitectura e instala Ollama con el script oficial. En macOS requiere Homebrew.</p>
+        </div>
+
+        <div class="tab-pane" id="pane-windows">
+          <div class="term-code reveal">
+            <pre><code><span class="cm" data-i18n="install.windows.a1"># Opcion A - WSL2 (recomendado)</span>
+<span class="cmd">wsl</span> --install
+<span class="cmd">sudo apt-get install</span> -y git
+<span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
+<span class="cmd">cd</span> randi_IA <span class="cmd">&&</span> <span class="cmd">bash</span> install-ollama.sh
+
+<span class="cm" data-i18n="install.windows.a2"># Opcion B - Git Bash (Ollama nativo de Windows)</span>
+<span class="cmd">winget install</span> Ollama.Ollama
+<span class="cmd">git clone</span> https://github.com/sebastianl1/randi_IA.git
+<span class="cmd">cd</span> randi_IA <span class="cmd">&&</span> <span class="cmd">bash</span> install-ollama.sh</code></pre>
+            <button class="c-copy" data-copy data-i18n="copy.btn">Copiar</button>
+          </div>
+          <p style="text-align:center;color:var(--muted);font-size:.9rem" class="reveal" data-i18n="install.windows.hint">RANDI funciona en WSL2 o Git Bash/MSYS2. En Git Bash, Ollama corre como app nativa de Windows.</p>
         </div>
       </div>
     </section>
@@ -652,6 +682,8 @@
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq6.q">¿Puedo usar los modelos con OpenCode?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq6.a">Sí. Si tienes <a href="https://github.com/anomalyco/opencode" rel="noopener">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq7.q">¿Cómo actualizo RANDI?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq7.a">Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq8.q">¿Qué pasa si me quedo sin memoria?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq8.a">Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq9.q">¿Puedo usar visión, voz o generar imágenes?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq9.a">Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img "prompt"</code> o 🎨 con A1111/ComfyUI local (GPU).</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq10.q">¿Puedo generar video localmente?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq10.a">No de forma realista en teléfonos o equipos sin GPU dedicada. Está en el roadmap de RANDI (ej. Wan 2.1 en Colab o GPUs de alto rendimiento).</p></div></div>
         </div>
       </div>
     </section>
@@ -725,12 +757,17 @@
       "feat4_t": "Instalación con un clic", "feat4_d": "Un script interactivo verifica el entorno, instala Ollama y deja tu asistente listo en minutos.",
       "feat5_t": "Compatibilidad con OpenCode", "feat5_d": "Con OpenCode instalado usa los modelos locales como provider, por ejemplo <code>opencode -m ollama/qwen2.5-coder:7b</code>.",
       "feat6_t": "Catálogo de modelos", "feat6_d": "Elige entre DeepSeek, Qwen, Gemma y Mistral en varios tamaños, de 0.5B a 8B, con un comando.",
+      "feat7_t": "Visión y chat con imágenes", "feat7_d": "Sube imágenes en la web o con <code>/image ruta</code> en el TUI. Modelos llava, gemma3 y qwen2.5vl, 100% offline.",
+      "feat8_t": "Voz", "feat8_d": "Texto a voz con espeak-ng/piper (🔊 en la web) y voz a texto con whisper.cpp (🎤).",
+      "feat9_t": "Generación de imágenes", "feat9_d": "Crea imágenes con <code>randi img \"prompt\"</code> o 🎨 en la web, usando A1111/ComfyUI local (GPU).",
       "install.eyebrow": "Instalación", "install.title": "Listo en pocos minutos",
-      "install.sub": "Elige tu nivel y copia el bloque de comandos.",
-      "install.tab_nuevo": "Nuevo en Termux", "install.tab_experto": "Ya uso Termux",
-      "install.nuevo.c1": "# 1. Actualizar e instalar dependencias", "install.nuevo.c2": "# 2. Clonar e instalar",
-      "install.nuevo.hint": "¿Primera vez con Termux? <a href=\"https://github.com/sebastianl1/randi_IA#requisitos\">Lee los requisitos y la guía</a> antes de empezar.",
-      "install.experto.hint": "El instalador verifica el entorno (RAM, almacenamiento, ARM64), instala Ollama y configura OpenCode automáticamente.",
+      "install.sub": "Elige tu plataforma y copia el bloque de comandos.",
+      "install.tab_android": "Android (Termux)", "install.tab_linux": "Linux / macOS", "install.tab_windows": "Windows",
+      "install.android.c1": "# 1. Actualizar e instalar dependencias", "install.android.c2": "# 2. Clonar e instalar",
+      "install.android.hint": "Usa el paquete nativo de Ollama para Termux (fallback npm). Instala Termux desde F-Droid, no de Google Play.",
+      "install.linux.hint": "El instalador detecta la plataforma, verifica RAM/almacenamiento/arquitectura e instala Ollama con el script oficial. En macOS requiere Homebrew.",
+      "install.windows.a1": "# Opcion A - WSL2 (recomendado)", "install.windows.a2": "# Opcion B - Git Bash (Ollama nativo de Windows)",
+      "install.windows.hint": "RANDI funciona en WSL2 o Git Bash/MSYS2. En Git Bash, Ollama corre como app nativa de Windows.",
       "uso.eyebrow": "Uso", "uso.title": "Empieza a usar RANDI",
       "uso.sub": "Comandos principales para trabajar con tu asistente de IA desde Termux.",
       "uso.c1": "# Iniciar el chat interactivo", "uso.c2": "# Chat con un modelo específico", "uso.c3": "# Abrir la interfaz web local", "uso.c4": "# Actualizar RANDI",
@@ -749,6 +786,8 @@
       "faq6.q": "¿Puedo usar los modelos con OpenCode?", "faq6.a": "Sí. Si tienes <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.",
       "faq7.q": "¿Cómo actualizo RANDI?", "faq7.a": "Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.",
       "faq8.q": "¿Qué pasa si me quedo sin memoria?", "faq8.a": "Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.",
+      "faq9.q": "¿Puedo usar visión, voz o generar imágenes?", "faq9.a": "Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img \"prompt\"</code> o 🎨 con A1111/ComfyUI local (GPU).",
+      "faq10.q": "¿Puedo generar video localmente?", "faq10.a": "No de forma realista en teléfonos o equipos sin GPU dedicada. Está en el roadmap de RANDI (ej. Wan 2.1 en Colab o GPUs de alto rendimiento).",
       "footer.about_h": "RANDI · Termux", "footer.about_d": "Asistente de IA 100% local para Termux en Android ARM64. Ejecuta DeepSeek, Qwen, Gemma y Mistral sin conexión a internet ni consumo de tokens.",
       "footer.res_h": "Recursos", "footer.res.install": "Instalación", "footer.res.commands": "Comandos", "footer.res.faq": "FAQ", "footer.res.readme": "README",
       "footer.links_h": "Enlaces", "footer.links.repo": "Repositorio", "footer.links.portfolio": "Portafolio del autor", "footer.links.opencode": "OpenCode (compatible)", "footer.links.termux": "Termux en F-Droid", "footer.links.ollama": "Modelos de Ollama",
