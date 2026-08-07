@@ -34,7 +34,11 @@ export async function chat(model, messages, onToken, onDone, onError) {
 
   const payload = {
     model,
-    messages: messages.map(m => ({ role: m.role, content: m.content })),
+    messages: messages.map((m) => {
+      const base = { role: m.role, content: m.content };
+      if (m.images && m.images.length) base.images = m.images;
+      return base;
+    }),
     stream: true,
   };
 

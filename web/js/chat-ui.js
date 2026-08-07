@@ -123,14 +123,105 @@ function createMessageEl(role) {
   return div;
 }
 
-export function appendMessage(role, content) {
+export function appendMessage(role, content, images) {
   const div = createMessageEl(role);
   const contentEl = div.querySelector('.msg-content');
-  contentEl.innerHTML = role === 'user' ? escapeHtml(content) : renderMarkdown(content);
+  if (role === 'user') {
+    let html = '';
+    if (images && images.length) {
+      html = images.map((u) => `<img class="msg-img" src="${u}" alt="imagen adjunta">`).join('');
+    }
+    contentEl.innerHTML = html + escapeHtml(content);
+  } else {
+    contentEl.innerHTML = renderMarkdown(content);
+    addSpeakerBtn(div, content);
+  }
   contentEl.dataset.content = content;
   messagesEl.appendChild(div);
   scrollToBottom();
   updateContextBar(getMessages());
+}
+
+function addSpeakerBtn(div, text) {
+  if (!div || div.dataset.role !== 'assistant') return;
+  const header = div.querySelector('.msg-header');
+  if (!header) return;
+  const btn = document.createElement('button');
+  btn.className = 'msg-speak';
+  btn.title = 'Escuchar respuesta';
+  btn.textContent = '🔊';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speak(text);
+  });
+  header.appendChild(btn);
+}
+
+export function speak(text) {
+  const t = (text || '').trim().slice(0, 500);
+  if (!t) return;
+  fetch(`/api/tts?text=${encodeURIComponent(t)}`)
+    .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('tts no disponible'))))
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = new Audio(url);
+      a.onended = () => URL.revokeObjectURL(url);
+      a.play().catch(() => {});
+    })
+    .catch(() => {});
+}
+
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+export async function toggleMic() {
+  if (isRecording) {
+    mediaRecorder?.stop();
+    isRecording = false;
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      try {
+        const res = await fetch('/api/stt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'audio/webm' },
+          body: blob,
+        });
+        const data = await res.json();
+        if (res.ok && data.text) {
+          inputEl.value = (inputEl.value ? inputEl.value + ' ' : '') + data.text;
+          autoResizeInput();
+          inputEl.focus();
+        } else {
+          showError(data.error || 'STT no disponible (whisper)');
+        }
+      } catch {
+        showError('Error de STT');
+      }
+    };
+    mediaRecorder.start();
+    isRecording = true;
+  } catch {
+    showError('Microfono no disponible');
+  }
+}
+
+export async function generateImage(prompt, engine) {
+  const res = await fetch('/api/imagegen', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, engine }),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
 }
 
 function escapeHtml(text) {
@@ -214,6 +305,7 @@ export function finalizeStreaming(role, fullText, stats) {
       contentEl.innerHTML = renderMarkdown(fullText);
       contentEl.dataset.content = fullText;
     }
+    addSpeakerBtn(el, fullText);
     if (stats) {
       const statsDiv = document.createElement('div');
       statsDiv.className = 'msg-stats';
@@ -245,7 +337,7 @@ function setInputState(streaming) {
   if (!streaming) inputEl.focus();
 }
 
-export async function sendMessage(text, backend, model, temperature, systemPrompt) {
+export async function sendMessage(text, backend, model, temperature, systemPrompt, images, tts) {
   const trimmed = text.trim();
   if (!trimmed || isStreaming) return;
 
@@ -253,13 +345,17 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
     return handleCommand(trimmed);
   }
 
-  appendMessage('user', trimmed);
+  appendMessage('user', trimmed, images);
   inputEl.value = '';
   autoResizeInput();
   setInputState(true);
   showTyping();
 
   const messages = getMessages();
+  if (images && images.length) {
+    const last = messages[messages.length - 1];
+    if (last && last.role === 'user') last.images = images;
+  }
 
   if (backend === 'ollama') {
     await new Promise((resolve) => {
@@ -298,6 +394,7 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
             if (ec) parts.push(`${ec} tok`);
             const stats = parts.length ? parts.join(' · ') : null;
             finalizeStreaming('assistant', fullText, stats);
+            if (tts) speak(fullText);
           }
           setInputState(false);
           resolve();
@@ -329,6 +426,7 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
           if (data.aborted) {
             if (fullText) {
               finalizeStreaming('assistant', fullText, null);
+              if (tts) speak(fullText);
             } else {
               hideTyping();
             }
@@ -341,6 +439,7 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
               stats = `${approxTokens} tok · ${(approxTokens / secs).toFixed(0)} tok/s · ${secs.toFixed(1)}s`;
             }
             finalizeStreaming('assistant', text, stats);
+            if (tts) speak(text);
           }
           setInputState(false);
           resolve();

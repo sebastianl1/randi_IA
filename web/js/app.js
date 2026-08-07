@@ -1,10 +1,12 @@
 import { checkServer, listModels } from './ollama-client.js';
 import { getAvailableModels, downloadModel, isModelLoaded, getLoadedModelId, isModelCached, getCachedModelIds, getModelInfo, getModelContext, isLoading as isGPUModelLoading, removeCachedModel } from './webgpu-client.js';
-import { getOllamaContext, DEFAULT_BACKEND, DEFAULT_TEMPERATURE, DEFAULT_SYSTEM_PROMPT } from './config.js';
+import { loadCatalog, getOllamaContext } from './catalog.js';
+import { DEFAULT_BACKEND, DEFAULT_TEMPERATURE, DEFAULT_SYSTEM_PROMPT } from './config.js';
 import {
   sendMessage, stopStreaming, clearMessages, setMessages,
   getMessages, updateContextBar, showTyping, hideTyping,
   appendMessage, removeWelcome, setContextLimit,
+  toggleMic, generateImage,
 } from './chat-ui.js';
 
 const state = {
@@ -14,6 +16,10 @@ const state = {
   systemPrompt: DEFAULT_SYSTEM_PROMPT,
   ollamaOnline: false,
   messages: [],
+  eco: false,
+  codeMode: false,
+  tts: false,
+  pendingImage: null,
 };
 
 const modelSelect = document.getElementById('model-select');
@@ -40,6 +46,16 @@ const availableCount = document.getElementById('available-count');
 const modelBar = document.getElementById('model-bar');
 const modelBarText = document.getElementById('model-bar-text');
 const modelBarClose = document.getElementById('model-bar-close');
+const btnAttach = document.getElementById('btn-attach');
+const fileInput = document.getElementById('file-input');
+const attachPreview = document.getElementById('attach-preview');
+const attachImg = document.getElementById('attach-img');
+const attachRemove = document.getElementById('attach-remove');
+const btnMic = document.getElementById('btn-mic');
+const btnImagegen = document.getElementById('btn-imagegen');
+const ecoToggle = document.getElementById('eco-toggle');
+const codeToggle = document.getElementById('code-toggle');
+const ttsToggle = document.getElementById('tts-toggle');
 
 function showModelBar(text, type) {
   modelBar.className = 'model-bar ' + type;
@@ -66,6 +82,9 @@ function saveState() {
       model: state.model,
       temperature: state.temperature,
       systemPrompt: state.systemPrompt,
+      eco: state.eco,
+      codeMode: state.codeMode,
+      tts: state.tts,
     }));
   } catch {}
 }
@@ -79,8 +98,14 @@ function loadSavedState() {
       state.temperature = data.temperature ?? DEFAULT_TEMPERATURE;
       state.systemPrompt = data.systemPrompt || state.systemPrompt;
       state.model = data.model || '';
+      state.eco = !!data.eco;
+      state.codeMode = !!data.codeMode;
+      state.tts = !!data.tts;
       tempSlider.value = state.temperature;
       tempValue.textContent = state.temperature;
+      if (ecoToggle) ecoToggle.checked = state.eco;
+      if (codeToggle) codeToggle.checked = state.codeMode;
+      if (ttsToggle) ttsToggle.checked = state.tts;
       if (state.backend === 'webgpu') {
         document.querySelector('[data-backend="webgpu"]').classList.add('active');
         document.querySelector('[data-backend="ollama"]').classList.remove('active');
@@ -90,6 +115,11 @@ function loadSavedState() {
 }
 
 async function init() {
+  try {
+    await loadCatalog();
+  } catch (e) {
+    console.warn('No se pudo cargar el catalogo:', e);
+  }
   loadSavedState();
   syncContextLimit();
   populateWebGPUModels();
@@ -285,9 +315,10 @@ function updateTopBar() {
 }
 
 function syncContextLimit() {
-  const limit = state.backend === 'webgpu'
+  let limit = state.backend === 'webgpu'
     ? getModelContext(state.model)
     : getOllamaContext(state.model);
+  if (state.eco && limit > 0) limit = Math.min(limit, 2048);
   setContextLimit(limit);
 }
 
@@ -374,6 +405,97 @@ tempSlider.addEventListener('input', () => {
   saveState();
 });
 
+/* ─── Adjuntar imagen (vision) ─── */
+
+btnAttach.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Solo se admiten imagenes', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    state.pendingImage = reader.result;
+    attachImg.src = state.pendingImage;
+    attachPreview.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+});
+
+attachRemove.addEventListener('click', () => {
+  state.pendingImage = null;
+  attachPreview.classList.add('hidden');
+  attachImg.src = '';
+  fileInput.value = '';
+});
+
+btnMic.addEventListener('click', () => {
+  btnMic.classList.toggle('recording');
+  toggleMic();
+});
+
+/* ─── Generacion de imagenes ─── */
+
+btnImagegen.addEventListener('click', () => {
+  document.getElementById('imagegen-modal').classList.remove('hidden');
+  document.getElementById('ig-prompt').value = '';
+  document.getElementById('ig-result').classList.add('hidden');
+  document.getElementById('ig-result').src = '';
+  document.getElementById('ig-generate').disabled = false;
+});
+
+document.getElementById('ig-cancel').addEventListener('click', () => {
+  document.getElementById('imagegen-modal').classList.add('hidden');
+});
+
+document.getElementById('ig-generate').addEventListener('click', async () => {
+  const prompt = document.getElementById('ig-prompt').value.trim();
+  const engine = document.getElementById('ig-engine').value;
+  if (!prompt) return;
+  const btn = document.getElementById('ig-generate');
+  const status = document.getElementById('ig-status');
+  const result = document.getElementById('ig-result');
+  btn.disabled = true;
+  status.textContent = 'Generando (requiere ComfyUI/A1111 local)...';
+  status.classList.remove('hidden');
+  try {
+    const { ok, data } = await generateImage(prompt, engine);
+    if (ok && data.image) {
+      result.src = 'data:image/png;base64,' + data.image;
+      result.classList.remove('hidden');
+      status.textContent = '';
+      status.classList.add('hidden');
+    } else {
+      status.textContent = data.error || 'Error al generar imagen';
+    }
+  } catch {
+    status.textContent = 'Error al generar imagen';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ─── Toggles eco / codigo / tts ─── */
+
+ecoToggle.addEventListener('change', () => {
+  state.eco = ecoToggle.checked;
+  syncContextLimit();
+  saveState();
+});
+
+codeToggle.addEventListener('change', () => {
+  state.codeMode = codeToggle.checked;
+  saveState();
+});
+
+ttsToggle.addEventListener('change', () => {
+  state.tts = ttsToggle.checked;
+  saveState();
+});
+
 btnDownload.addEventListener('click', async () => {
   const modelId = state.model;
   if (!modelId) return;
@@ -440,7 +562,18 @@ window.addEventListener('send-message', async () => {
     }
   }
 
-  await sendMessage(text, state.backend, state.model, state.temperature, state.systemPrompt);
+  const systemPrompt = state.codeMode
+    ? 'Eres RANDI en modo programador. Das respuestas de codigo precisas, con explicaciones breves y ejemplos funcionales.'
+    : state.systemPrompt;
+
+  await sendMessage(text, state.backend, state.model, state.temperature, systemPrompt,
+    state.pendingImage ? [state.pendingImage] : null, state.tts);
+  if (state.pendingImage) {
+    state.pendingImage = null;
+    attachPreview.classList.add('hidden');
+    attachImg.src = '';
+    fileInput.value = '';
+  }
   saveState();
 });
 

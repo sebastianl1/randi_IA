@@ -1,9 +1,12 @@
-#!/data/data/com.termux/files/usr/bin/python3
+#!/usr/bin/env python3
 import argparse
+import base64
 import json
 import os
 import readline
+import shutil
 import signal
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -35,20 +38,31 @@ SESSIONS_DIR = CONFIG_DIR / "sessions"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 HISTORY_FILE = CONFIG_DIR / ".chat_history"
 
-MODEL_INFO = {
-    "gemma4:2b":           {"ram": 1.5, "ctx": 8192,  "cat": "bajo"},
-    "deepseek-r1:1.5b":    {"ram": 1.1, "ctx": 8192,  "cat": "bajo"},
-    "qwen2.5-coder:1.5b":  {"ram": 0.9, "ctx": 16384, "cat": "bajo"},
-    "qwen2.5-coder:0.5b":  {"ram": 0.4, "ctx": 8192,  "cat": "bajo"},
-    "phi3:mini":           {"ram": 2.0, "ctx": 8192,  "cat": "bajo"},
-    "llama3.2:3b":         {"ram": 2.0, "ctx": 8192,  "cat": "medio"},
-    "qwen3:4b":            {"ram": 2.5, "ctx": 16384, "cat": "medio"},
-    "phi3:3.8b":           {"ram": 2.3, "ctx": 8192,  "cat": "medio"},
-    "deepseek-r1:7b":      {"ram": 4.7, "ctx": 32768, "cat": "alto"},
-    "qwen2.5-coder:7b":    {"ram": 4.7, "ctx": 32768, "cat": "alto"},
-    "qwen3:8b":            {"ram": 4.5, "ctx": 32768, "cat": "alto"},
-    "mistral:7b":          {"ram": 4.1, "ctx": 32768, "cat": "alto"},
-}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from catalog import get_models as _catalog_get_models
+except ImportError:
+    _catalog_get_models = None
+
+_MODEL_CACHE = {}
+
+def _catalog():
+    global _MODEL_CACHE
+    if not _MODEL_CACHE and _catalog_get_models is not None:
+        try:
+            for m in _catalog_get_models():
+                _MODEL_CACHE[m["id"]] = m
+        except Exception:
+            _MODEL_CACHE = {}
+    return _MODEL_CACHE
+
+def _match_model(model_name):
+    if not model_name:
+        return None
+    for key, m in _catalog().items():
+        if model_name.startswith(key) or key.startswith(model_name):
+            return m
+    return None
 
 console = Console(
     theme=Theme({
@@ -84,7 +98,8 @@ def get_ram_info():
 def ram_warning(model_name):
     total_gb, available_gb = get_ram_info()
     if total_gb == 0: return
-    needed = next((v["ram"] for k, v in MODEL_INFO.items() if model_name.startswith(k) or k.startswith(model_name)), 4)
+    m = _match_model(model_name)
+    needed = m.get("ram", 4) if m else 4
     if available_gb < needed * 0.8:
         console.print(Panel(
             f"[warning]RAM disponible: ~{available_gb:.1f}GB de {total_gb:.1f}GB\n"
@@ -95,12 +110,12 @@ def ram_warning(model_name):
         ))
 
 def model_info_str(name):
-    for key, info in MODEL_INFO.items():
-        if name.startswith(key) or key.startswith(name):
-            ram = info["ram"]
-            icon = "🟢" if ram < 2 else "🟡" if ram < 4 else "🔴"
-            return f"{icon} {ram:.1f}GB"
-    return "?"
+    m = _match_model(name)
+    if not m:
+        return "?"
+    ram = m.get("ram", 4)
+    icon = "🟢" if ram < 2 else "🟡" if ram < 4 else "🔴"
+    return f"{icon} {ram:.1f}GB"
 
 def suggest_best_model():
     _, available_gb = get_ram_info()
@@ -122,22 +137,24 @@ def optimal_context(model_name, avail_gb=None):
         _, avail_gb = get_ram_info()
     if avail_gb == 0:
         return None
-    for key, info in MODEL_INFO.items():
-        if model_name.startswith(key) or key.startswith(model_name):
-            needed = info["ram"]
-            ctx = info["ctx"]
-            if avail_gb < needed * 0.7:
-                return max(1024, ctx // 4)
-            elif avail_gb < needed * 0.9:
-                return max(2048, ctx // 2)
-            return None
+    m = _match_model(model_name)
+    if not m:
+        return None
+    needed = m.get("ram", 4)
+    ctx = m.get("ctx", 4096)
+    if avail_gb < needed * 0.7:
+        return max(1024, ctx // 4)
+    elif avail_gb < needed * 0.9:
+        return max(2048, ctx // 2)
     return None
 
 class Completer:
     def __init__(self):
         self.commands = [
             "/help", "/model", "/system", "/clear", "/save",
-            "/load", "/temp", "/models", "/tokens", "/info", "/exit", "/quit",
+            "/load", "/temp", "/models", "/tokens", "/info",
+            "/image", "/eco", "/code", "/general", "/tts",
+            "/exit", "/quit",
         ]
         self.models = []
 
@@ -162,6 +179,10 @@ class ChatSession:
             "Respondes en el mismo idioma en que te hablan. "
             "Das respuestas claras, concisas y bien estructuradas."
         )
+        self.code_mode = False
+        self.eco = False
+        self.tts = False
+        self.pending_image = None
         self.current_request = None
         self._setup_readline()
 
@@ -197,9 +218,9 @@ class ChatSession:
         return int(total_chars * 0.3)
 
     def _ctx_limit(self):
-        for key, info in MODEL_INFO.items():
-            if self.model.startswith(key) or key.startswith(self.model):
-                return info["ctx"]
+        m = _match_model(self.model)
+        if m:
+            return m.get("ctx", 4096)
         return 4096
 
     def _context_display(self):
@@ -232,10 +253,19 @@ class ChatSession:
             return f"[dim]╰─ {' · '.join(parts)}[/dim]"
         return ""
 
-    def chat(self, user_input: str):
-        msgs = [{"role": "system", "content": self.system_prompt}]
+    def chat(self, user_input: str, images: list = None):
+        sys_prompt = self.system_prompt
+        if self.code_mode:
+            sys_prompt = (
+                "Eres RANDI en modo programador. Das respuestas de codigo "
+                "precisas, con explicaciones breves y ejemplos funcionales. "
+                "Usas el lenguaje de la pregunta."
+            )
+        msgs = [{"role": "system", "content": sys_prompt}]
         msgs.extend(self.messages)
         msgs.append({"role": "user", "content": user_input})
+        if images:
+            msgs[-1]["images"] = images
 
         options = {"temperature": self.temperature}
 
@@ -247,6 +277,12 @@ class ChatSession:
         if any(x in raw for x in ("70b", "13b")):
             if "num_ctx" not in options or options["num_ctx"] > 2048:
                 options["num_ctx"] = 2048
+
+        if self.eco:
+            _, avail_gb = get_ram_info()
+            eco_ctx = 2048 if avail_gb == 0 else max(1024, min(4096, int(avail_gb * 512)))
+            options["num_ctx"] = min(options.get("num_ctx", eco_ctx), eco_ctx)
+            options["num_predict"] = options.get("num_predict", 512)
 
         payload = {
             "model": self.model,
@@ -403,6 +439,9 @@ class ChatSession:
             table.add_row("Temperature", str(self.temperature))
             table.add_row("Contexto", f"{ctx:,}/{limit:,} ({pct}%)")
             table.add_row("Mensajes", str(len(self.messages)))
+            table.add_row("Eco", "ON" if self.eco else "OFF")
+            table.add_row("Codigo", "ON" if self.code_mode else "OFF")
+            table.add_row("TTS", "ON" if self.tts else "OFF")
             table.add_row("System prompt", self.system_prompt[:60] + "...")
             console.print(Panel(table, title="Sesion", border_style="blue", padding=(0, 1)))
 
@@ -424,6 +463,23 @@ class ChatSession:
         elif command == "/load":
             self._load_session(arg)
 
+        elif command == "/image":
+            self._handle_image(arg)
+
+        elif command == "/eco":
+            self._toggle_eco(arg)
+
+        elif command == "/code":
+            self.code_mode = True
+            console.print("[success]Modo programador activado. (/general para volver)[/]")
+
+        elif command == "/general":
+            self.code_mode = False
+            console.print("[success]Modo general activado.[/]")
+
+        elif command == "/tts":
+            self._toggle_tts(arg)
+
         else:
             console.print(f"[error]Comando desconocido: {command}[/]")
             console.print("[dim]/help para comandos disponibles.[/dim]")
@@ -439,6 +495,11 @@ class ChatSession:
             ("/model <m>", "Cambiar modelo activo"),
             ("/system <p>", "Cambiar system prompt"),
             ("/temp <n>", "Ajustar temperatura (0-2)"),
+            ("/image <ruta>", "Adjuntar imagen (modelos vision)"),
+            ("/eco", "Modo eco: menos RAM (on/off)"),
+            ("/code", "Modo programador"),
+            ("/general", "Volver al modo general"),
+            ("/tts", "Texto a voz (on/off)"),
             ("/clear", "Limpiar conversacion"),
             ("/save <nom>", "Guardar sesion"),
             ("/load <nom>", "Cargar sesion"),
@@ -511,6 +572,72 @@ class ChatSession:
         except Exception as e:
             console.print(f"[error]Error al cargar sesion: {e}[/]")
 
+    def _handle_image(self, arg):
+        if not arg:
+            vision = [m["id"] for m in _catalog().values() if m.get("type") == "vision"]
+            console.print("[info]Uso:[/] [bold]/image <ruta>[/]")
+            console.print("[dim]Modelos de vision disponibles:[/]")
+            for vid in vision:
+                console.print(f"  [dim]{vid}[/dim]")
+            console.print("[dim]Cambia con: /model <id>[/dim]")
+            return
+        path = Path(arg).expanduser()
+        if not path.is_file():
+            console.print(f"[error]Archivo no encontrado: {arg}[/]")
+            return
+        try:
+            data = base64.b64encode(path.read_bytes()).decode()
+            self.pending_image = data
+            console.print(f"[success]Imagen adjuntada:[/] [bold]{path.name}[/]")
+            console.print("[dim]Escribe tu pregunta y se enviara junto a la imagen.[/dim]")
+        except Exception as e:
+            console.print(f"[error]No se pudo leer la imagen: {e}[/]")
+
+    def _toggle_eco(self, arg):
+        arg = (arg or "").lower()
+        if arg in ("on", "1", "si", "s"):
+            self.eco = True
+        elif arg in ("off", "0", "no", "n"):
+            self.eco = False
+        else:
+            self.eco = not self.eco
+        state = "ON" if self.eco else "OFF"
+        console.print(f"[info]Modo eco:[/] [bold]{state}[/]")
+        if self.eco:
+            console.print("[dim]Contexto y tokens reducidos para ahorrar RAM.[/dim]")
+
+    def _toggle_tts(self, arg):
+        arg = (arg or "").lower()
+        if arg in ("on", "1", "si", "s"):
+            self.tts = True
+        elif arg in ("off", "0", "no", "n"):
+            self.tts = False
+        else:
+            self.tts = not self.tts
+        state = "ON" if self.tts else "OFF"
+        console.print(f"[info]Texto a voz:[/] [bold]{state}[/]")
+        if self.tts:
+            if not (shutil.which("espeak-ng") or shutil.which("espeak") or shutil.which("piper")):
+                console.print("[warning]No se encontro espeak-ng/espeak/piper. Instala uno para voz.[/]")
+
+    def _speak(self, text):
+        if not self.tts or not text:
+            return
+        text = text[:500]
+        for cmd in (["espeak-ng", "-v", "es"], ["espeak", "-v", "es"]):
+            if shutil.which(cmd[0]):
+                try:
+                    subprocess.Popen(cmd + [text], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception:
+                    pass
+                return
+        if shutil.which("piper"):
+            try:
+                subprocess.Popen(["piper", "--output_raw"], stdin=subprocess.PIPE,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+
     def run(self):
         signal.signal(signal.SIGINT, self._signal_handler)
 
@@ -560,10 +687,16 @@ class ChatSession:
                     padding=(0, 1),
                 ))
 
-                response, stats = self.chat(user_input)
+                images = None
+                if self.pending_image:
+                    images = [self.pending_image]
+                    self.pending_image = None
+
+                response, stats = self.chat(user_input, images=images)
 
                 if response:
                     self.add_message("assistant", response)
+                    self._speak(response)
 
             except EOFError:
                 console.print()

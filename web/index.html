@@ -39,8 +39,21 @@
       <div id="context-bar" class="context-bar hidden">
         <span id="ctx-indicator" class="ctx-indicator"></span>
       </div>
+      <div id="attach-preview" class="attach-preview hidden">
+        <img id="attach-img" alt="adjunto">
+        <button id="attach-remove" class="attach-remove" title="Quitar imagen">✕</button>
+      </div>
       <div class="input-row">
+        <button id="btn-attach" class="btn-tool" title="Adjuntar imagen (vision)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/></svg>
+        </button>
+        <button id="btn-mic" class="btn-tool" title="Voz a texto (Whisper)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+        </button>
         <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send"></textarea>
+        <button id="btn-imagegen" class="btn-tool" title="Generar imagen (GPU)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </button>
         <button id="btn-send" class="btn-send" title="Enviar">
           <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -48,6 +61,7 @@
           <svg viewBox="0 0 24 24" width="22" height="22"><rect fill="currentColor" x="4" y="4" width="16" height="16" rx="2"/></svg>
         </button>
       </div>
+      <input type="file" id="file-input" accept="image/*" hidden>
     </div>
   </main>
 
@@ -98,6 +112,13 @@
         <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
       </div>
 
+      <div class="sheet-group">
+        <label>Modos</label>
+        <label class="toggle-row"><span>Modo eco (menos RAM)</span><input type="checkbox" id="eco-toggle"></label>
+        <label class="toggle-row"><span>Modo programador</span><input type="checkbox" id="code-toggle"></label>
+        <label class="toggle-row"><span>Texto a voz (respuestas)</span><input type="checkbox" id="tts-toggle"></label>
+      </div>
+
       <div class="sheet-group sheet-actions">
         <button id="btn-save-session" class="btn-secondary">Guardar</button>
         <button id="btn-load-session" class="btn-secondary">Cargar</button>
@@ -123,6 +144,23 @@
       <div class="modal-actions">
         <button id="modal-confirm" class="btn-primary">Aceptar</button>
         <button id="modal-cancel" class="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="imagegen-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Generar imagen</h2>
+      <textarea id="ig-prompt" rows="3" placeholder="Describe la imagen..."></textarea>
+      <select id="ig-engine" class="model-select">
+        <option value="a1111">A1111 (127.0.0.1:7860)</option>
+        <option value="comfyui">ComfyUI (127.0.0.1:8188)</option>
+      </select>
+      <div id="ig-status" class="progress-text hidden">Generando...</div>
+      <img id="ig-result" class="ig-result hidden" alt="imagen generada">
+      <div class="modal-actions">
+        <button id="ig-generate" class="btn-primary">Generar</button>
+        <button id="ig-cancel" class="btn-secondary">Cancelar</button>
       </div>
     </div>
   </div>
