@@ -1,0 +1,66 @@
+{
+  "version": "1.4.0",
+  "ollama": [
+    { "id": "qwen2.5-coder:0.5b",    "name": "Qwen2.5 Coder 0.5B",   "size": "0.4GB",  "ram": 1.0,  "ctx": 8192,   "cat": "bajo",  "type": "code",      "desc": "Super ligero, codigo basico" },
+    { "id": "nomic-embed-text",      "name": "Nomic Embed Text",    "size": "0.3GB",  "ram": 0.8,  "ctx": 8192,   "cat": "bajo",  "type": "embed",     "desc": "Embeddings para RAG" },
+    { "id": "qwen2.5-coder:1.5b",    "name": "Qwen2.5 Coder 1.5B",  "size": "0.9GB",  "ram": 1.5,  "ctx": 16384,  "cat": "bajo",  "type": "code",      "desc": "Codigo ligero" },
+    { "id": "deepseek-r1:1.5b",      "name": "DeepSeek R1 1.5B",    "size": "1.1GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "reasoning", "desc": "Razonamiento ligero" },
+    { "id": "qwen3:1.7b",            "name": "Qwen3 1.7B",          "size": "1.3GB",  "ram": 2.0,  "ctx": 16384,  "cat": "bajo",  "type": "chat",      "desc": "Chat ligero y rapido" },
+    { "id": "smollm2:1.7b",          "name": "SmolLM2 1.7B",        "size": "1.3GB",  "ram": 2.0,  "ctx": 16384,  "cat": "bajo",  "type": "chat",      "desc": "Ligero y versatil" },
+    { "id": "gemma3:1b",             "name": "Gemma 3 1B",          "size": "1.3GB",  "ram": 2.0,  "ctx": 16384,  "cat": "bajo",  "type": "vision",    "desc": "Vision + chat ligero" },
+    { "id": "llama3.2:1b",           "name": "Llama 3.2 1B",        "size": "1.3GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "chat",      "desc": "Meta Llama ligera" },
+    { "id": "gemma4:2b",             "name": "Gemma 4 2B",          "size": "1.5GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "chat",      "desc": "Rapido, respuestas inmediatas" },
+    { "id": "codegemma:2b",          "name": "CodeGemma 2B",        "size": "1.7GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "code",      "desc": "Codigo ligero" },
+    { "id": "mxbai-embed-large",     "name": "MXBai Embed Large",   "size": "0.7GB",  "ram": 1.0,  "ctx": 512,    "cat": "bajo",  "type": "embed",     "desc": "Embeddings de alta calidad" },
+    { "id": "qwen3-moe:0.6b",        "name": "Qwen3 MoE 0.6B",      "size": "0.9GB",  "ram": 1.2,  "ctx": 131072, "cat": "bajo",  "type": "moe",       "desc": "MoE: potencia alta con pocos recursos" },
+    { "id": "phi3:mini",             "name": "Phi-3 Mini",          "size": "2.0GB",  "ram": 3.0,  "ctx": 8192,   "cat": "bajo",  "type": "chat",      "desc": "Microsoft Phi-3 mini" },
+    { "id": "llama3.2:3b",           "name": "Llama 3.2 3B",        "size": "2.0GB",  "ram": 3.0,  "ctx": 8192,   "cat": "medio", "type": "chat",      "desc": "Meta Llama 3.2 general" },
+    { "id": "qwen2.5-coder:3b",      "name": "Qwen2.5 Coder 3B",    "size": "1.9GB",  "ram": 3.0,  "ctx": 32768,  "cat": "medio", "type": "code",      "desc": "Codigo medio" },
+    { "id": "llava-phi3:3.8b",       "name": "LLaVA Phi-3 3.8B",    "size": "2.2GB",  "ram": 3.5,  "ctx": 8192,   "cat": "medio", "type": "vision",    "desc": "Vision ligera" },
+    { "id": "phi3:3.8b",             "name": "Phi-3 3.8B",          "size": "2.3GB",  "ram": 3.5,  "ctx": 8192,   "cat": "medio", "type": "chat",      "desc": "Microsoft Phi-3 medio" },
+    { "id": "phi4-mini:3.8b",        "name": "Phi-4 Mini 3.8B",     "size": "2.3GB",  "ram": 3.5,  "ctx": 16384,  "cat": "medio", "type": "chat",      "desc": "Microsoft Phi-4 mini" },
+    { "id": "qwen3:4b",              "name": "Qwen3 4B",            "size": "2.5GB",  "ram": 3.5,  "ctx": 16384,  "cat": "medio", "type": "chat",      "desc": "Chat ligero y rapido" },
+    { "id": "mistral:7b",            "name": "Mistral 7B",          "size": "4.1GB",  "ram": 5.5,  "ctx": 32768,  "cat": "alto",  "type": "chat",      "desc": "Mistral v0.3 general" },
+    { "id": "qwen3:8b",              "name": "Qwen3 8B",            "size": "4.5GB",  "ram": 6.0,  "ctx": 32768,  "cat": "alto",  "type": "chat",      "desc": "Chat general" },
+    { "id": "deepseek-r1:7b",        "name": "DeepSeek R1 7B",      "size": "4.7GB",  "ram": 6.0,  "ctx": 32768,  "cat": "alto",  "type": "reasoning", "desc": "Razonamiento y logica" },
+    { "id": "qwen2.5-coder:7b",      "name": "Qwen2.5 Coder 7B",    "size": "4.7GB",  "ram": 6.0,  "ctx": 32768,  "cat": "alto",  "type": "code",      "desc": "Codigo y programacion" },
+    { "id": "llava:7b",              "name": "LLaVA 7B",            "size": "4.7GB",  "ram": 6.0,  "ctx": 8192,   "cat": "alto",  "type": "vision",    "desc": "Vision clasica" },
+    { "id": "gemma3:4b",             "name": "Gemma 3 4B",          "size": "4.9GB",  "ram": 6.0,  "ctx": 32768,  "cat": "alto",  "type": "vision",    "desc": "Vision + chat potente" },
+    { "id": "qwen2.5vl:7b",          "name": "Qwen2.5 VL 7B",       "size": "6.5GB",  "ram": 8.0,  "ctx": 32768,  "cat": "alto",  "type": "vision",    "desc": "Vision avanzada" }
+  ],
+  "webgpu": [
+    { "id": "onnx-community/gemma-3-270m-it-ONNX",        "name": "Gemma 3 270M",           "size": "~200 MB", "ram": "1 GB+", "context": 4096,  "maxTokens": 1024, "description": "Google Gemma 3 ultra ligero" },
+    { "id": "onnx-community/Qwen2.5-0.5B-Instruct",       "name": "Qwen2.5 0.5B Instruct",   "size": "~300 MB", "ram": "1 GB+", "context": 8192,  "maxTokens": 1024, "description": "Super ligero y rapido" },
+    { "id": "onnx-community/Qwen2.5-Coder-0.5B-Instruct", "name": "Qwen2.5 Coder 0.5B",      "size": "~300 MB", "ram": "1 GB+", "context": 8192,  "maxTokens": 1024, "description": "Codigo super ligero" },
+    { "id": "onnx-community/Qwen3-0.6B-Instruct",         "name": "Qwen3 0.6B Instruct",     "size": "~400 MB", "ram": "1 GB+", "context": 32768, "maxTokens": 1024, "description": "Qwen3 ligero con contexto grande" },
+    { "id": "Xenova/tinyllama-1.1b-chat-v1.0",            "name": "TinyLlama 1.1B Chat",     "size": "~700 MB", "ram": "2 GB+", "context": 2048,  "maxTokens": 1024, "description": "Ligero y versatil" },
+    { "id": "onnx-community/Llama-3.2-1B-Instruct-ONNX",  "name": "Llama 3.2 1B",            "size": "~700 MB", "ram": "2 GB+", "context": 8192,  "maxTokens": 1024, "description": "Meta Llama 3.2" },
+    { "id": "onnx-community/gemma-3-1b-it-ONNX-GQA",      "name": "Gemma 3 1B IT",           "size": "~700 MB", "ram": "2 GB+", "context": 8192,  "maxTokens": 1024, "description": "Google Gemma 3" },
+    { "id": "onnx-community/SmolLM2-1.7B-Instruct",       "name": "SmolLM2 1.7B Instruct",   "size": "~1.1 GB", "ram": "2 GB+", "context": 8192,  "maxTokens": 1024, "description": "Versatil de parametros medios" },
+    { "id": "onnx-community/Qwen2.5-1.5B-Instruct",       "name": "Qwen2.5 1.5B Instruct",   "size": "~900 MB", "ram": "2 GB+", "context": 16384, "maxTokens": 2048, "description": "Balanceado general" },
+    { "id": "onnx-community/Qwen2.5-Coder-1.5B-Instruct", "name": "Qwen2.5 Coder 1.5B",      "size": "~900 MB", "ram": "2 GB+", "context": 16384, "maxTokens": 2048, "description": "Codigo balanceado" },
+    { "id": "onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX", "name": "DeepSeek R1 Distill 1.5B", "size": "~1 GB", "ram": "3 GB+", "context": 8192,  "maxTokens": 1024, "description": "Razonamiento profundo" },
+    { "id": "Xenova/phi-3-mini-4k-instruct",               "name": "Phi-3 Mini 4K",          "size": "~2 GB",   "ram": "4 GB+", "context": 4096,  "maxTokens": 1024, "description": "Microsoft Phi-3" }
+  ],
+  "tools": {
+    "vision": {
+      "enabled": true,
+      "note": "Modelos que entienden imagenes via Ollama (llava, gemma3:4b, qwen2.5vl, ...). Sube una imagen en la web o usa /image en el TUI."
+    },
+    "tts": [
+      { "engine": "espeak-ng", "pkg": "espeak-ng", "platforms": ["termux", "linux"], "note": "Voz robotica, funciona offline" },
+      { "engine": "piper",     "pkg": "piper",     "platforms": ["linux", "macos", "windows"], "note": "Voz natural (build manual o pip piper-tts)" }
+    ],
+    "stt": [
+      { "engine": "whisper.cpp", "cmd": "whisper-cli", "platforms": ["termux", "linux", "macos"], "note": "Voz a texto (build manual, no esta en repos)" }
+    ],
+    "imagegen": [
+      { "engine": "ComfyUI", "url": "http://localhost:8188", "platforms": ["linux", "windows"], "note": "Generacion de imagenes, requiere GPU dedicada" },
+      { "engine": "A1111",   "url": "http://localhost:7860", "platforms": ["linux", "windows"], "note": "Automatic1111 / Stable Diffusion WebUI, GPU dedicada" }
+    ],
+    "video": {
+      "enabled": false,
+      "note": "Roadmap: la generacion de video local no es viable en telefonos. Requiere GPU dedicada (ej. Wan 2.1 en Colab)."
+    }
+  }
+}
