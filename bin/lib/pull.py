@@ -35,7 +35,12 @@ def server_running():
 
 def do_pull(model_id):
     info(f"Descargando {model_id}...")
-    rc = subprocess.call(["ollama", "pull", model_id])
+    try:
+        rc = subprocess.call(["ollama", "pull", model_id])
+    except FileNotFoundError:
+        err("Ollama no encontrado en el PATH.")
+        warn("Instala Ollama primero (bash install-ollama.sh) o agregalo al PATH.")
+        return False
     if rc == 0:
         ok(f"{model_id} descargado")
     else:
@@ -106,7 +111,12 @@ def main():
 
     if not server_running():
         info("Iniciando servidor Ollama...")
-        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            err("Ollama no esta instalado o no esta en el PATH.")
+            warn("Instala Ollama primero (bash install-ollama.sh) y vuelve a ejecutar.")
+            return
         time.sleep(3)
 
     interactive()

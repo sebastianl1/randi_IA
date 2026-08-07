@@ -5,7 +5,10 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 ## [Unreleased]
 
 ### Fixed
-- Instalador: progreso visible con spinner y tiempo transcurrido, `timeout` por paso y log en `$RANDI_DIR/install.log` (antes parecia colgado en "Instalando dependencias"). Manejo de sudo en Linux/WSL sin bloqueo.
+- Instalador: log en `$RANDI_DIR/install.log` (antes `/install.log`, read-only en Android, que silenciaba `pkg install`). Con fallback a `$HOME/randi-install.log` si el directorio no es escribible.
+- Instalador: fallback de `timeout` en macOS (GNU coreutils no incluido); los pasos corren sin limite de tiempo.
+- Instalador: `pull.py` ya no crashea si `ollama` no esta en el PATH (Windows nativo).
+- Repo: nuevo `.gitattributes` fuerza finales de linea LF en Windows/Git Bash (evita `syntax error` por CRLF).
 - Web UI movil: fallback `100vh` para `100dvh` (evita el layout roto en navegadores/WebViews sin soporte `dvh`).
 - Web UI movil: `word-break`/`overflow-wrap` en mensajes y tablas con scroll interno (evita desbordes horizontales).
 - CI: `ruff.toml` con reglas curadas (`E4,E9,F,I,W`) y errores de lint resueltos (imports, f-strings, globals innecesarios).

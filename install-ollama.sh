@@ -18,8 +18,6 @@ err()   { echo -e "  ${RED}${B}::${R} $1"; }
 dim()   { echo -e "  ${D}$1${R}"; }
 
 # ─── Progress (run_step: spinner + timeout + log) ─────────────────────────
-RANDI_LOG="${RANDI_LOG:-$RANDI_DIR/install.log}"
-
 _run_spinner() {
     local pid=$1 label=$2
     local chars='|/-\' i=0 start elapsed
@@ -36,8 +34,15 @@ _run_spinner() {
 run_step() {
     local label="$1" tmo="$2"; shift 2
     local pid rc
-    mkdir -p "$(dirname "$RANDI_LOG")"
-    ( timeout "$tmo" "$@" >> "$RANDI_LOG" 2>&1 ) &
+    if ! mkdir -p "$(dirname "$RANDI_LOG")" 2>/dev/null; then
+        RANDI_LOG="$HOME/randi-install.log"
+        mkdir -p "$HOME" 2>/dev/null || true
+    fi
+    if command -v timeout >/dev/null 2>&1; then
+        ( timeout "$tmo" "$@" >> "$RANDI_LOG" 2>&1 ) &
+    else
+        ( "$@" >> "$RANDI_LOG" 2>&1 ) &
+    fi
     pid=$!
     _run_spinner "$pid" "$label"
     wait "$pid"
@@ -60,6 +65,7 @@ run_step() {
 # ─── Config ───────────────────────────────────────────────────────────────
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RANDI_DIR="$HOME/.local/share/randi"
+RANDI_LOG="${RANDI_LOG:-$RANDI_DIR/install.log}"
 BIN_DIR="$HOME/bin"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
