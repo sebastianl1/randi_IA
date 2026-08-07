@@ -2,9 +2,9 @@
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="1.2.0"
+RANDI_VERSION="1.3.0"
 RANDI_AUTHOR="Sebastian Laguna"
-RANDI_REPO="${RANDI_REPO:-https://github.com/TU_USUARIO/randi.git}"
+RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
 
 R='\033[0m'; B='\033[1m'; D='\033[2m'; I='\033[3m'
@@ -75,10 +75,10 @@ cmd_web() {
         script="$repo_parent/web/server.py"
     elif [ -f "$PWD/web/server.py" ]; then
         script="$PWD/web/server.py"
-    elif [ -f "$RANDI_DIR/lib/web_server.py" ]; then
-        script="$RANDI_DIR/lib/web_server.py"
-    elif [ -f "$HOME/.local/share/randi/lib/web_server.py" ]; then
-        script="$HOME/.local/share/randi/lib/web_server.py"
+    elif [ -f "$RANDI_DIR/web/server.py" ]; then
+        script="$RANDI_DIR/web/server.py"
+    elif [ -f "$HOME/.local/share/randi/web/server.py" ]; then
+        script="$HOME/.local/share/randi/web/server.py"
     fi
 
     if [ -z "$script" ]; then
@@ -490,13 +490,17 @@ _do_update() {
     echo ""
     info "Actualizando scripts..."
 
-    # Copiar scripts principales
-    cp "$src/bin/randi" "$RANDI_DIR/../bin/randi" 2>/dev/null || \
-    cp "$src/bin/randi" "$HOME/bin/randi" 2>/dev/null || {
+    # Copiar scripts principales (ubicacion canonica ~/bin, fallback al repo en dev)
+    local target_randi="$HOME/bin/randi"
+    if [ ! -f "$target_randi" ] && [ -f "$REPO_DIR/bin/randi" ]; then
+        target_randi="$REPO_DIR/bin/randi"
+    fi
+    if cp "$src/bin/randi" "$target_randi" 2>/dev/null; then
+        chmod +x "$target_randi"
+    else
         err "No se pudo instalar el script randi."
         return 1
-    }
-    chmod +x "$HOME/bin/randi" 2>/dev/null || true
+    fi
 
     cp "$src/bin/ollama-chat" "$HOME/bin/ollama-chat" 2>/dev/null || true
     chmod +x "$HOME/bin/ollama-chat" 2>/dev/null || true
@@ -506,9 +510,15 @@ _do_update() {
     cp "$src/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
     chmod +x "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
 
+    # Copiar interfaz web
+    if [ -d "$src/web" ]; then
+        mkdir -p "$RANDI_DIR/web"
+        cp -r "$src/web/." "$RANDI_DIR/web/" 2>/dev/null || true
+    fi
+
     # Leer nueva version
     local new_ver
-    new_ver=$(grep '^RANDI_VERSION=' "$HOME/bin/randi" 2>/dev/null | cut -d'"' -f2)
+    new_ver=$(grep '^RANDI_VERSION=' "$target_randi" 2>/dev/null | cut -d'"' -f2)
     echo ""
     ok "Actualizacion completada!"
     if [ -n "$new_ver" ]; then
@@ -617,33 +627,33 @@ show_menu() {
         echo -e "  ${B}7${R})  ${CYN}Web UI${R}         ${D}Interfaz web local${R}"
         echo -e "  ${B}8${R})  ${D}Catalogo${R}        ${D}Modelos recomendados${R}"
         echo -e "  ${B}9${R})  ${D}Configuracion${R}   ${D}Ver configuracion${R}"
-         echo -e "  ${B}10${R}) ${YLW}Actualizar${R}     ${D}Update desde GitHub o local${R}"
-         echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
-         echo -e "  ${B}0${R})  ${RED}Salir${R}"
-         echo ""
-         echo -ne "  ${BLU}${B}❯${R} "
-         read -r opt
-         case "$opt" in
-             1) cmd_chat ;;
-             2) cmd_run ;;
-             3) cmd_pull ;;
-             4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             6)
-                 if server_running; then
-                     cmd_stop
-                 else
-                     cmd_serve
-                 fi
-                 echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             7) cmd_web ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             8) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             9) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             10) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             11) cmd_uninstall ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-             0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
-             *) err "Opcion invalida"; sleep 1 ;;
-         esac
+        echo -e "  ${B}10${R}) ${YLW}Actualizar${R}     ${D}Update desde GitHub o local${R}"
+        echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
+        echo -e "  ${B}0${R})  ${RED}Salir${R}"
+        echo ""
+        echo -ne "  ${BLU}${B}❯${R} "
+        read -r opt
+        case "$opt" in
+            1) cmd_chat ;;
+            2) cmd_run ;;
+            3) cmd_pull ;;
+            4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            6)
+                if server_running; then
+                    cmd_stop
+                else
+                    cmd_serve
+                fi
+                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            7) cmd_web ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            8) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            9) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            10) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            11) cmd_uninstall ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
+            *) err "Opcion invalida"; sleep 1 ;;
+        esac
     done
 }
 

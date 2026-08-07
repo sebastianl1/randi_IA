@@ -22,7 +22,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RANDI_DIR="$HOME/.local/share/randi"
 BIN_DIR="$HOME/bin"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_REPO="${RANDI_REPO:-https://github.com/TU_USUARIO/randi.git}"
+RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 
 # ─── Detect Shell ─────────────────────────────────────────────────────────
 detect_shell() {
@@ -47,6 +47,43 @@ check_termux() {
         return 2>/dev/null || exit 1
     fi
     ok "Entorno Termux detectado"
+}
+
+check_env() {
+    local arch
+    arch=$(uname -m 2>/dev/null || echo "unknown")
+
+    echo ""
+    info "Verificando entorno..."
+
+    case "$arch" in
+        aarch64|arm64) ok "Arquitectura: $arch (ARM64)" ;;
+        *) warn "Arquitectura: $arch — se recomienda ARM64 (aarch64)" ;;
+    esac
+
+    if [ -r /proc/meminfo ]; then
+        local total_kb avail_kb total_gb avail_gb
+        total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+        avail_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+        total_gb=$((total_kb / 1024 / 1024))
+        avail_gb=$((avail_kb / 1024 / 1024))
+        if [ "$total_gb" -lt 4 ]; then
+            warn "RAM total: ~${total_gb}GB — se recomienda minimo 4GB"
+        else
+            ok "RAM total: ~${total_gb}GB (${avail_gb}GB disponibles)"
+        fi
+    fi
+
+    local free_kb free_gb
+    free_kb=$(df -k "$HOME" 2>/dev/null | tail -n 1 | awk '{print $4}')
+    if [ -n "$free_kb" ] && [ "$free_kb" -gt 0 ] 2>/dev/null; then
+        free_gb=$((free_kb / 1024 / 1024))
+        if [ "$free_gb" -lt 3 ]; then
+            warn "Almacenamiento libre: ~${free_gb}GB — se recomienda 3GB+ para modelos"
+        else
+            ok "Almacenamiento libre: ~${free_gb}GB"
+        fi
+    fi
 }
 
 # ─── Install Dependencies ─────────────────────────────────────────────────
@@ -88,7 +125,7 @@ install_scripts() {
     echo ""
     info "Instalando scripts RANDI..."
 
-    mkdir -p "$BIN_DIR" "$RANDI_DIR/lib" "$RANDI_DIR/sessions"
+    mkdir -p "$BIN_DIR" "$RANDI_DIR/lib" "$RANDI_DIR/sessions" "$RANDI_DIR/web"
 
     if [ -f "$REPO_DIR/bin/randi" ]; then
         cp "$REPO_DIR/bin/randi" "$BIN_DIR/randi"
@@ -102,6 +139,11 @@ install_scripts() {
     if [ -f "$REPO_DIR/bin/lib/ollama_chat.py" ]; then
         cp "$REPO_DIR/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py"
         chmod +x "$RANDI_DIR/lib/ollama_chat.py"
+    fi
+
+    if [ -d "$REPO_DIR/web" ]; then
+        cp -r "$REPO_DIR/web/." "$RANDI_DIR/web/"
+        ok "Interfaz web: $RANDI_DIR/web"
     fi
 }
 
@@ -354,6 +396,7 @@ main() {
     echo "  ──────────────────────────────────────────────"
 
     check_termux
+    check_env
     install_deps
     install_ollama
     install_scripts
