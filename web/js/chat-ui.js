@@ -50,13 +50,36 @@ export function clearMessages() {
   scrollToBottom();
 }
 
+function sanitizeHtml(html) {
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('script, style, iframe, object, embed, link, meta').forEach((n) => n.remove());
+    doc.querySelectorAll('*').forEach((n) => {
+      [...n.attributes].forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith('on')) {
+          n.removeAttribute(attr.name);
+        } else if (name === 'href' || name === 'src' || name === 'xlink:href') {
+          const v = (attr.value || '').trim().toLowerCase();
+          if (v.startsWith('javascript:') || v.startsWith('vbscript:') || v.startsWith('data:text/html')) {
+            n.removeAttribute(attr.name);
+          }
+        }
+      });
+    });
+    return doc.body.innerHTML;
+  } catch {
+    return html.replace(/[<>]/g, '');
+  }
+}
+
 function renderMarkdown(text) {
   if (typeof marked !== 'undefined') {
     try {
-      return marked.parse(text, { breaks: true, gfm: true });
+      return sanitizeHtml(marked.parse(text, { breaks: true, gfm: true }));
     } catch {}
   }
-  return text.replace(/\n/g, '<br>');
+  return escapeHtml(text).replace(/\n/g, '<br>');
 }
 
 function scrollToBottom() {
