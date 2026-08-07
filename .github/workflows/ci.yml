@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bash - sintaxis
+        run: |
+          bash -n bin/randi
+          bash -n install-ollama.sh
+          bash -n bin/ollama-chat
+
+      - name: Python - compilacion
+        run: |
+          python3 -m py_compile web/server.py bin/lib/*.py
+
+      - name: JS - sintaxis
+        run: |
+          for f in web/js/*.js docs/lang/*.js; do node --check "$f"; done
+
+      - name: models.json valido y sin duplicados
+        run: |
+          python3 -c "
+          import json, sys
+          sys.path.insert(0, 'bin/lib')
+          from catalog import get_models
+          d = json.load(open('web/models.json'))
+          ids = [m['id'] for m in get_models()]
+          assert len(ids) == len(set(ids)), 'IDs duplicados en el catalogo'
+          for m in get_models():
+              assert m.get('ctx'), f'falta ctx en {m[\"id\"]}'
+              assert m.get('ram'), f'falta ram en {m[\"id\"]}'
+          print(f'OK: {len(ids)} modelos unicos')
+          "

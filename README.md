@@ -1,5 +1,11 @@
 # RANDI 🤖
 
+[![Version](https://img.shields.io/github/v/release/sebastianl1/randi_IA?label=version&style=flat-square)](https://github.com/sebastianl1/randi_IA/releases)
+[![Stars](https://img.shields.io/github/stars/sebastianl1/randi_IA?style=flat-square)](https://github.com/sebastianl1/randi_IA/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Plataformas](https://img.shields.io/badge/Termux%20%E2%80%A2%20Linux%20%E2%80%A2%20macOS%20%E2%80%A2%20Windows%20%E2%80%A2%20WSL2-6c8cff?style=flat-square)]()
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square)]()
+
 **RANDI** — Asistente de IA local para Termux en Android, Linux, macOS y Windows (WSL2 / Git Bash).
 Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, vision (chat con imagenes), texto a voz y generacion de imagenes.
 
@@ -307,5 +313,14 @@ free -h      # Memoria disponible
 ## Licencia
 
 MIT
+
+## Soporte
+
+RANDI es un proyecto open source, gratuito y sin publicidad, hecho con dedicacion para la comunidad.
+
+- ⭐ **Da una estrella** en [GitHub](https://github.com/sebastianl1/randi_IA) si te resulta util.
+- 🐛 Reporta errores o sugiere mejoras en [Issues](https://github.com/sebastianl1/randi_IA/issues).
+- 🌐 Comparte el proyecto en redes, comunidades de Termux/IA y listas de recursos.
+- 🤝 Las contribuciones son bienvenidas (ver `CONTRIBUTING.md`).
 
 ## HECHO POR SEBASTIAN LAGUNA
