@@ -57,7 +57,7 @@ randi help               # Mostrar ayuda
 
 ### Bajo consumo (< 2GB RAM)
 ```bash
-randi pull gemma4:2b            # Rapido (1.5GB)
+randi pull gemma3:1b            # Rapido (1.5GB)
 randi pull deepseek-r1:1.5b     # Razonamiento ligero (1.1GB)
 randi pull qwen2.5-coder:1.5b   # Codigo ligero (0.9GB)
 randi pull qwen2.5-coder:0.5b   # Super ligero (0.4GB)
@@ -86,7 +86,7 @@ randi pull mistral:7b           # Mistral v0.3 (4.1GB)
 opencode -m ollama/qwen2.5-coder:7b
 opencode -m ollama/deepseek-r1:7b
 opencode -m ollama/qwen3:8b
-opencode -m ollama/gemma4:2b
+opencode -m ollama/gemma3:1b
 opencode -m ollama/llama3.2:3b
 opencode -m ollama/qwen2.5-coder:1.5b
 ```
@@ -150,14 +150,33 @@ randi web 3000               # Puerto especifico
 ```bash
 export OLLAMA_HOST=http://localhost:11434
 export OLLAMA_KEEP_ALIVE=-1
+export OLLAMA_FLASH_ATTENTION=1      # Mas rapido
+export OLLAMA_KV_CACHE_TYPE=q8_0     # Menos RAM
 export RANDI_DIR=$HOME/.local/share/randi
 ```
+
+## Codificar en celular (8GB RAM)
+
+```bash
+# 1. Aceleracion por GPU (Termux/Android)
+pkg install ollama-backend-vulkan mesa-vulkan-icd-freedreno
+
+# 2. Modelo recomendado (punto dulce)
+randi pull qwen2.5-coder:3b
+opencode -m ollama/qwen2.5-coder:3b
+
+# 3. Mas potente (7B, cierra apps, requiere Vulkan)
+randi pull qwen2.5-coder:7b
+```
+
+Alternativa: backend **WebGPU** en `randi web` con `Qwen2.5 Coder 1.5B` o `3B` (GPU del navegador).
 
 ## Mantenimiento
 
 ```bash
-# Actualizar Ollama
-npm update -g @mmmbuto/ollama-termux
+# Actualizar Ollama (Termux)
+pkg upgrade ollama            # paquete nativo
+# o npm update -g @mmmbuto/ollama-termux   (si usas el paquete npm)
 
 # Ver espacio usado por modelos
 du -sh ~/.ollama/models/

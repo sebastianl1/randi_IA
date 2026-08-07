@@ -1,12 +1,12 @@
 import { checkServer, listModels } from './ollama-client.js';
 import { getAvailableModels, downloadModel, isModelLoaded, getLoadedModelId, isModelCached, getCachedModelIds, getModelInfo, getModelContext, isLoading as isGPUModelLoading, removeCachedModel } from './webgpu-client.js';
-import { loadCatalog, getOllamaContext } from './catalog.js';
+import { loadCatalog, getOllamaContext, getOllamaModelInfo } from './catalog.js';
 import { DEFAULT_BACKEND, DEFAULT_TEMPERATURE, DEFAULT_SYSTEM_PROMPT } from './config.js';
 import {
   sendMessage, stopStreaming, clearMessages, setMessages,
   getMessages, updateContextBar, showTyping, hideTyping,
   appendMessage, removeWelcome, setContextLimit,
-  toggleMic, generateImage,
+  toggleMic, generateImage, removeMicRecordingClass,
 } from './chat-ui.js';
 
 const state = {
@@ -70,6 +70,29 @@ function hideModelBar() {
 window.__setSystemPrompt = (prompt) => {
   state.systemPrompt = prompt;
 };
+
+window.__setEco = (val) => {
+  if (ecoToggle) {
+    ecoToggle.checked = !!val;
+    ecoToggle.dispatchEvent(new Event('change'));
+  }
+};
+
+window.__setCode = (val) => {
+  if (codeToggle) {
+    codeToggle.checked = !!val;
+    codeToggle.dispatchEvent(new Event('change'));
+  }
+};
+
+window.__setTts = (val) => {
+  if (ttsToggle) {
+    ttsToggle.checked = !!val;
+    ttsToggle.dispatchEvent(new Event('change'));
+  }
+};
+
+window.__attachImage = () => fileInput.click();
 
 function setModelStatus(status) {
   modelStatus.className = 'status-indicator ' + status;
@@ -421,6 +444,14 @@ fileInput.addEventListener('change', () => {
     state.pendingImage = reader.result;
     attachImg.src = state.pendingImage;
     attachPreview.classList.remove('hidden');
+    if (state.backend !== 'ollama') {
+      showToast('Vision requiere el backend Ollama', 'warning');
+    } else {
+      const info = getOllamaModelInfo(state.model);
+      if (state.model && info && info.type !== 'vision') {
+        showToast('Este modelo no es de vision. Prueba: gemma3:1b, llava, qwen2.5vl', 'warning');
+      }
+    }
   };
   reader.readAsDataURL(file);
 });
@@ -566,8 +597,9 @@ window.addEventListener('send-message', async () => {
     ? 'Eres RANDI en modo programador. Das respuestas de codigo precisas, con explicaciones breves y ejemplos funcionales.'
     : state.systemPrompt;
 
+  const imagePayload = state.pendingImage ? [state.pendingImage.split(',')[1]] : null;
   await sendMessage(text, state.backend, state.model, state.temperature, systemPrompt,
-    state.pendingImage ? [state.pendingImage] : null, state.tts);
+    imagePayload, state.tts);
   if (state.pendingImage) {
     state.pendingImage = null;
     attachPreview.classList.add('hidden');

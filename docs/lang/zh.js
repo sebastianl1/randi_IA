@@ -88,7 +88,7 @@ window.I18N = {
   "faq5.q": "网页界面和 WebGPU 如何工作？",
   "faq5.a": "<code>randi web</code> 打开本地网页界面，包含两个后端：<strong>Ollama</strong> 用于大型模型，<strong>WebGPU</strong> 用于在浏览器 GPU 上运行的小型模型（&lt;2B，使用 Transformers.js）。模型缓存在浏览器中。",
   "faq6.q": "可以将这些模型与 OpenCode 一起使用吗？",
-  "faq6.a": "可以。如果你已安装 <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a>，安装程序会自动配置本地提供商。使用 <code>opencode -m ollama/qwen2.5-coder:7b</code> 或任意模型，如 <code>ollama/deepseek-r1:7b</code>、<code>ollama/qwen3:8b</code>、<code>ollama/gemma4:2b</code>。",
+  "faq6.a": "可以。如果你已安装 <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a>，安装程序会自动配置本地提供商。使用 <code>opencode -m ollama/qwen2.5-coder:7b</code> 或任意模型，如 <code>ollama/deepseek-r1:7b</code>、<code>ollama/qwen3:8b</code>、<code>ollama/gemma3:1b</code>。",
   "faq7.q": "如何更新 RANDI？",
   "faq7.a": "运行 <code>randi update</code> 从 GitHub 或本地更新。要添加更多模型，请使用 <code>randi pull</code>。",
   "faq8.q": "内存不足怎么办？",

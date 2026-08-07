@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "ollama": [
     { "id": "qwen2.5-coder:0.5b",    "name": "Qwen2.5 Coder 0.5B",   "size": "0.4GB",  "ram": 1.0,  "ctx": 8192,   "cat": "bajo",  "type": "code",      "desc": "Super ligero, codigo basico" },
     { "id": "nomic-embed-text",      "name": "Nomic Embed Text",    "size": "0.3GB",  "ram": 0.8,  "ctx": 8192,   "cat": "bajo",  "type": "embed",     "desc": "Embeddings para RAG" },
@@ -9,7 +9,6 @@
     { "id": "smollm2:1.7b",          "name": "SmolLM2 1.7B",        "size": "1.3GB",  "ram": 2.0,  "ctx": 16384,  "cat": "bajo",  "type": "chat",      "desc": "Ligero y versatil" },
     { "id": "gemma3:1b",             "name": "Gemma 3 1B",          "size": "1.3GB",  "ram": 2.0,  "ctx": 16384,  "cat": "bajo",  "type": "vision",    "desc": "Vision + chat ligero" },
     { "id": "llama3.2:1b",           "name": "Llama 3.2 1B",        "size": "1.3GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "chat",      "desc": "Meta Llama ligera" },
-    { "id": "gemma4:2b",             "name": "Gemma 4 2B",          "size": "1.5GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "chat",      "desc": "Rapido, respuestas inmediatas" },
     { "id": "codegemma:2b",          "name": "CodeGemma 2B",        "size": "1.7GB",  "ram": 2.0,  "ctx": 8192,   "cat": "bajo",  "type": "code",      "desc": "Codigo ligero" },
     { "id": "mxbai-embed-large",     "name": "MXBai Embed Large",   "size": "0.7GB",  "ram": 1.0,  "ctx": 512,    "cat": "bajo",  "type": "embed",     "desc": "Embeddings de alta calidad" },
     { "id": "qwen3-moe:0.6b",        "name": "Qwen3 MoE 0.6B",      "size": "0.9GB",  "ram": 1.2,  "ctx": 131072, "cat": "bajo",  "type": "moe",       "desc": "MoE: potencia alta con pocos recursos" },
@@ -39,6 +38,7 @@
     { "id": "onnx-community/SmolLM2-1.7B-Instruct",       "name": "SmolLM2 1.7B Instruct",   "size": "~1.1 GB", "ram": "2 GB+", "context": 8192,  "maxTokens": 1024, "description": "Versatil de parametros medios" },
     { "id": "onnx-community/Qwen2.5-1.5B-Instruct",       "name": "Qwen2.5 1.5B Instruct",   "size": "~900 MB", "ram": "2 GB+", "context": 16384, "maxTokens": 2048, "description": "Balanceado general" },
     { "id": "onnx-community/Qwen2.5-Coder-1.5B-Instruct", "name": "Qwen2.5 Coder 1.5B",      "size": "~900 MB", "ram": "2 GB+", "context": 16384, "maxTokens": 2048, "description": "Codigo balanceado" },
+    { "id": "onnx-community/Qwen2.5-Coder-3B-Instruct",   "name": "Qwen2.5 Coder 3B",        "size": "~2 GB",   "ram": "3 GB+", "context": 32768, "maxTokens": 2048, "description": "Codigo potente para 8GB RAM" },
     { "id": "onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX", "name": "DeepSeek R1 Distill 1.5B", "size": "~1 GB", "ram": "3 GB+", "context": 8192,  "maxTokens": 1024, "description": "Razonamiento profundo" },
     { "id": "Xenova/phi-3-mini-4k-instruct",               "name": "Phi-3 Mini 4K",          "size": "~2 GB",   "ram": "4 GB+", "context": 4096,  "maxTokens": 1024, "description": "Microsoft Phi-3" }
   ],

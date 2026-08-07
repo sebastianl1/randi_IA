@@ -88,7 +88,7 @@ window.I18N = {
   "faq5.q": "How do the web interface and WebGPU work?",
   "faq5.a": "<code>randi web</code> opens a local web interface with two backends: <strong>Ollama</strong> for large models and <strong>WebGPU</strong> for small models (&lt;2B) that run on the browser's GPU with Transformers.js. Models are cached in the browser.",
   "faq6.q": "Can I use the models with OpenCode?",
-  "faq6.a": "Yes. If you have <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> installed, the installer automatically sets up the local provider. Use <code>opencode -m ollama/qwen2.5-coder:7b</code> or any model like <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.",
+  "faq6.a": "Yes. If you have <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> installed, the installer automatically sets up the local provider. Use <code>opencode -m ollama/qwen2.5-coder:7b</code> or any model like <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma3:1b</code>.",
   "faq7.q": "How do I update RANDI?",
   "faq7.a": "Run <code>randi update</code> to update from GitHub or locally. To add more models use <code>randi pull</code>.",
   "faq8.q": "What happens if I run out of memory?",

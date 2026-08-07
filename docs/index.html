@@ -66,7 +66,7 @@
     "author": { "@type": "Person", "name": "Sebastian Laguna" },
     "license": "https://opensource.org/licenses/MIT",
     "url": "https://github.com/sebastianl1/randi_IA",
-    "softwareVersion": "1.4.0",
+    "softwareVersion": "1.4.1",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" },
     "featureList": "IA 100% local en Termux, sin conexión a internet, sin consumo de tokens, Ollama para Termux, modelos DeepSeek/Qwen/Gemma/Mistral, chat TUI con streaming, interfaz web con WebGPU (Transformers.js), integración con OpenCode, gestión de modelos"
@@ -107,7 +107,7 @@
       {
         "@type": "Question",
         "name": "¿Puedo usar los modelos con OpenCode?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Sí. Si tienes OpenCode instalado, el instalador configura automáticamente el provider local. Usa 'opencode -m ollama/qwen2.5-coder:7b' o cualquier modelo como ollama/deepseek-r1:7b, ollama/qwen3:8b, ollama/gemma4:2b." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Sí. Si tienes OpenCode instalado, el instalador configura automáticamente el provider local. Usa 'opencode -m ollama/qwen2.5-coder:7b' o cualquier modelo como ollama/deepseek-r1:7b, ollama/qwen3:8b, ollama/gemma3:1b." }
       },
       {
         "@type": "Question",
@@ -462,7 +462,7 @@
     <!-- Hero -->
     <section class="hero">
       <div class="badge-row">
-        <span class="pill">v1.4.0</span>
+        <span class="pill">v1.4.1</span>
         <span class="pill green" data-i18n="hero.badge_local">100% local</span>
         <span class="pill" data-i18n="hero.badge_offline">Sin internet</span>
         <span class="pill">ARM64</span>
@@ -655,7 +655,7 @@
             <button type="button" class="model-card" data-model="deepseek-r1:7b"><span class="model-name">DeepSeek R1 7B</span><span class="model-id">deepseek-r1:7b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
             <button type="button" class="model-card" data-model="qwen2.5-coder:7b"><span class="model-name">Qwen 2.5 Coder 7B</span><span class="model-id">qwen2.5-coder:7b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
             <button type="button" class="model-card" data-model="qwen3:8b"><span class="model-name">Qwen3 8B</span><span class="model-id">qwen3:8b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
-            <button type="button" class="model-card" data-model="gemma4:2b"><span class="model-name">Gemma 4 2B</span><span class="model-id">gemma4:2b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
+            <button type="button" class="model-card" data-model="gemma3:1b"><span class="model-name">Gemma 3 1B</span><span class="model-id">gemma3:1b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
             <button type="button" class="model-card" data-model="mistral:7b"><span class="model-name">Mistral 7B</span><span class="model-id">mistral:7b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
             <button type="button" class="model-card" data-model="deepseek-r1:1.5b"><span class="model-name">DeepSeek R1 1.5B</span><span class="model-id">deepseek-r1:1.5b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
             <button type="button" class="model-card" data-model="qwen2.5-coder:1.5b"><span class="model-name">Qwen 2.5 Coder 1.5B</span><span class="model-id">qwen2.5-coder:1.5b</span><span class="model-copy" data-i18n="model.copy">Click para copiar</span></button>
@@ -679,7 +679,7 @@
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq3.q">¿Cuáles son los requisitos mínimos?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq3.a"><strong>4GB</strong> de RAM, <strong>3GB</strong> de almacenamiento libre, <strong>Android 11+</strong> y Termux desde <a href="https://f-droid.org/packages/com.termux/">F-Droid</a>. Para los modelos grandes se recomienda 8GB+ de RAM. Solo dispositivos ARM64 (aarch64).</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq4.q">¿Por qué debo instalar Termux desde F-Droid y no desde Google Play?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq4.a">La versión de Termux en Google Play está desactualizada y abandonada. La versión oficial se mantiene en <a href="https://f-droid.org/packages/com.termux/">F-Droid</a>, que es la única compatible con este instalador.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq5.q">¿Cómo funciona la interfaz web y WebGPU?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq5.a"><code>randi web</code> abre una interfaz web local con dos backends: <strong>Ollama</strong> para modelos grandes y <strong>WebGPU</strong> para modelos pequeños (&lt;2B) que corren en la GPU del navegador con Transformers.js. Los modelos se cachean en el navegador.</p></div></div>
-          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq6.q">¿Puedo usar los modelos con OpenCode?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq6.a">Sí. Si tienes <a href="https://github.com/anomalyco/opencode" rel="noopener">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq6.q">¿Puedo usar los modelos con OpenCode?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq6.a">Sí. Si tienes <a href="https://github.com/anomalyco/opencode" rel="noopener">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma3:1b</code>.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq7.q">¿Cómo actualizo RANDI?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq7.a">Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq8.q">¿Qué pasa si me quedo sin memoria?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq8.a">Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq9.q">¿Puedo usar visión, voz o generar imágenes?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq9.a">Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img "prompt"</code> o 🎨 con A1111/ComfyUI local (GPU).</p></div></div>
@@ -783,7 +783,7 @@
       "faq3.q": "¿Cuáles son los requisitos mínimos?", "faq3.a": "<strong>4GB</strong> de RAM, <strong>3GB</strong> de almacenamiento libre, <strong>Android 11+</strong> y Termux desde <a href=\"https://f-droid.org/packages/com.termux/\">F-Droid</a>. Para los modelos grandes se recomienda 8GB+ de RAM. Solo dispositivos ARM64 (aarch64).",
       "faq4.q": "¿Por qué debo instalar Termux desde F-Droid y no desde Google Play?", "faq4.a": "La versión de Termux en Google Play está desactualizada y abandonada. La versión oficial se mantiene en <a href=\"https://f-droid.org/packages/com.termux/\">F-Droid</a>, que es la única compatible con este instalador.",
       "faq5.q": "¿Cómo funciona la interfaz web y WebGPU?", "faq5.a": "<code>randi web</code> abre una interfaz web local con dos backends: <strong>Ollama</strong> para modelos grandes y <strong>WebGPU</strong> para modelos pequeños (&lt;2B) que corren en la GPU del navegador con Transformers.js. Los modelos se cachean en el navegador.",
-      "faq6.q": "¿Puedo usar los modelos con OpenCode?", "faq6.a": "Sí. Si tienes <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma4:2b</code>.",
+      "faq6.q": "¿Puedo usar los modelos con OpenCode?", "faq6.a": "Sí. Si tienes <a href=\"https://github.com/anomalyco/opencode\" rel=\"noopener\">OpenCode</a> instalado, el instalador configura automáticamente el provider local. Usa <code>opencode -m ollama/qwen2.5-coder:7b</code> o cualquier modelo como <code>ollama/deepseek-r1:7b</code>, <code>ollama/qwen3:8b</code>, <code>ollama/gemma3:1b</code>.",
       "faq7.q": "¿Cómo actualizo RANDI?", "faq7.a": "Ejecuta <code>randi update</code> para actualizar desde GitHub o localmente. Para agregar más modelos usa <code>randi pull</code>.",
       "faq8.q": "¿Qué pasa si me quedo sin memoria?", "faq8.a": "Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.",
       "faq9.q": "¿Puedo usar visión, voz o generar imágenes?", "faq9.a": "Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img \"prompt\"</code> o 🎨 con A1111/ComfyUI local (GPU).",

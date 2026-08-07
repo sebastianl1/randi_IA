@@ -64,11 +64,6 @@ def model_info(model_id):
     return None
 
 
-def format_size(size):
-    s = size.get("size", "") if isinstance(size, dict) else ""
-    return s
-
-
 def _table():
     models = get_models()
     cat_labels = {"bajo": "Bajo consumo", "medio": "Consumo medio", "alto": "Consumo alto"}

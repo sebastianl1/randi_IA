@@ -40,6 +40,8 @@ def do_pull(model_id):
         ok(f"{model_id} descargado")
     else:
         err(f"Fallo la descarga de {model_id}")
+        if model_id not in [m["id"] for m in get_models()]:
+            warn(f"'{model_id}' no esta en el catalogo oficial de RANDI; verifica el nombre en https://ollama.com/library")
     return rc == 0
 
 
@@ -56,7 +58,7 @@ def interactive():
     entries = []
     for cat in ("bajo", "medio", "alto"):
         label, color = cats.get(cat, (cat, R))
-        items = [m for m in models if m.get("cat") == cat]
+        items = [m for m in models if m.get("cat") == cat and m.get("type") not in ("embed", "moe")]
         if not items:
             continue
         print(f"\n  {color}{label}{R}")

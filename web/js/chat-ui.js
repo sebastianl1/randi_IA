@@ -175,10 +175,16 @@ let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
 
+export function removeMicRecordingClass() {
+  const btn = document.getElementById('btn-mic');
+  if (btn) btn.classList.remove('recording');
+}
+
 export async function toggleMic() {
   if (isRecording) {
     mediaRecorder?.stop();
     isRecording = false;
+    removeMicRecordingClass();
     return;
   }
   try {
@@ -188,6 +194,7 @@ export async function toggleMic() {
     mediaRecorder.ondataavailable = (e) => { if (e.data.size) audioChunks.push(e.data); };
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
+      removeMicRecordingClass();
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
       try {
         const res = await fetch('/api/stt', {
@@ -476,6 +483,11 @@ function handleCommand(cmd) {
       '`/clear`        - Limpiar conversación',
       '`/temp <n>`     - Ajustar temperatura (0-2)',
       '`/system <p>`   - Cambiar system prompt',
+      '`/image`        - Adjuntar imagen (vision, backend Ollama)',
+      '`/eco`          - Modo eco: menos RAM (on/off)',
+      '`/code`         - Modo programador',
+      '`/general`      - Volver al modo general',
+      '`/tts`          - Texto a voz (on/off)',
       '`/save <nom>`   - Guardar sesión',
       '`/load <nom>`   - Cargar sesión',
     ];
@@ -522,6 +534,42 @@ function handleCommand(cmd) {
     } else {
       document.getElementById('btn-load-session').click();
     }
+    return;
+  }
+
+  if (command === 'image') {
+    window.__attachImage?.();
+    appendMessage('system', 'Selecciona la imagen a adjuntar');
+    return;
+  }
+
+  if (command === 'eco') {
+    const on = arg ? ['on', '1', 'si', 's'].includes(arg.toLowerCase()) : undefined;
+    const current = document.getElementById('eco-toggle')?.checked;
+    const next = on === undefined ? !current : on;
+    window.__setEco?.(next);
+    appendMessage('system', `Modo eco ${next ? 'activado' : 'desactivado'}`);
+    return;
+  }
+
+  if (command === 'code') {
+    window.__setCode?.(true);
+    appendMessage('system', 'Modo programador activado (/general para volver)');
+    return;
+  }
+
+  if (command === 'general') {
+    window.__setCode?.(false);
+    appendMessage('system', 'Modo general activado');
+    return;
+  }
+
+  if (command === 'tts') {
+    const on = arg ? ['on', '1', 'si', 's'].includes(arg.toLowerCase()) : undefined;
+    const current = document.getElementById('tts-toggle')?.checked;
+    const next = on === undefined ? !current : on;
+    window.__setTts?.(next);
+    appendMessage('system', `Texto a voz ${next ? 'activado' : 'desactivado'}`);
     return;
   }
 

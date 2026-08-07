@@ -125,7 +125,7 @@ El catalogo completo (26+ modelos) se centraliza en `models.json` y se consulta 
 ### Bajo consumo (< 2GB RAM) — 4-6GB RAM
 | Modelo | Tamano | Uso |
 |--------|--------|-----|
-| `gemma4:2b` | 1.5GB | Rapido, respuestas inmediatas |
+| `gemma3:1b` | 1.5GB | Rapido, respuestas inmediatas |
 | `qwen3-moe:0.6b` | 0.9GB | **MoE**: potencia alta con pocos recursos |
 | `gemma3:1b` | 1.3GB | Vision + chat ligero |
 | `deepseek-r1:1.5b` | 1.1GB | Razonamiento ligero |
@@ -161,6 +161,19 @@ Usa el **modo eco** para correr modelos potentes con pocos recursos:
 - **TUI:** `/eco` reduce contexto y tokens segun la RAM libre.
 - **Web:** toggle "Modo eco" en la configuracion.
 - `optimal_context` ajusta automaticamente el contexto al modelo y a la RAM disponible.
+- El perfil exporta `OLLAMA_FLASH_ATTENTION=1` y `OLLAMA_KV_CACHE_TYPE=q8_0` (menos RAM, mas rapido).
+
+## Programar con IA en el celular (8GB RAM)
+
+Si quieres codificar desde un telefono de 8GB, la configuracion recomendada es:
+
+1. **Instala el backend Vulkan** durante `install-ollama.sh` (o manual: `pkg install ollama-backend-vulkan mesa-vulkan-icd-freedreno`). Usa la GPU Adreno/Mali y hace viable modelos de 7B.
+2. **Usa `qwen2.5-coder:3b`** como punto dulce: rapido, ligero (~2GB) y suficiente para chat y agentes de codigo.
+3. Para tareas mas grandes, **`qwen2.5-coder:7b`** (4.7GB) corre en 8GB cerrando apps, y con Vulkan es usable.
+4. **Agente de codigo**: `opencode -m ollama/qwen2.5-coder:3b` (ya configurado por el instalador).
+5. **En el navegador**: la web con backend WebGPU corre `Qwen2.5 Coder 1.5B`/`3B` en la GPU del Chrome (Android).
+
+> **Nota:** el autocompletado tipo Copilot en un editor movil no es realista localmente; lo que funciona es el agente (chat/refactor) via OpenCode o la web.
 
 ## Chat TUI
 
@@ -187,7 +200,7 @@ Modelos disponibles en OpenCode:
 - `ollama/deepseek-r1:7b` — Razonamiento
 - `ollama/qwen2.5-coder:7b` — Codigo
 - `ollama/qwen3:8b` — General
-- `ollama/gemma4:2b` — Rapido
+- `ollama/gemma3:1b` — Rapido
 - `ollama/deepseek-r1:1.5b` — Razonamiento ligero
 - `ollama/qwen2.5-coder:1.5b` — Codigo ligero
 - `ollama/llama3.2:3b` — General ligero

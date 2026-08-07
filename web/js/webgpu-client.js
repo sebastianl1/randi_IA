@@ -54,7 +54,7 @@ export function getCachedModelIds() {
 }
 
 export function getAvailableModels() {
-  return WEBGPU_MODELS;
+  return getWebGPUModels();
 }
 
 export function isModelLoaded() {

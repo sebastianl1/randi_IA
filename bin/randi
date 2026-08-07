@@ -2,7 +2,7 @@
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="1.4.0"
+RANDI_VERSION="1.4.1"
 RANDI_AUTHOR="Sebastian Laguna"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
@@ -192,7 +192,7 @@ check_ram() {
             warn "El modelo '$model' puede necesitar ~${needed}GB de RAM"
             dim "  Recomendados para tu dispositivo:"
             dim "    randi chat -m deepseek-r1:1.5b  (1.1GB)"
-            dim "    randi chat -m gemma4:2b        (1.5GB)"
+            dim "    randi chat -m gemma3:1b        (1.5GB)"
             dim "    randi chat -m qwen2.5-coder:0.5b (0.4GB)"
             echo ""
             echo -n "Continuar de todas formas? (s/N): "

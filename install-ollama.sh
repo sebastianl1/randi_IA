@@ -205,6 +205,38 @@ install_ollama() {
     fi
 }
 
+# ─── Vulkan Backend (opcional) ───────────────────────────────────────────
+install_vulkan() {
+    if [ "$PLATFORM" != "termux" ]; then
+        return 0
+    fi
+    if pkg list-installed 2>/dev/null | grep -q "ollama-backend-vulkan"; then
+        ok "Backend Vulkan ya instalado"
+        return 0
+    fi
+    echo ""
+    warn "Para correr modelos potentes (ej. qwen2.5-coder:7b) mas rapido,"
+    warn "puedes instalar el backend Vulkan que usa la GPU del telefono."
+    echo -n "  Instalar backend Vulkan (recomendado)? (s/N): "
+    read -r vulkan_opt
+    if [ "$vulkan_opt" = "s" ] || [ "$vulkan_opt" = "S" ]; then
+        pkg install -y ollama-backend-vulkan > /dev/null 2>&1
+        case "$(getprop ro.hardware 2>/dev/null)" in
+            *qcom*|*Qualcomm*|*SM*|*LGE*)
+                pkg install -y mesa-vulkan-icd-freedreno > /dev/null 2>&1 || true
+                ;;
+            *mali*|*ARM*|*rk30*|*rk33*)
+                pkg install -y mesa-vulkan-icd-mali-t7xx > /dev/null 2>&1 || true
+                ;;
+        esac
+        if pkg list-installed 2>/dev/null | grep -q "ollama-backend-vulkan"; then
+            ok "Backend Vulkan instalado (aceleracion por GPU)"
+        else
+            warn "No se pudo instalar el backend Vulkan; se usa CPU."
+        fi
+    fi
+}
+
 # ─── Install Scripts ─────────────────────────────────────────────────────
 install_scripts() {
     echo ""
@@ -262,6 +294,8 @@ configure_shell() {
                 echo "fish_add_path \$HOME/bin" >> "$sf"
                 echo "set -gx OLLAMA_KEEP_ALIVE -1" >> "$sf"
                 echo "set -gx OLLAMA_HOST $OLLAMA_HOST" >> "$sf"
+                echo "set -gx OLLAMA_FLASH_ATTENTION 1" >> "$sf"
+                echo "set -gx OLLAMA_KV_CACHE_TYPE q8_0" >> "$sf"
                 ;;
             *)
                 echo "" >> "$sf"
@@ -269,6 +303,8 @@ configure_shell() {
                 echo 'export PATH="$HOME/bin:$PATH"' >> "$sf"
                 echo 'export OLLAMA_KEEP_ALIVE="-1"' >> "$sf"
                 echo "export OLLAMA_HOST=$OLLAMA_HOST" >> "$sf"
+                echo 'export OLLAMA_FLASH_ATTENTION="1"' >> "$sf"
+                echo 'export OLLAMA_KV_CACHE_TYPE="q8_0"' >> "$sf"
                 ;;
         esac
         ok "Configurado: $(basename $sf)"
@@ -276,6 +312,8 @@ configure_shell() {
 
     export PATH="$HOME/bin:$PATH"
     export OLLAMA_KEEP_ALIVE="-1"
+    export OLLAMA_FLASH_ATTENTION="1"
+    export OLLAMA_KV_CACHE_TYPE="q8_0"
 }
 
 # ─── OpenCode Config ─────────────────────────────────────────────────────
@@ -299,8 +337,9 @@ configure_opencode() {
       "models": {
         "deepseek-r1:7b":     { "name": "DeepSeek R1 7B", "limit": { "context": 32768, "output": 4096 } },
         "qwen2.5-coder:7b":   { "name": "Qwen 2.5 Coder 7B", "limit": { "context": 32768, "output": 4096 } },
+        "qwen2.5-coder:3b":   { "name": "Qwen 2.5 Coder 3B", "limit": { "context": 32768, "output": 4096 } },
         "qwen3:8b":           { "name": "Qwen3 8B", "limit": { "context": 32768, "output": 4096 } },
-        "gemma4:2b":          { "name": "Gemma 4 2B", "limit": { "context": 16384, "output": 4096 } },
+        "gemma3:1b":          { "name": "Gemma 3 1B", "limit": { "context": 16384, "output": 4096 } },
         "deepseek-r1:1.5b":   { "name": "DeepSeek R1 1.5B", "limit": { "context": 16384, "output": 4096 } },
         "qwen2.5-coder:1.5b": { "name": "Qwen 2.5 Coder 1.5B", "limit": { "context": 16384, "output": 4096 } },
         "qwen2.5-coder:0.5b": { "name": "Qwen 2.5 Coder 0.5B", "limit": { "context": 8192, "output": 2048 } },
@@ -431,6 +470,7 @@ main() {
     check_env
     install_deps
     install_ollama
+    install_vulkan
     install_scripts
     configure_shell
     configure_opencode

@@ -104,7 +104,7 @@ def ram_warning(model_name):
         console.print(Panel(
             f"[warning]RAM disponible: ~{available_gb:.1f}GB de {total_gb:.1f}GB\n"
             f"[warning]'{model_name}' puede necesitar ~{needed}GB de RAM\n"
-            f"[dim]Prueba con: randi chat -m gemma4:2b  (1.5GB)  o  randi chat -m deepseek-r1:1.5b  (1.1GB)[/dim]",
+            f"[dim]Prueba con: randi chat -m gemma3:1b  (1.5GB)  o  randi chat -m deepseek-r1:1.5b  (1.1GB)[/dim]",
             border_style="yellow",
             padding=(0, 1),
         ))
@@ -120,7 +120,7 @@ def model_info_str(name):
 def suggest_best_model():
     _, available_gb = get_ram_info()
     if available_gb == 0:
-        return "gemma4:2b"
+        return "gemma3:1b"
     if available_gb < 1.5:
         return "qwen2.5-coder:0.5b"
     elif available_gb < 2.5:
@@ -589,6 +589,10 @@ class ChatSession:
             data = base64.b64encode(path.read_bytes()).decode()
             self.pending_image = data
             console.print(f"[success]Imagen adjuntada:[/] [bold]{path.name}[/]")
+            m = _match_model(self.model)
+            if not m or m.get("type") != "vision":
+                console.print("[warning]El modelo actual no es de vision.[/]")
+                console.print("[dim]  Usa /model gemma3:1b, gemma3:4b, llava:7b o qwen2.5vl:7b[/dim]")
             console.print("[dim]Escribe tu pregunta y se enviara junto a la imagen.[/dim]")
         except Exception as e:
             console.print(f"[error]No se pudo leer la imagen: {e}[/]")
@@ -633,8 +637,11 @@ class ChatSession:
                 return
         if shutil.which("piper"):
             try:
-                subprocess.Popen(["piper", "--output_raw"], stdin=subprocess.PIPE,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                p = subprocess.Popen(["piper", "--output_raw"],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+                p.communicate(text.encode(), timeout=60)
             except Exception:
                 pass
 
