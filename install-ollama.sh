@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  RANDI — Instalador para Termux
@@ -24,6 +24,22 @@ BIN_DIR="$HOME/bin"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 
+# ─── Detect Platform ──────────────────────────────────────────────────────
+detect_platform() {
+    if [ -d "/data/data/com.termux" ]; then
+        echo "termux"
+    elif [ -n "${MSYSTEM:-}" ] || [ -n "${MINGW_PREFIX:-}" ]; then
+        echo "windows"
+    elif [ "$(uname -s)" = "Darwin" ]; then
+        echo "macos"
+    elif [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "wsl"
+    else
+        echo "linux"
+    fi
+}
+PLATFORM="$(detect_platform)"
+
 # ─── Detect Shell ─────────────────────────────────────────────────────────
 detect_shell() {
     local shell_name
@@ -41,12 +57,36 @@ get_profile() {
 }
 
 # ─── Check ────────────────────────────────────────────────────────────────
-check_termux() {
-    if [ ! -d "/data/data/com.termux" ] && [ ! -f "/data/data/com.termux/files/usr/bin/pkg" ]; then
-        err "Este instalador requiere Termux en Android."
-        return 2>/dev/null || exit 1
+check_env_platform() {
+    case "$PLATFORM" in
+        termux)
+            ok "Plataforma: Termux (Android)"
+            ;;
+        windows)
+            ok "Plataforma: Windows (Git Bash/MSYS2)"
+            ;;
+        wsl)
+            ok "Plataforma: Windows (WSL2)"
+            ;;
+        macos)
+            ok "Plataforma: macOS"
+            ;;
+        linux)
+            ok "Plataforma: Linux"
+            ;;
+        *)
+            warn "Plataforma desconocida: $PLATFORM"
+            ;;
+    esac
+}
+
+check_python() {
+    if command -v python3 >/dev/null 2>&1; then
+        ok "Python: $(python3 --version 2>&1)"
+        return 0
     fi
-    ok "Entorno Termux detectado"
+    err "Se requiere python3. Instalalo antes de continuar."
+    return 1
 }
 
 check_env() {
@@ -89,28 +129,73 @@ check_env() {
 # ─── Install Dependencies ─────────────────────────────────────────────────
 install_deps() {
     echo ""
-    info "Actualizando paquetes..."
-    pkg update -y > /dev/null 2>&1 && pkg upgrade -y > /dev/null 2>&1
-
     info "Instalando dependencias..."
-    pkg install -y nodejs-lts python3 python-pip curl wget git jq > /dev/null 2>&1
 
-    pip install requests rich -q > /dev/null 2>&1 || pkg install python-requests python-rich -y > /dev/null 2>&1 || true
+    case "$PLATFORM" in
+        termux)
+            pkg update -y > /dev/null 2>&1 && pkg upgrade -y > /dev/null 2>&1
+            pkg install -y python python-pip curl wget git jq > /dev/null 2>&1
+            pip install requests rich -q > /dev/null 2>&1 || true
+            ;;
+        macos)
+            if ! command -v brew >/dev/null 2>&1; then
+                warn "Homebrew no encontrado. Instalalo en https://brew.sh"
+            else
+                brew install python git curl jq > /dev/null 2>&1 || true
+            fi
+            ;;
+        windows)
+            # Git Bash: python y git ya vienen con la instalacion
+            ;;
+        linux|wsl)
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update > /dev/null 2>&1
+                sudo apt-get install -y python3 python3-pip curl git jq > /dev/null 2>&1 || true
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y python3 python3-pip curl git jq > /dev/null 2>&1 || true
+            elif command -v pacman >/dev/null 2>&1; then
+                sudo pacman -Sy --noconfirm python python-pip curl git jq > /dev/null 2>&1 || true
+            fi
+            pip3 install requests rich -q > /dev/null 2>&1 || true
+            ;;
+    esac
 
+    if ! command -v python3 >/dev/null 2>&1; then
+        err "python3 no esta instalado. Instalalo y vuelve a ejecutar."
+        return 2>/dev/null || exit 1
+    fi
     ok "Dependencias instaladas"
 }
 
 # ─── Install Ollama ──────────────────────────────────────────────────────
 install_ollama() {
     if command -v ollama &>/dev/null; then
-        ok "Ollama ya instalado"
+        ok "Ollama ya instalado ($(ollama --version 2>/dev/null | head -1))"
         return 0
     fi
 
     echo ""
-    info "Instalando Ollama para Termux..."
-    npm install -g @mmmbuto/ollama-termux@latest > /dev/null 2>&1
-    ollama-termux > /dev/null 2>&1
+    info "Instalando Ollama ($PLATFORM)..."
+
+    case "$PLATFORM" in
+        termux)
+            if pkg install -y ollama > /dev/null 2>&1; then
+                ok "Ollama instalado (paquete nativo de Termux)"
+            else
+                warn "Paquete nativo no disponible, usando npm..."
+                npm install -g @mmmbuto/ollama-termux@latest > /dev/null 2>&1
+                ollama-termux > /dev/null 2>&1
+            fi
+            ;;
+        macos|linux|wsl)
+            curl -fsSL https://ollama.com/install.sh | sh
+            ;;
+        windows)
+            warn "En Windows nativo instalalo con el instalador oficial:"
+            warn "  winget install Ollama.Ollama"
+            warn "  o descarga de https://ollama.com/download"
+            ;;
+    esac
 
     if command -v ollama &>/dev/null; then
         ok "Ollama instalado correctamente"
@@ -141,9 +226,23 @@ install_scripts() {
         chmod +x "$RANDI_DIR/lib/ollama_chat.py"
     fi
 
+    if [ -f "$REPO_DIR/bin/lib/catalog.py" ]; then
+        cp "$REPO_DIR/bin/lib/catalog.py" "$RANDI_DIR/lib/catalog.py"
+    fi
+
+    if [ -f "$REPO_DIR/bin/lib/pull.py" ]; then
+        cp "$REPO_DIR/bin/lib/pull.py" "$RANDI_DIR/lib/pull.py"
+        chmod +x "$RANDI_DIR/lib/pull.py"
+    fi
+
     if [ -d "$REPO_DIR/web" ]; then
         cp -r "$REPO_DIR/web/." "$RANDI_DIR/web/"
         ok "Interfaz web: $RANDI_DIR/web"
+    fi
+
+    if [ -f "$REPO_DIR/web/models.json" ]; then
+        cp "$REPO_DIR/web/models.json" "$RANDI_DIR/lib/models.json"
+        ok "Catalogo de modelos: $RANDI_DIR/lib/models.json"
     fi
 }
 
@@ -226,84 +325,16 @@ download_models() {
     echo "  ─── Selección de modelos ───"
     echo ""
 
-    echo "  Bajo consumo (< 2GB RAM):"
-    echo "    1)  gemma4:2b            (1.5 GB)"
-    echo "    2)  deepseek-r1:1.5b     (1.1 GB)"
-    echo "    3)  qwen2.5-coder:1.5b   (0.9 GB)"
-    echo "    4)  qwen2.5-coder:0.5b   (0.4 GB)"
-    echo "    5)  phi3:mini            (2.0 GB)"
-    echo ""
-    echo "  Consumo medio (2-4 GB RAM):"
-    echo "    6)  llama3.2:3b          (2.0 GB)"
-    echo "    7)  qwen3:4b             (2.5 GB)"
-    echo "    8)  phi3:3.8b            (2.3 GB)"
-    echo ""
-    echo "  Consumo alto (4-8 GB RAM):"
-    echo "    9)  deepseek-r1:7b       (4.7 GB)"
-    echo "    10) qwen2.5-coder:7b     (4.7 GB)"
-    echo "    11) qwen3:8b             (4.5 GB)"
-    echo "    12) mistral:7b           (4.1 GB)"
-    echo ""
-    echo "  0)  Ninguno"
-    echo ""
-    echo -n "  Opción (ej: 1 3 6): "
-    read -r -a selections
-
-    local first_model=""
-    local has_valid=0
-    local skip=0
-
-    for opt in "${selections[@]}"; do
-        case "$opt" in
-            1) model="gemma4:2b" ;;
-            2) model="deepseek-r1:1.5b" ;;
-            3) model="qwen2.5-coder:1.5b" ;;
-            4) model="qwen2.5-coder:0.5b" ;;
-            5) model="phi3:mini" ;;
-            6) model="llama3.2:3b" ;;
-            7) model="qwen3:4b" ;;
-            8) model="phi3:3.8b" ;;
-            9) model="deepseek-r1:7b" ;;
-            10) model="qwen2.5-coder:7b" ;;
-            11) model="qwen3:8b" ;;
-            12) model="mistral:7b" ;;
-            0|13) skip=1; continue ;;
-            *) warn "Opción inválida: $opt"; continue ;;
-        esac
-        has_valid=1
-        echo ""
-        info "Descargando $model..."
-        ollama pull "$model"
-        ok "$model descargado"
-        [ -z "$first_model" ] && first_model="$model"
-    done
-
-    if [ "$has_valid" = "0" ] && [ "$skip" = "0" ] && [ ${#selections[@]} -gt 0 ]; then
-        err "No seleccionaste opciones válidas"
-        download_models
-        return
+    if [ -f "$REPO_DIR/bin/lib/pull.py" ]; then
+        python3 "$REPO_DIR/bin/lib/pull.py"
+    else
+        warn "No se encuentra pull.py; usa luego: randi pull"
     fi
 
-    if [ -n "$first_model" ]; then
-        mkdir -p "$HOME/.config/randi"
-        local cfg="$HOME/.config/randi/config.json"
-        if [ -f "$cfg" ]; then
-            python3 -c "
-import json
-c=json.load(open('$cfg'))
-c['model']='$first_model'
-json.dump(c,open('$cfg','w'),indent=2)
-" 2>/dev/null || true
-        else
-            echo "{\"model\":\"$first_model\",\"temperature\":0.7,\"last_session\":\"\"}" > "$cfg"
-        fi
-    fi
-
-    if [ "$has_valid" = "1" ]; then
-        echo ""
-        echo -n "  ¿Descargar más modelos? (s/N): "
-        read -r more
-        [ "$more" = "s" ] || [ "$more" = "S" ] && download_models
+    mkdir -p "$HOME/.config/randi"
+    local cfg="$HOME/.config/randi/config.json"
+    if [ ! -f "$cfg" ]; then
+        echo "{\"model\":\"qwen2.5-coder:1.5b\",\"temperature\":0.7,\"last_session\":\"\"}" > "$cfg"
     fi
 }
 
@@ -395,7 +426,8 @@ main() {
     echo "    Instalando RANDI"
     echo "  ──────────────────────────────────────────────"
 
-    check_termux
+    check_env_platform
+    check_python
     check_env
     install_deps
     install_ollama
@@ -405,10 +437,14 @@ main() {
 
     echo ""
     info "Iniciando servidor Ollama..."
-    nohup ollama serve > /dev/null 2>&1 &
-    local serve_pid=$!
-    disown "$serve_pid" 2>/dev/null || true
-    sleep 3
+    if command -v ollama >/dev/null 2>&1; then
+        nohup ollama serve > /dev/null 2>&1 &
+        local serve_pid=$!
+        disown "$serve_pid" 2>/dev/null || true
+        sleep 3
+    else
+        warn "Ollama no disponible; instala modelos luego con: randi pull"
+    fi
 
     download_models
 

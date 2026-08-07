@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 # RANDI Chat - Wrapper directo para el chat TUI
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
