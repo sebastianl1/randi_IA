@@ -597,6 +597,70 @@ cmd_status() {
     fi
 }
 
+cmd_doctor() {
+    echo ""
+    echo -e "${BLU}${B}Diagnostico de RANDI v$RANDI_VERSION${R}"
+    hr
+    local fail=0
+
+    if command -v python3 >/dev/null 2>&1; then
+        ok "Python3: $(python3 --version 2>&1 | awk '{print $2}')"
+    else
+        err "Python3 no encontrado"; fail=1
+    fi
+
+    local cat_dir
+    cat_dir="$(dirname "$(find_py_script catalog.py 2>/dev/null)" 2>/dev/null)"
+    local cat_file
+    cat_file=$(python3 -c "import sys; sys.path.insert(0, '$cat_dir'); from catalog import find_catalog_path; print(find_catalog_path() or '')" 2>/dev/null)
+    if [ -n "$cat_file" ]; then
+        ok "Catalogo: $cat_file"
+    else
+        err "models.json no encontrado"; fail=1
+    fi
+
+    if command -v ollama >/dev/null 2>&1; then
+        ok "Ollama: $(ollama --version 2>/dev/null | head -1 | tr -d '\r')"
+    else
+        err "Ollama no instalado (bash install-ollama.sh)"; fail=1
+    fi
+
+    if server_running; then
+        ok "Servidor Ollama: activo ($OLLAMA_HOST)"
+        local n
+        n=$(ollama list 2>/dev/null | tail -n +2 | wc -l)
+        if [ "$n" -gt 0 ]; then
+            ok "Modelos instalados: $n"
+        else
+            warn "No hay modelos instalados (randi pull)"
+        fi
+    else
+        warn "Servidor Ollama: detenido (randi serve)"
+    fi
+
+    if [ "$PLATFORM" = "termux" ] && command -v pkg >/dev/null 2>&1; then
+        if pkg list-installed 2>/dev/null | grep -q "ollama-backend-vulkan"; then
+            ok "Backend Vulkan: instalado (GPU acelerada)"
+        else
+            warn "Backend Vulkan: no instalado (mas lento). pkg install ollama-backend-vulkan"
+        fi
+    fi
+
+    if [ -r /proc/meminfo ]; then
+        local mt ma
+        mt=$(grep MemTotal /proc/meminfo | awk '{printf "%.1f", $2/1024/1024}')
+        ma=$(grep MemAvailable /proc/meminfo | awk '{printf "%.1f", $2/1024/1024}')
+        echo -e "  ${BLU}${B}RAM:${R} ${mt}GB total, ${ma}GB disponibles"
+    fi
+
+    echo ""
+    if [ "$fail" = "1" ]; then
+        err "Se encontraron problemas. Revisa: bash install-ollama.sh"
+    else
+        ok "Todo en orden."
+    fi
+}
+
 show_menu() {
     while true; do
         clear
@@ -628,6 +692,7 @@ show_menu() {
         echo -e "  ${B}10${R}) ${YLW}Actualizar${R}     ${D}Update desde GitHub o local${R}"
         echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
         echo -e "  ${B}12${R}) ${CYN}Imagen${R}        ${D}Generar imagen (A1111, GPU)${R}"
+        echo -e "  ${B}13${R}) ${D}Doctor${R}         ${D}Diagnostico del sistema${R}"
         echo -e "  ${B}0${R})  ${RED}Salir${R}"
         echo ""
         echo -ne "  ${BLU}${B}❯${R} "
@@ -656,6 +721,7 @@ show_menu() {
                 read -r img_prompt
                 cmd_img "$img_prompt"
                 echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            13) cmd_doctor ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
             0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
             *) err "Opcion invalida"; sleep 1 ;;
         esac
@@ -663,7 +729,7 @@ show_menu() {
 }
 
 case "${1:-}" in
-    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img)
+    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor)
         cmd="$1"
         shift
         "cmd_$cmd" "$@"
@@ -689,6 +755,7 @@ case "${1:-}" in
         echo -e "  ${B}randi update${R}             ${D}Actualizar${R}"
         echo -e "  ${B}randi web${R} ${D}[puerto]${R}      ${D}Interfaz web local${R}"
         echo -e "  ${B}randi img${R} ${D}\"prompt\"${R}       ${D}Generar imagen (A1111/GPU)${R}"
+        echo -e "  ${B}randi doctor${R}             ${D}Diagnostico del sistema${R}"
         ;;
     *)
         if [ -n "${1:-}" ]; then
