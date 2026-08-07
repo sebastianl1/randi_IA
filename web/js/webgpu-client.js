@@ -163,7 +163,7 @@ export async function downloadModel(modelId, onProgress) {
     for (const attempt of deviceAttempts) {
       for (const dtype of attempt.dtypes) {
         watchdog.touch();
-        sendProgress('download', Math.min(10, 8 + Math.random() * 2), `Cargando componentes (${dtype})...`);
+        sendProgress('download', 9, `Cargando componentes (${dtype})...`);
         try {
           pipe = await pipeline('text-generation', modelId, {
             device: attempt.device,

@@ -159,7 +159,10 @@ export RANDI_DIR=$HOME/.local/share/randi
 
 ```bash
 # 1. Aceleracion por GPU (Termux/Android)
-pkg install ollama-backend-vulkan mesa-vulkan-icd-freedreno
+#    Qualcomm/Adreno -> mesa-vulkan-icd-freedreno
+#    Mali            -> mesa-vulkan-icd-mali-t7xx
+#    (el instalador elige el driver segun el SoC)
+pkg install ollama-backend-vulkan
 
 # 2. Modelo recomendado (punto dulce)
 randi pull qwen2.5-coder:3b

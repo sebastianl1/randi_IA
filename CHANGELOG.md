@@ -2,6 +2,33 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Security
+- `randi web`: servidor enlazado solo en `127.0.0.1` y validacion de `Host`/`Origin` (anti CSRF/SSRF y DNS rebinding). Eliminado CORS `*`.
+- Token opcional `RANDI_TOKEN` (cabecera `X-RANDI-Token`), inyectado como `<meta name="randi-token">` en la SPA.
+- CSP basico en la web y viewport con zoom habilitado.
+- `sanitizeHtml` endurecido (bloquea `svg`, `form`, `base`, `srcdoc`, `style`, esquemas `data:`).
+
+### Fixed
+- Web: imagen adjunta ya se muestra en el mensaje (se usaba base64 sin prefijo `data:`).
+- Web: el streaming no quedaba colgado si Ollama cerraba el stream sin `done:true`.
+- Web: acciones WebGPU visibles al recargar con backend webgpu guardado.
+- Web: nombre de sesion por defecto sin `:` (ilegal en filesystems).
+- Web: `s.model` escapado en la lista de sesiones (self-XSS).
+- Web: ComfyUI deshabilitado en el modal (devolvia 501 siempre).
+- Servidor: `DELETE` a rutas no-API responde 404 (antes colgaba al cliente).
+- i18n: anadidas las claves `faq11`/`faq12` en de, fr, pt y zh.
+
+### Added
+- Endpoint `GET /api/health` para monitoreo.
+- Tests `pytest` (`tests/`) para catalogo, servidor (seguridad) e i18n; job `test` en CI.
+- Workflow de despliegue de GitHub Pages (`deploy.yml`).
+- CI: shellcheck (solo errores), ruff y validacion de claves i18n.
+
+### Docs
+- Nueva `docs/ARCHITECTURE.md` con diagramas y ADRs.
+
 ## [1.4.1] - 2026-08-07
 
 ### Fixed

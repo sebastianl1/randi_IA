@@ -1,4 +1,4 @@
-const CACHE = 'randi-v1.4.1';
+const CACHE = 'randi-v1.4.2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -13,6 +13,7 @@ self.addEventListener('install', (e) => {
         './js/config.js',
         './js/ollama-client.js',
         './js/webgpu-client.js',
+        './vendor/marked.min.js',
         './models.json',
         './manifest.webmanifest',
       ]))

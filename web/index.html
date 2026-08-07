@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co; worker-src 'self' blob:;">
 <title>RANDI</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -12,18 +13,18 @@
 <body>
 <div id="app">
   <header id="top-bar">
-    <button id="btn-model" class="top-model">
+    <button id="btn-model" class="top-model" aria-label="Cambiar modelo">
       <span id="model-name">RANDI</span>
-      <svg class="top-chevron" viewBox="0 0 12 12" width="10" height="10"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+      <svg class="top-chevron" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
     </button>
-    <span id="connection-dot" class="conn-dot offline"></span>
+    <span id="connection-dot" class="conn-dot offline" role="status" aria-label="Estado de conexión"></span>
   </header>
 
   <div id="model-bar" class="model-bar hidden">
     <span id="model-bar-icon" class="model-bar-icon"></span>
     <span id="model-bar-text" class="model-bar-text"></span>
-    <button id="model-bar-close" class="model-bar-close">
-      <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+    <button id="model-bar-close" class="model-bar-close" aria-label="Cerrar barra de modelo">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
     </button>
   </div>
 
@@ -44,24 +45,24 @@
       </div>
       <div id="attach-preview" class="attach-preview hidden">
         <img id="attach-img" alt="adjunto">
-        <button id="attach-remove" class="attach-remove" title="Quitar imagen">✕</button>
+        <button id="attach-remove" class="attach-remove" title="Quitar imagen" aria-label="Quitar imagen">✕</button>
       </div>
       <div class="input-row">
-        <button id="btn-attach" class="btn-tool" title="Adjuntar imagen (vision)">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/></svg>
+        <button id="btn-attach" class="btn-tool" title="Adjuntar imagen (vision)" aria-label="Adjuntar imagen">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/></svg>
         </button>
-        <button id="btn-mic" class="btn-tool" title="Voz a texto (Whisper)">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+        <button id="btn-mic" class="btn-tool" title="Voz a texto (Whisper)" aria-label="Voz a texto">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
         </button>
-        <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send"></textarea>
-        <button id="btn-imagegen" class="btn-tool" title="Generar imagen (GPU)">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send" aria-label="Mensaje"></textarea>
+        <button id="btn-imagegen" class="btn-tool" title="Generar imagen (GPU)" aria-label="Generar imagen">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
         </button>
-        <button id="btn-send" class="btn-send" title="Enviar">
-          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        <button id="btn-send" class="btn-send" title="Enviar" aria-label="Enviar mensaje">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
-        <button id="btn-stop" class="btn-stop hidden" title="Detener">
-          <svg viewBox="0 0 24 24" width="22" height="22"><rect fill="currentColor" x="4" y="4" width="16" height="16" rx="2"/></svg>
+        <button id="btn-stop" class="btn-stop hidden" title="Detener" aria-label="Detener generación">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect fill="currentColor" x="4" y="4" width="16" height="16" rx="2"/></svg>
         </button>
       </div>
       <input type="file" id="file-input" accept="image/*" hidden>
@@ -157,7 +158,7 @@
       <textarea id="ig-prompt" rows="3" placeholder="Describe la imagen..."></textarea>
       <select id="ig-engine" class="model-select">
         <option value="a1111">A1111 (127.0.0.1:7860)</option>
-        <option value="comfyui">ComfyUI (127.0.0.1:8188)</option>
+        <option value="comfyui" disabled>ComfyUI (próximamente)</option>
       </select>
       <div id="ig-status" class="progress-text hidden">Generando...</div>
       <img id="ig-result" class="ig-result hidden" alt="imagen generada">
@@ -169,7 +170,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.6/marked.min.js"></script>
+<script src="vendor/marked.min.js"></script>
 <script type="module" src="js/app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {

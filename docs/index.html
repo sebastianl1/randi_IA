@@ -118,6 +118,26 @@
         "@type": "Question",
         "name": "¿Qué pasa si me quedo sin memoria?",
         "acceptedAnswer": { "@type": "Answer", "text": "Usa modelos más pequeños. Revisa 'randi ps' para ver los modelos en RAM y 'free -h' para la memoria disponible." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Puedo usar visión, voz o generar imágenes?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Sí. Visión: sube una imagen en la web (📎) o usa /image en el TUI con modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp). Generación de imágenes: 'randi img \"prompt\"' o 🎨 con A1111/ComfyUI local." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Puedo generar vídeos localmente?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No es realista en teléfonos o equipos sin GPU dedicada. Está en el roadmap de RANDI (ej. Wan 2.1 en Colab o GPUs de gama alta)." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿RANDI es gratis y respeta mi privacidad?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Sí. RANDI es open source (MIT) y 100% local: tus conversaciones nunca salen de tu dispositivo. Solo necesitas internet la primera vez para descargar los modelos." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué modelo uso para programar en un celular de 8GB?",
+        "acceptedAnswer": { "@type": "Answer", "text": "'qwen2.5-coder:3b' es el punto dulce (rápido y ligero). Para más potencia, 'qwen2.5-coder:7b' corre cerrando apps e instalando el backend Vulkan (pkg install ollama-backend-vulkan). Como agente usa 'opencode -m ollama/qwen2.5-coder:3b'." }
       }
     ]
   }
@@ -163,18 +183,6 @@
       { "@type": "HowToStep", "position": 4, "name": "Ejecutar el instalador", "text": "bash install-ollama.sh" },
       { "@type": "HowToStep", "position": 5, "name": "Usar RANDI", "text": "randi serve && randi chat" }
     ]
-  }
-  </script>
-
-  <!-- JSON-LD: VideoObject -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "name": "RANDI - IA local en tu celular (demo)",
-    "description": "Demo de RANDI, asistente de IA 100% local en Termux con Ollama y WebGPU.",
-    "thumbnailUrl": "https://sebastianl1.github.io/randi_IA/imagenes/randi1.jpg",
-    "uploadDate": "2026-08-07"
   }
   </script>
 

@@ -3,10 +3,10 @@ import { getAvailableModels, downloadModel, isModelLoaded, getLoadedModelId, isM
 import { loadCatalog, getOllamaContext, getOllamaModelInfo } from './catalog.js';
 import { DEFAULT_BACKEND, DEFAULT_TEMPERATURE, DEFAULT_SYSTEM_PROMPT } from './config.js';
 import {
-  sendMessage, stopStreaming, clearMessages, setMessages,
+  sendMessage, clearMessages, setMessages,
   getMessages, updateContextBar, showTyping, hideTyping,
   appendMessage, removeWelcome, setContextLimit,
-  toggleMic, generateImage, removeMicRecordingClass,
+  toggleMic, generateImage,
 } from './chat-ui.js';
 
 const state = {
@@ -132,6 +132,9 @@ function loadSavedState() {
       if (state.backend === 'webgpu') {
         document.querySelector('[data-backend="webgpu"]').classList.add('active');
         document.querySelector('[data-backend="ollama"]').classList.remove('active');
+        webgpuActions.classList.remove('hidden');
+      } else {
+        webgpuActions.classList.add('hidden');
       }
     }
   } catch {}
@@ -597,7 +600,7 @@ window.addEventListener('send-message', async () => {
     ? 'Eres RANDI en modo programador. Das respuestas de codigo precisas, con explicaciones breves y ejemplos funcionales.'
     : state.systemPrompt;
 
-  const imagePayload = state.pendingImage ? [state.pendingImage.split(',')[1]] : null;
+  const imagePayload = state.pendingImage ? [state.pendingImage] : null;
   await sendMessage(text, state.backend, state.model, state.temperature, systemPrompt,
     imagePayload, state.tts);
   if (state.pendingImage) {
@@ -622,7 +625,7 @@ btnSave.addEventListener('click', () => {
   const cancelBtn = document.getElementById('modal-cancel');
 
   title.textContent = 'Guardar sesión';
-  input.value = `sesión_${new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '')}`;
+  input.value = `sesión_${new Date().toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '')}`;
   input.style.display = 'block';
   list.innerHTML = '';
   list.style.display = 'none';
@@ -711,7 +714,7 @@ btnLoad.addEventListener('click', () => {
       });
       item.innerHTML = `
         <span class="session-name">${escapeHtml(s.name)}</span>
-        <span class="session-info">${s.model || '?'} · ${s.messages?.length || 0} msgs · ${date}</span>
+        <span class="session-info">${escapeHtml(s.model || '?')} · ${s.messages?.length || 0} msgs · ${date}</span>
       `;
       item.addEventListener('click', () => {
         window.__loadSession?.(s.name);

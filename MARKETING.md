@@ -16,7 +16,7 @@ Materiales listos para publicar. **Elige tus cuentas y publica desde ahi** (RAND
 
 ## Anuncio de release (X/Twitter, es)
 
-> 🚀 RANDI v1.4 — IA 100% local en tu celular 🧠📱
+> 🚀 RANDI v1.4.1 — IA 100% local en tu celular 🧠📱
 >
 > Corre DeepSeek, Qwen, Gemma y Mistral SIN internet ni consumo de tokens.
 > ✅ Chat TUI + Web con WebGPU
@@ -29,7 +29,7 @@ Materiales listos para publicar. **Elige tus cuentas y publica desde ahi** (RAND
 
 ## Anuncio de release (X/Twitter, en)
 
-> 🚀 RANDI v1.4 — 100% local AI on your phone 🧠📱
+> 🚀 RANDI v1.4.1 — 100% local AI on your phone 🧠📱
 >
 > Run DeepSeek, Qwen, Gemma & Mistral with NO internet and NO token costs.
 > ✅ TUI chat + Web UI with WebGPU
@@ -46,7 +46,7 @@ Materiales listos para publicar. **Elige tus cuentas y publica desde ahi** (RAND
 > Hice RANDI: un asistente de IA 100% local para Termux. Chat TUI con streaming, interfaz web con WebGPU (modelos que corren en la GPU del navegador), vision (subir imagenes), voz y generacion de imagenes. Corre DeepSeek/Qwen/Gemma/Mistral sin internet. Multiplataforma. Todo gratis y MIT. ¿Opiniones?
 
 **r/LocalLLaMA:**
-> Show HN-ish: RANDI v1.4 — local LLM toolkit for phones. Runs qwen2.5-coder:3b/7b on an 8GB phone via Ollama + optional Vulkan backend on Termux. Includes TUI chat, a WebGPU browser backend (Transformers.js), vision (llava/gemma3), TTS/STT, and imagegen (A1111). Fully offline, MIT. Would love feedback on the WebGPU quantization fallback logic.
+> Show HN-ish: RANDI v1.4.1 — local LLM toolkit for phones. Runs qwen2.5-coder:3b/7b on an 8GB phone via Ollama + optional Vulkan backend on Termux. Includes TUI chat, a WebGPU browser backend (Transformers.js), vision (llava/gemma3), TTS/STT, and imagegen (A1111). Fully offline, MIT. Would love feedback on the WebGPU quantization fallback logic.
 
 **r/ollama:**
 > Post sharing RANDI — a multiplatform wrapper/toolkit for Ollama with a nice TUI, a web UI with a WebGPU backend, vision support, and a central models catalog (models.json). Works on Termux, Linux, macOS, Windows.

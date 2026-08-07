@@ -1,3 +1,5 @@
+import { apiHeaders } from './config.js';
+
 const OLLAMA_HOST = (() => {
   const base = `${window.location.protocol}//${window.location.host}`;
   return base;
@@ -7,7 +9,10 @@ let abortController = null;
 
 export async function checkServer() {
   try {
-    const res = await fetch(`${OLLAMA_HOST}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${OLLAMA_HOST}/api/tags`, {
+      headers: apiHeaders(),
+      signal: AbortSignal.timeout(3000),
+    });
     return res.ok;
   } catch {
     return false;
@@ -16,7 +21,10 @@ export async function checkServer() {
 
 export async function listModels() {
   try {
-    const res = await fetch(`${OLLAMA_HOST}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${OLLAMA_HOST}/api/tags`, {
+      headers: apiHeaders(),
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.models || []).map(m => ({
@@ -59,6 +67,14 @@ export async function chat(model, messages, onToken, onDone, onError) {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let gotDone = false;
+
+    const finish = (data) => {
+      if (!gotDone) {
+        gotDone = true;
+        onDone?.(data || {});
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -76,7 +92,7 @@ export async function chat(model, messages, onToken, onDone, onError) {
           const data = JSON.parse(trimmed);
           const content = data.message?.content || '';
           if (content) onToken?.(content);
-          if (data.done) onDone?.(data);
+          if (data.done) finish(data);
         } catch {
           // partial line, skip
         }
@@ -89,9 +105,12 @@ export async function chat(model, messages, onToken, onDone, onError) {
         const data = JSON.parse(buffer.trim());
         const content = data.message?.content || '';
         if (content) onToken?.(content);
-        if (data.done) onDone?.(data);
+        if (data.done) finish(data);
       } catch {}
     }
+
+    // Stream termino sin una linea con done:true (drop/cierre abrupto)
+    finish({ aborted: false, incomplete: true });
   } catch (err) {
     if (err.name === 'AbortError') {
       onDone?.({ aborted: true });

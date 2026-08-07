@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import hmac
+import html
 import json
 import os
 import shutil
@@ -16,6 +18,11 @@ from pathlib import Path
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 WEB_DIR = Path(__file__).parent.resolve()
+
+# Seguridad: solo se aceptan peticiones dirigidas a hosts locales (anti DNS
+# rebinding) y, si se define RANDI_TOKEN, se exige la cabecera X-RANDI-Token.
+ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+RANDI_TOKEN = os.environ.get("RANDI_TOKEN", "")
 
 server_instance = None
 
@@ -56,13 +63,56 @@ def _json_response(handler, code, obj):
     handler.send_response(code)
     handler.send_header("Content-Type", "application/json")
     handler.send_header("Content-Length", str(len(body)))
-    handler.send_header("Access-Control-Allow-Origin", "*")
     handler.end_headers()
     handler.wfile.write(body)
 
 class ProxyHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_DIR), **kwargs)
+
+    # --- Seguridad -----------------------------------------------------
+    def _host_ok(self):
+        host = self.headers.get("Host", "")
+        name = host.split(":", 1)[0].strip("[]").lower()
+        return name in ALLOWED_HOSTS
+
+    def _origin_ok(self):
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True
+        expected = f"http://{self.headers.get('Host', '')}"
+        return origin == expected
+
+    def _token_ok(self):
+        if not RANDI_TOKEN:
+            return True
+        provided = self.headers.get("X-RANDI-Token", "") or ""
+        return hmac.compare_digest(provided, RANDI_TOKEN)
+
+    def _gate(self, api=False):
+        # Todo: Host valido (anti DNS rebinding).
+        # Solo /api/*: Origin (CSRF) y token opcional (RANDI_TOKEN).
+        if not self._host_ok():
+            return False
+        if api and (not self._origin_ok() or not self._token_ok()):
+            return False
+        return True
+
+    def _serve_index_with_token(self):
+        try:
+            html_src = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+        except OSError:
+            super().do_GET()
+            return
+        tag = f'<meta name="randi-token" content="{html.escape(RANDI_TOKEN)}">'
+        if "name=\"randi-token\"" not in html_src:
+            html_src = html_src.replace("</head>", f"  {tag}\n</head>")
+        body = html_src.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _proxy_request(self, method):
         path = self.path
@@ -83,8 +133,6 @@ class ProxyHandler(SimpleHTTPRequestHandler):
                 for key, val in src.headers.items():
                     if key.lower() not in ("transfer-encoding", "content-encoding", "content-length"):
                         self.send_header(key, val)
-                if "access-control-allow-origin" not in [k.lower() for k in src.headers.keys()]:
-                    self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
 
                 content_type = src.headers.get("Content-Type", "")
@@ -103,7 +151,6 @@ class ProxyHandler(SimpleHTTPRequestHandler):
                     shutil.copyfileobj(src, self.wfile)
         except urllib.error.HTTPError as e:
             self.send_response(e.code)
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(e.read())
         except urllib.error.URLError:
@@ -123,7 +170,6 @@ class ProxyHandler(SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "audio/wav")
                 self.send_header("Content-Length", str(len(out)))
-                self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
                 self.wfile.write(out)
                 return
@@ -138,7 +184,6 @@ class ProxyHandler(SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "audio/wav")
                 self.send_header("Content-Length", str(len(out)))
-                self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
                 self.wfile.write(out)
                 return
@@ -224,14 +269,32 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             _json_response(self, 400, {"error": "engine desconocido"})
 
     def do_GET(self):
+        api = self.path.startswith("/api/")
+        if not self._gate(api):
+            _json_response(self, 403, {"error": "Acceso denegado"})
+            return
         if self.path.startswith("/api/tts"):
             self.handle_tts()
+        elif self.path == "/api/health":
+            _json_response(self, 200, {"status": "ok", "ollama": self._proxy_health()})
         elif self.path.startswith("/api/"):
             self._proxy_request("GET")
+        elif RANDI_TOKEN and self.path in ("/", "/index.html"):
+            self._serve_index_with_token()
         else:
             super().do_GET()
 
+    def _proxy_health(self):
+        try:
+            with urllib.request.urlopen(f"{OLLAMA_HOST}/api/tags", timeout=3) as r:
+                return r.status == 200
+        except Exception:
+            return False
+
     def do_POST(self):
+        if not self._gate(api=True):
+            _json_response(self, 403, {"error": "Acceso denegado"})
+            return
         if self.path.startswith("/api/stt"):
             self.handle_stt()
         elif self.path.startswith("/api/imagegen"):
@@ -242,15 +305,25 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             super().do_POST()
 
     def do_OPTIONS(self):
+        if not self._gate(api=True):
+            _json_response(self, 403, {"error": "Acceso denegado"})
+            return
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-RANDI-Token")
+        self.send_header("Access-Control-Max-Age", "600")
         self.end_headers()
 
     def do_DELETE(self):
+        if not self._gate(api=True):
+            _json_response(self, 403, {"error": "Acceso denegado"})
+            return
         if self.path.startswith("/api/"):
             self._proxy_request("DELETE")
+        else:
+            self.send_response(404)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
 
     def log_message(self, format, *args):
         msg = format % args
@@ -274,7 +347,7 @@ def main():
         print(f"\033[0;31m◆ No se encontro puerto disponible ({args.port}-8099)\033[0m")
         sys.exit(1)
 
-    server_addr = ("", port)
+    server_addr = ("127.0.0.1", port)
     global server_instance
     server_instance = HTTPServer(server_addr, ProxyHandler)
 

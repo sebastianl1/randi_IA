@@ -53,15 +53,16 @@ export function clearMessages() {
 function sanitizeHtml(html) {
   try {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    doc.querySelectorAll('script, style, iframe, object, embed, link, meta').forEach((n) => n.remove());
+    const forbid = 'script, style, iframe, object, embed, link, meta, base, template, form, input, button, textarea, select, option, svg, math, frame, frameset';
+    doc.querySelectorAll(forbid).forEach((n) => n.remove());
     doc.querySelectorAll('*').forEach((n) => {
       [...n.attributes].forEach((attr) => {
         const name = attr.name.toLowerCase();
-        if (name.startsWith('on')) {
+        if (name.startsWith('on') || name === 'srcdoc' || name === 'style') {
           n.removeAttribute(attr.name);
-        } else if (name === 'href' || name === 'src' || name === 'xlink:href') {
+        } else if (['href', 'src', 'xlink:href', 'action', 'formaction', 'poster', 'background', 'cite', 'data', 'srcset'].includes(name)) {
           const v = (attr.value || '').trim().toLowerCase();
-          if (v.startsWith('javascript:') || v.startsWith('vbscript:') || v.startsWith('data:text/html')) {
+          if (v.startsWith('javascript:') || v.startsWith('vbscript:') || v.startsWith('data:')) {
             n.removeAttribute(attr.name);
           }
         }
@@ -361,7 +362,12 @@ export async function sendMessage(text, backend, model, temperature, systemPromp
   const messages = getMessages();
   if (images && images.length) {
     const last = messages[messages.length - 1];
-    if (last && last.role === 'user') last.images = images;
+    if (last && last.role === 'user') {
+      // La API de Ollama espera base64 puro (sin el prefijo data:)
+      last.images = images.map((u) =>
+        u.startsWith('data:') && u.includes(',') ? u.split(',')[1] : u
+      );
+    }
   }
 
   if (backend === 'ollama') {

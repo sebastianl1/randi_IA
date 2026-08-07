@@ -14,14 +14,21 @@ Gracias por querer contribuir. Todo el proyecto es 100% local y open source (MIT
 
 1. Haz fork y crea una rama: `git checkout -b feat/mi-mejora`.
 2. Haz cambios pequeños y enfocados.
-3. Verifica que todo pase:
+3. Verifica que todo pase (mismo conjunto que el CI de `.github/workflows/ci.yml`):
    ```bash
    bash -n bin/randi install-ollama.sh bin/ollama-chat
    python3 -m py_compile web/server.py bin/lib/*.py
    for f in web/js/*.js docs/lang/*.js; do node --check "$f"; done
    python3 -c "import json; json.load(open('web/models.json'))"
+   python3 -m pytest tests/ -q
    ```
 4. Envia el PR describiendo que hace y como probarlo.
+
+## Tests
+
+- Los tests viven en `tests/` y cubren catalogo, seguridad del servidor web e i18n.
+- Si tocas `web/server.py` (proxy/TTS/STT/imagegen) o `web/models.json`,
+  ejecuta `python3 -m pytest tests/ -q` antes de enviar el PR.
 
 ## Convenciones
 
@@ -29,7 +36,9 @@ Gracias por querer contribuir. Todo el proyecto es 100% local y open source (MIT
 - `models.json` es la unica fuente de verdad del catalogo de modelos; no dupliques listas en otros archivos.
 - Shebangs con `#!/usr/bin/env bash|python3` (multiplataforma).
 - Los scripts bash y python deben ser multiplataforma (Termux/Linux/macOS/Windows).
+- Commits estilo Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`.
 - El autor de los commits: `Sebastian Laguna <sebasbele11@gmail.com>`.
+- La arquitectura y las decisiones (ADR) se documentan en `docs/ARCHITECTURE.md`; actualizalo si cambias componentes.
 
 ## Reportes de seguridad
 

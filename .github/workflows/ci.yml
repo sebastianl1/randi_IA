@@ -17,15 +17,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Bash - sintaxis
+      - name: Instalar herramientas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          pip install ruff
+
+      - name: Bash - sintaxis y shellcheck
         run: |
           bash -n bin/randi
           bash -n install-ollama.sh
           bash -n bin/ollama-chat
+          shellcheck -S error bin/randi install-ollama.sh bin/ollama-chat
 
-      - name: Python - compilacion
+      - name: Python - compilacion y lint
         run: |
           python3 -m py_compile web/server.py bin/lib/*.py
+          ruff check web/server.py bin/lib/*.py
 
       - name: JS - sintaxis
         run: |
@@ -45,3 +53,36 @@ jobs:
               assert m.get('ram'), f'falta ram en {m[\"id\"]}'
           print(f'OK: {len(ids)} modelos unicos')
           "
+
+      - name: Claves i18n completas en todos los idiomas
+        run: |
+          python3 -c "
+          import re
+          from pathlib import Path
+
+          def keys(fn):
+              src = Path(fn).read_text(encoding='utf-8')
+              return set(re.findall(r'^\s*\"([\w.]+)\":', src, re.M))
+
+          base = keys('docs/lang/en.js')
+          for lang in ('de', 'fr', 'pt', 'zh'):
+              k = keys(f'docs/lang/{lang}.js')
+              missing = sorted(base - k)
+              assert not missing, f'{lang}.js no tiene las claves: {missing}'
+          print('i18n OK: todos los idiomas tienen las claves de en.js')
+          "
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ejecutar tests (pytest)
+        run: |
+          pip install pytest
+          python3 -m pytest tests/ -q
