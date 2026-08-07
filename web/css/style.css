@@ -56,6 +56,7 @@ html, body {
 #app {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   height: 100dvh;
   position: relative;
 }
@@ -327,6 +328,10 @@ html, body {
 
 .msg-content {
   padding: 10px 14px;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
   line-height: 1.65;
   overflow-x: auto;
   word-wrap: break-word;
@@ -375,18 +380,22 @@ html, body {
   border-radius: 3px;
   font-size: 12px;
   font-family: var(--font-mono);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .msg-content pre code { background: none; padding: 0; }
 .msg-content ul, .msg-content ol { padding-left: 20px; margin: 6px 0; }
 .msg-content li { margin: 2px 0; }
-.msg-content a { color: var(--accent); text-decoration: none; }
+.msg-content a { color: var(--accent); text-decoration: none; overflow-wrap: break-word; word-break: break-word; }
 .msg-content a:hover { text-decoration: underline; }
 
 .msg-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   margin: 8px 0;
-  width: 100%;
   font-size: 12px;
 }
 

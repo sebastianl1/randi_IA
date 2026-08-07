@@ -19,13 +19,13 @@ except ImportError:
     sys.exit(1)
 
 try:
+    from rich import box
     from rich.console import Console
+    from rich.live import Live
     from rich.markdown import Markdown
     from rich.panel import Panel
     from rich.table import Table
     from rich.text import Text
-    from rich.live import Live
-    from rich import box
     from rich.theme import Theme
 except ImportError:
     print("Error: Se requiere la libreria 'rich'.")
@@ -348,11 +348,11 @@ class ChatSession:
             return full_content, final_data
 
         except requests.exceptions.ConnectionError:
-            console.print(f"\n[error]Error de conexion con Ollama.[/]")
+            console.print("\n[error]Error de conexion con Ollama.[/]")
             console.print("[dim]  Verifica: randi serve[/dim]")
             return "", {}
         except requests.exceptions.Timeout:
-            console.print(f"\n[error]Tiempo de espera agotado.[/]")
+            console.print("\n[error]Tiempo de espera agotado.[/]")
             return "", {}
         except requests.RequestException as e:
             console.print(f"\n[error]Error de red: {e}[/]")
@@ -724,14 +724,13 @@ class ChatSession:
         if self.current_request:
             self.current_request.close()
             self.current_request = None
-            console.print(f"\r[dim][cancelado][/dim]")
+            console.print("\r[dim][cancelado][/dim]")
         else:
             console.print()
 
 config = {"model": "", "temperature": 0.7, "last_session": ""}
 
 def load_config():
-    global config
     if CONFIG_FILE.exists():
         try:
             config.update(json.loads(CONFIG_FILE.read_text()))

@@ -4,13 +4,13 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 
 ## [Unreleased]
 
-### Security
-- `randi web`: servidor enlazado solo en `127.0.0.1` y validacion de `Host`/`Origin` (anti CSRF/SSRF y DNS rebinding). Eliminado CORS `*`.
-- Token opcional `RANDI_TOKEN` (cabecera `X-RANDI-Token`), inyectado como `<meta name="randi-token">` en la SPA.
-- CSP basico en la web y viewport con zoom habilitado.
-- `sanitizeHtml` endurecido (bloquea `svg`, `form`, `base`, `srcdoc`, `style`, esquemas `data:`).
-
 ### Fixed
+- Instalador: progreso visible con spinner y tiempo transcurrido, `timeout` por paso y log en `$RANDI_DIR/install.log` (antes parecia colgado en "Instalando dependencias"). Manejo de sudo en Linux/WSL sin bloqueo.
+- Web UI movil: fallback `100vh` para `100dvh` (evita el layout roto en navegadores/WebViews sin soporte `dvh`).
+- Web UI movil: `word-break`/`overflow-wrap` en mensajes y tablas con scroll interno (evita desbordes horizontales).
+- CI: `ruff.toml` con reglas curadas (`E4,E9,F,I,W`) y errores de lint resueltos (imports, f-strings, globals innecesarios).
+- CI: subidas `actions/checkout@v5` y `actions/setup-node@v5` (deprecacion de Node 20).
+- Repo: `.opencode/` y `*.log` anadidos a `.gitignore`; ***REMOVED*** locales de `.opencode` fuera del tracking.
 - Web: imagen adjunta ya se muestra en el mensaje (se usaba base64 sin prefijo `data:`).
 - Web: el streaming no quedaba colgado si Ollama cerraba el stream sin `done:true`.
 - Web: acciones WebGPU visibles al recargar con backend webgpu guardado.
@@ -19,6 +19,12 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 - Web: ComfyUI deshabilitado en el modal (devolvia 501 siempre).
 - Servidor: `DELETE` a rutas no-API responde 404 (antes colgaba al cliente).
 - i18n: anadidas las claves `faq11`/`faq12` en de, fr, pt y zh.
+
+### Security
+- `randi web`: servidor enlazado solo en `127.0.0.1` y validacion de `Host`/`Origin` (anti CSRF/SSRF y DNS rebinding). Eliminado CORS `*`.
+- Token opcional `RANDI_TOKEN` (cabecera `X-RANDI-Token`), inyectado como `<meta name="randi-token">` en la SPA.
+- CSP basico en la web y viewport con zoom habilitado.
+- `sanitizeHtml` endurecido (bloquea `svg`, `form`, `base`, `srcdoc`, `style`, esquemas `data:`).
 
 ### Added
 - Endpoint `GET /api/health` para monitoreo.

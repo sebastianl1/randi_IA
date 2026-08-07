@@ -10,9 +10,9 @@ import socket
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
@@ -331,7 +331,6 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             print(f"  {msg}")
 
 def shutdown_server(signum, frame):
-    global server_instance
     if server_instance:
         print("\n  Deteniendo servidor...")
         server_instance.shutdown()
@@ -353,7 +352,7 @@ def main():
 
     url = f"http://localhost:{port}"
     print(f"\033[0;32m◆ Servidor web RANDI en \033[1m{url}\033[0m")
-    print(f"\033[0;2m  Presiona Ctrl+C para detener\033[0m")
+    print("\033[0;2m  Presiona Ctrl+C para detener\033[0m")
     print()
 
     open_browser(url)

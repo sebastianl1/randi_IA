@@ -17,6 +17,46 @@ warn()  { echo -e "  ${YLW}${B}::${R} $1"; }
 err()   { echo -e "  ${RED}${B}::${R} $1"; }
 dim()   { echo -e "  ${D}$1${R}"; }
 
+# ─── Progress (run_step: spinner + timeout + log) ─────────────────────────
+RANDI_LOG="${RANDI_LOG:-$RANDI_DIR/install.log}"
+
+_run_spinner() {
+    local pid=$1 label=$2
+    local chars='|/-\' i=0 start elapsed
+    start=$(date +%s)
+    while kill -0 "$pid" 2>/dev/null; do
+        elapsed=$(( $(date +%s) - start ))
+        printf "\r  %s %s ... (%ss) " "${chars:$((i % 4)):1}" "$label" "$elapsed"
+        i=$((i + 1))
+        sleep 0.1
+    done
+    printf "\r  %s ... (%ss)\n" "$label" "$(( $(date +%s) - start ))"
+}
+
+run_step() {
+    local label="$1" tmo="$2"; shift 2
+    local pid rc
+    mkdir -p "$(dirname "$RANDI_LOG")"
+    ( timeout "$tmo" "$@" >> "$RANDI_LOG" 2>&1 ) &
+    pid=$!
+    _run_spinner "$pid" "$label"
+    wait "$pid"
+    rc=$?
+    if [ "$rc" -eq 0 ]; then
+        ok "$label"
+        return 0
+    fi
+    err "Fallo: $label"
+    if [ "$rc" -eq 124 ]; then
+        warn "  Se agoto el tiempo limite (${tmo}s). Revisa tu conexion y reintenta."
+    fi
+    if [ -s "$RANDI_LOG" ]; then
+        warn "  Ultimas lineas de $RANDI_LOG:"
+        tail -n 8 "$RANDI_LOG" | sed 's/^/    /'
+    fi
+    return 1
+}
+
 # ─── Config ───────────────────────────────────────────────────────────────
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RANDI_DIR="$HOME/.local/share/randi"
@@ -130,39 +170,69 @@ check_env() {
 install_deps() {
     echo ""
     info "Instalando dependencias..."
+    local deps_ok=0
 
     case "$PLATFORM" in
         termux)
-            pkg update -y > /dev/null 2>&1 && pkg upgrade -y > /dev/null 2>&1
-            pkg install -y python python-pip curl wget git jq > /dev/null 2>&1
-            pip install requests rich -q > /dev/null 2>&1 || true
+            run_step "Actualizando repositorios (pkg update)" 300 pkg update -y || deps_ok=1
+            run_step "Actualizando paquetes (pkg upgrade)" 600 pkg upgrade -y || deps_ok=1
+            run_step "Instalando python, git, curl, jq" 600 pkg install -y python python-pip curl wget git jq || deps_ok=1
+            run_step "Instalando librerias Python (requests, rich)" 300 pip install requests rich -q || true
             ;;
         macos)
             if ! command -v brew >/dev/null 2>&1; then
                 warn "Homebrew no encontrado. Instalalo en https://brew.sh"
             else
-                brew install python git curl jq > /dev/null 2>&1 || true
+                run_step "Instalando dependencias (brew)" 600 brew install python git curl jq || deps_ok=1
             fi
             ;;
         windows)
             # Git Bash: python y git ya vienen con la instalacion
             ;;
         linux|wsl)
-            if command -v apt-get >/dev/null 2>&1; then
-                sudo apt-get update > /dev/null 2>&1
-                sudo apt-get install -y python3 python3-pip curl git jq > /dev/null 2>&1 || true
-            elif command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y python3 python3-pip curl git jq > /dev/null 2>&1 || true
-            elif command -v pacman >/dev/null 2>&1; then
-                sudo pacman -Sy --noconfirm python python-pip curl git jq > /dev/null 2>&1 || true
+            local pm=""
+            command -v apt-get >/dev/null 2>&1 && pm="apt-get"
+            command -v dnf >/dev/null 2>&1 && pm="dnf"
+            command -v pacman >/dev/null 2>&1 && pm="pacman"
+
+            local sudo_cmd=""
+            if [ "$(id -u)" -ne 0 ]; then
+                if sudo -n true 2>/dev/null; then
+                    sudo_cmd="sudo -n"
+                else
+                    warn "Se requiere sudo para instalar dependencias."
+                    warn "  Ejecuta: sudo bash install-ollama.sh"
+                    warn "  o configura sudo sin contrasena (evita bloqueos)."
+                    deps_ok=1
+                fi
             fi
-            pip3 install requests rich -q > /dev/null 2>&1 || true
+
+            case "$pm" in
+                apt-get)
+                    run_step "Actualizando apt" 300 $sudo_cmd apt-get update -qq || deps_ok=1
+                    run_step "Instalando dependencias (apt)" 600 $sudo_cmd apt-get install -y python3 python3-pip curl git jq || deps_ok=1
+                    ;;
+                dnf)
+                    run_step "Instalando dependencias (dnf)" 600 $sudo_cmd dnf install -y python3 python3-pip curl git jq || deps_ok=1
+                    ;;
+                pacman)
+                    run_step "Instalando dependencias (pacman)" 600 $sudo_cmd pacman -Sy --noconfirm python python-pip curl git jq || deps_ok=1
+                    ;;
+                *)
+                    warn "No se detecto gestor de paquetes (apt/dnf/pacman)."
+                    deps_ok=1
+                    ;;
+            esac
+            run_step "Instalando librerias Python (requests, rich)" 300 pip3 install requests rich -q || true
             ;;
     esac
 
     if ! command -v python3 >/dev/null 2>&1; then
         err "python3 no esta instalado. Instalalo y vuelve a ejecutar."
         return 2>/dev/null || exit 1
+    fi
+    if [ "$deps_ok" -eq 1 ]; then
+        warn "Algunas dependencias no se instalaron; revisa $RANDI_LOG"
     fi
     ok "Dependencias instaladas"
 }
@@ -179,15 +249,16 @@ install_ollama() {
 
     case "$PLATFORM" in
         termux)
-            if pkg install -y ollama > /dev/null 2>&1; then
+            if run_step "Instalando Ollama (paquete nativo)" 600 pkg install -y ollama; then
                 ok "Ollama instalado (paquete nativo de Termux)"
             else
                 warn "Paquete nativo no disponible, usando npm..."
-                npm install -g @mmmbuto/ollama-termux@latest > /dev/null 2>&1
-                ollama-termux > /dev/null 2>&1
+                run_step "Instalando Ollama (npm)" 600 npm install -g @mmmbuto/ollama-termux@latest || true
+                ollama-termux > /dev/null 2>&1 || true
             fi
             ;;
         macos|linux|wsl)
+            info "Descargando e instalando Ollama (script oficial)..."
             curl -fsSL https://ollama.com/install.sh | sh
             ;;
         windows)
@@ -220,13 +291,13 @@ install_vulkan() {
     echo -n "  Instalar backend Vulkan (recomendado)? (s/N): "
     read -r vulkan_opt
     if [ "$vulkan_opt" = "s" ] || [ "$vulkan_opt" = "S" ]; then
-        pkg install -y ollama-backend-vulkan > /dev/null 2>&1
+        run_step "Instalando backend Vulkan" 600 pkg install -y ollama-backend-vulkan || true
         case "$(getprop ro.hardware 2>/dev/null)" in
             *qcom*|*Qualcomm*|*SM*|*LGE*)
-                pkg install -y mesa-vulkan-icd-freedreno > /dev/null 2>&1 || true
+                run_step "Instalando driver Adreno (freedreno)" 300 pkg install -y mesa-vulkan-icd-freedreno || true
                 ;;
             *mali*|*ARM*|*rk30*|*rk33*)
-                pkg install -y mesa-vulkan-icd-mali-t7xx > /dev/null 2>&1 || true
+                run_step "Instalando driver Mali" 300 pkg install -y mesa-vulkan-icd-mali-t7xx || true
                 ;;
         esac
         if pkg list-installed 2>/dev/null | grep -q "ollama-backend-vulkan"; then
@@ -386,6 +457,8 @@ show_summary() {
     echo "  ──────────────────────────────────────────────"
     echo ""
     ok "RANDI instalado correctamente"
+    echo ""
+    dim "  Log de instalacion: $RANDI_LOG"
     echo ""
     echo "  Comandos:"
     echo "    randi              Menú interactivo"
