@@ -147,6 +147,37 @@
   }
   </script>
 
+  <!-- JSON-LD: HowTo -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Instalar RANDI (IA local en Termux)",
+    "description": "Instala RANDI, asistente de IA 100% local, en Termux en pocos minutos.",
+    "totalTime": "PT15M",
+    "tool": [ { "@type": "HowToTool", "name": "Termux (Android)" } ],
+    "step": [
+      { "@type": "HowToStep", "position": 1, "name": "Instalar Termux", "text": "Instala Termux desde F-Droid, no desde Google Play." },
+      { "@type": "HowToStep", "position": 2, "name": "Actualizar e instalar git", "text": "pkg update && pkg upgrade -y && pkg install git -y" },
+      { "@type": "HowToStep", "position": 3, "name": "Clonar el repositorio", "text": "git clone https://github.com/sebastianl1/randi_IA.git && cd randi_IA" },
+      { "@type": "HowToStep", "position": 4, "name": "Ejecutar el instalador", "text": "bash install-ollama.sh" },
+      { "@type": "HowToStep", "position": 5, "name": "Usar RANDI", "text": "randi serve && randi chat" }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: VideoObject -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "RANDI - IA local en tu celular (demo)",
+    "description": "Demo de RANDI, asistente de IA 100% local en Termux con Ollama y WebGPU.",
+    "thumbnailUrl": "https://sebastianl1.github.io/randi_IA/imagenes/randi1.jpg",
+    "uploadDate": "2026-08-07"
+  }
+  </script>
+
   <style>
     :root {
       --bg: #0b0d12;
@@ -684,6 +715,8 @@
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq8.q">¿Qué pasa si me quedo sin memoria?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq8.a">Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq9.q">¿Puedo usar visión, voz o generar imágenes?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq9.a">Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img "prompt"</code> o 🎨 con A1111/ComfyUI local (GPU).</p></div></div>
           <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq10.q">¿Puedo generar video localmente?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq10.a">No de forma realista en teléfonos o equipos sin GPU dedicada. Está en el roadmap de RANDI (ej. Wan 2.1 en Colab o GPUs de alto rendimiento).</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq11.q">¿RANDI es gratis y respeta mi privacidad?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq11.a">Sí. RANDI es open source (MIT) y 100% local: tus conversaciones nunca salen de tu dispositivo. Solo necesitas internet la primera vez para descargar los modelos.</p></div></div>
+          <div class="faq-item reveal"><button class="faq-q"><span data-i18n="faq12.q">¿Qué modelo uso para codificar en un celular de 8GB?</span><span class="chev">▼</span></button><div class="faq-a"><p data-i18n="faq12.a"><code>qwen2.5-coder:3b</code> es el punto dulce (rápido y ligero). Para más potencia, <code>qwen2.5-coder:7b</code> corre cerrando apps y con el backend Vulkan instalado (<code>pkg install ollama-backend-vulkan</code>). Como agente usa <code>opencode -m ollama/qwen2.5-coder:3b</code>.</p></div></div>
         </div>
       </div>
     </section>
@@ -788,6 +821,8 @@
       "faq8.q": "¿Qué pasa si me quedo sin memoria?", "faq8.a": "Usa modelos más pequeños. Revisa <code>randi ps</code> para ver los modelos en RAM y <code>free -h</code> para la memoria disponible.",
       "faq9.q": "¿Puedo usar visión, voz o generar imágenes?", "faq9.a": "Sí. Visión: sube una imagen en la web (📎) o con <code>/image ruta</code> en el TUI usando modelos llava, gemma3 o qwen2.5vl. Texto a voz: botón 🔊 (espeak-ng/piper). Voz a texto: botón 🎤 (whisper.cpp, build manual). Generación de imágenes: <code>randi img \"prompt\"</code> o 🎨 con A1111/ComfyUI local (GPU).",
       "faq10.q": "¿Puedo generar video localmente?", "faq10.a": "No de forma realista en teléfonos o equipos sin GPU dedicada. Está en el roadmap de RANDI (ej. Wan 2.1 en Colab o GPUs de alto rendimiento).",
+      "faq11.q": "¿RANDI es gratis y respeta mi privacidad?", "faq11.a": "Sí. RANDI es open source (MIT) y 100% local: tus conversaciones nunca salen de tu dispositivo. Solo necesitas internet la primera vez para descargar los modelos.",
+      "faq12.q": "¿Qué modelo uso para codificar en un celular de 8GB?", "faq12.a": "<code>qwen2.5-coder:3b</code> es el punto dulce (rápido y ligero). Para más potencia, <code>qwen2.5-coder:7b</code> corre cerrando apps y con el backend Vulkan instalado (<code>pkg install ollama-backend-vulkan</code>). Como agente usa <code>opencode -m ollama/qwen2.5-coder:3b</code>.",
       "footer.about_h": "RANDI · Termux", "footer.about_d": "Asistente de IA 100% local para Termux en Android ARM64. Ejecuta DeepSeek, Qwen, Gemma y Mistral sin conexión a internet ni consumo de tokens.",
       "footer.res_h": "Recursos", "footer.res.install": "Instalación", "footer.res.commands": "Comandos", "footer.res.faq": "FAQ", "footer.res.readme": "README",
       "footer.links_h": "Enlaces", "footer.links.repo": "Repositorio", "footer.links.portfolio": "Portafolio del autor", "footer.links.opencode": "OpenCode (compatible)", "footer.links.termux": "Termux en F-Droid", "footer.links.ollama": "Modelos de Ollama",
