@@ -147,16 +147,16 @@ export async function downloadModel(modelId, onProgress) {
     sendProgress('download', 5, 'Verificando WebGPU...');
     watchdog.touch();
     const hasWebGPU = await webgpuAvailable();
-    const device = hasWebGPU ? 'webgpu' : 'cpu';
-    if (!hasWebGPU) sendProgress('download', 6, 'WebGPU no disponible, usando CPU (más lento)');
+    const device = hasWebGPU ? 'webgpu' : 'wasm';
+    if (!hasWebGPU) sendProgress('download', 6, 'WebGPU no disponible, usando WASM (más lento)');
 
     watchdog.stop();
     watchdog = createWatchdog('download', onStall);
 
     // Fallback robusto de dtype para evitar colgarse en cuantización on-the-fly
     const deviceAttempts = hasWebGPU
-      ? [{ device: 'webgpu', dtypes: ['q4', 'q8', 'fp16', 'fp32'] }, { device: 'cpu', dtypes: ['q8', 'fp32'] }]
-      : [{ device: 'cpu', dtypes: ['q8', 'fp32'] }];
+      ? [{ device: 'webgpu', dtypes: ['q4', 'q8', 'fp16', 'fp32'] }, { device: 'wasm', dtypes: ['q8', 'fp32'] }]
+      : [{ device: 'wasm', dtypes: ['q8', 'fp32'] }];
     let pipe = null;
     let lastErr = null;
 

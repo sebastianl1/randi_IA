@@ -32,6 +32,10 @@ _run_spinner() {
 }
 
 run_step() {
+    # run_step [-s] <label> <timeout> <cmd...>
+    #   -s = soft: en fallo avisa (warn) y no muestra log; para pasos opcionales
+    local soft=0
+    [ "$1" = "-s" ] && { soft=1; shift; }
     local label="$1" tmo="$2"; shift 2
     local pid rc
     if ! mkdir -p "$(dirname "$RANDI_LOG")" 2>/dev/null; then
@@ -51,15 +55,29 @@ run_step() {
         ok "$label"
         return 0
     fi
-    err "Fallo: $label"
-    if [ "$rc" -eq 124 ]; then
-        warn "  Se agoto el tiempo limite (${tmo}s). Revisa tu conexion y reintenta."
-    fi
-    if [ -s "$RANDI_LOG" ]; then
-        warn "  Ultimas lineas de $RANDI_LOG:"
-        tail -n 8 "$RANDI_LOG" | sed 's/^/    /'
+    if [ "$soft" -eq 1 ]; then
+        warn "$label: no disponible (se continua)"
+    else
+        err "Fallo: $label"
+        if [ "$rc" -eq 124 ]; then
+            warn "  Se agoto el tiempo limite (${tmo}s). Revisa tu conexion y reintenta."
+        fi
+        if [ -s "$RANDI_LOG" ]; then
+            warn "  Ultimas lineas de $RANDI_LOG:"
+            tail -n 8 "$RANDI_LOG" | sed 's/^/    /'
+        fi
     fi
     return 1
+}
+
+# ensure_dep <cmd> <paquete>: salta la instalacion si el comando ya existe
+ensure_dep() {
+    local cmd="$1" pkg="$2"
+    if command -v "$cmd" >/dev/null 2>&1; then
+        ok "$cmd ya instalado"
+        return 0
+    fi
+    run_step -s "Instalando $pkg ($cmd)" 300 pkg install -y "$pkg"
 }
 
 # ─── Config ───────────────────────────────────────────────────────────────
@@ -180,10 +198,19 @@ install_deps() {
 
     case "$PLATFORM" in
         termux)
-            run_step "Actualizando repositorios (pkg update)" 300 pkg update -y || deps_ok=1
-            run_step "Actualizando paquetes (pkg upgrade)" 600 pkg upgrade -y || deps_ok=1
-            run_step "Instalando python, git, curl, jq" 600 pkg install -y python python-pip curl wget git jq || deps_ok=1
-            run_step "Instalando librerias Python (requests, rich)" 300 pip install requests rich -q || true
+            # Deteccion: salta lo que ya esta instalado. Sin pkg update/upgrade
+            # para no tocar el lock de dpkg ni actualizar paquetes sin pedir.
+            ensure_dep python python || deps_ok=1
+            ensure_dep pip python-pip || deps_ok=1
+            ensure_dep git git || deps_ok=1
+            ensure_dep curl curl || deps_ok=1
+            ensure_dep wget wget || deps_ok=1
+            ensure_dep jq jq || deps_ok=1
+            if python3 -c "import requests, rich" >/dev/null 2>&1; then
+                ok "Librerias Python (requests, rich) ya instaladas"
+            else
+                run_step -s "Instalando librerias Python (requests, rich)" 300 pip install requests rich -q || true
+            fi
             ;;
         macos)
             if ! command -v brew >/dev/null 2>&1; then
@@ -255,12 +282,16 @@ install_ollama() {
 
     case "$PLATFORM" in
         termux)
-            if run_step "Instalando Ollama (paquete nativo)" 600 pkg install -y ollama; then
+            if run_step -s "Instalando Ollama (paquete nativo)" 600 pkg install -y ollama; then
                 ok "Ollama instalado (paquete nativo de Termux)"
             else
-                warn "Paquete nativo no disponible, usando npm..."
-                run_step "Instalando Ollama (npm)" 600 npm install -g @mmmbuto/ollama-termux@latest || true
-                ollama-termux > /dev/null 2>&1 || true
+                warn "Paquete nativo no disponible, probando npm..."
+                if command -v npm >/dev/null 2>&1; then
+                    run_step -s "Instalando Ollama (npm)" 600 npm install -g @mmmbuto/ollama-termux@latest || true
+                    ollama-termux > /dev/null 2>&1 || true
+                else
+                    warn "npm no disponible; no se pudo instalar el fallback."
+                fi
             fi
             ;;
         macos|linux|wsl)
@@ -289,8 +320,8 @@ install_ollama() {
     if command -v ollama &>/dev/null; then
         ok "Ollama instalado correctamente"
     else
-        err "Falló la instalación de Ollama"
-        return 2>/dev/null || exit 1
+        warn "Ollama no quedo instalado automaticamente."
+        warn "  Instalalo luego con:  randi pull   (o manualmente en https://ollama.com)"
     fi
 }
 
@@ -309,19 +340,21 @@ install_vulkan() {
     echo -n "  Instalar backend Vulkan (recomendado)? (s/N): "
     read -r vulkan_opt
     if [ "$vulkan_opt" = "s" ] || [ "$vulkan_opt" = "S" ]; then
-        run_step "Instalando backend Vulkan" 600 pkg install -y ollama-backend-vulkan || true
+        run_step -s "Instalando backend Vulkan" 600 pkg install -y ollama-backend-vulkan || true
         case "$(getprop ro.hardware 2>/dev/null)" in
             *qcom*|*Qualcomm*|*SM*|*LGE*)
-                run_step "Instalando driver Adreno (freedreno)" 300 pkg install -y mesa-vulkan-icd-freedreno || true
+                run_step -s "Instalando driver Adreno (freedreno)" 300 pkg install -y mesa-vulkan-icd-freedreno || true
                 ;;
             *mali*|*ARM*|*rk30*|*rk33*)
-                run_step "Instalando driver Mali" 300 pkg install -y mesa-vulkan-icd-mali-t7xx || true
+                run_step -s "Instalando driver Mali" 300 pkg install -y mesa-vulkan-icd-mali-t7xx || true
                 ;;
         esac
         if pkg list-installed 2>/dev/null | grep -q "ollama-backend-vulkan"; then
             ok "Backend Vulkan instalado (aceleracion por GPU)"
         else
-            warn "No se pudo instalar el backend Vulkan; se usa CPU."
+            warn "Backend Vulkan no disponible para tu dispositivo; se usa CPU (mas lento)."
+            warn "  Puedes instalarlo luego manualmente si el paquete existe:"
+            dim "    pkg install ollama-backend-vulkan"
         fi
     fi
 }

@@ -618,7 +618,7 @@ inputEl.addEventListener('input', autoResizeInput);
 
 function autoResizeInput() {
   inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
 }
 
 sendBtn.addEventListener('click', () => {

@@ -6,7 +6,7 @@ import {
   sendMessage, clearMessages, setMessages,
   getMessages, updateContextBar, showTyping, hideTyping,
   appendMessage, removeWelcome, setContextLimit,
-  toggleMic, generateImage,
+  toggleMic,
 } from './chat-ui.js';
 
 const state = {
@@ -52,7 +52,6 @@ const attachPreview = document.getElementById('attach-preview');
 const attachImg = document.getElementById('attach-img');
 const attachRemove = document.getElementById('attach-remove');
 const btnMic = document.getElementById('btn-mic');
-const btnImagegen = document.getElementById('btn-imagegen');
 const ecoToggle = document.getElementById('eco-toggle');
 const codeToggle = document.getElementById('code-toggle');
 const ttsToggle = document.getElementById('tts-toggle');
@@ -469,47 +468,6 @@ attachRemove.addEventListener('click', () => {
 btnMic.addEventListener('click', () => {
   btnMic.classList.toggle('recording');
   toggleMic();
-});
-
-/* ─── Generacion de imagenes ─── */
-
-btnImagegen.addEventListener('click', () => {
-  document.getElementById('imagegen-modal').classList.remove('hidden');
-  document.getElementById('ig-prompt').value = '';
-  document.getElementById('ig-result').classList.add('hidden');
-  document.getElementById('ig-result').src = '';
-  document.getElementById('ig-generate').disabled = false;
-});
-
-document.getElementById('ig-cancel').addEventListener('click', () => {
-  document.getElementById('imagegen-modal').classList.add('hidden');
-});
-
-document.getElementById('ig-generate').addEventListener('click', async () => {
-  const prompt = document.getElementById('ig-prompt').value.trim();
-  const engine = document.getElementById('ig-engine').value;
-  if (!prompt) return;
-  const btn = document.getElementById('ig-generate');
-  const status = document.getElementById('ig-status');
-  const result = document.getElementById('ig-result');
-  btn.disabled = true;
-  status.textContent = 'Generando (requiere ComfyUI/A1111 local)...';
-  status.classList.remove('hidden');
-  try {
-    const { ok, data } = await generateImage(prompt, engine);
-    if (ok && data.image) {
-      result.src = 'data:image/png;base64,' + data.image;
-      result.classList.remove('hidden');
-      status.textContent = '';
-      status.classList.add('hidden');
-    } else {
-      status.textContent = data.error || 'Error al generar imagen';
-    }
-  } catch {
-    status.textContent = 'Error al generar imagen';
-  } finally {
-    btn.disabled = false;
-  }
 });
 
 /* ─── Toggles eco / codigo / tts ─── */

@@ -55,9 +55,6 @@
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
         </button>
         <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send" aria-label="Mensaje"></textarea>
-        <button id="btn-imagegen" class="btn-tool" title="Generar imagen (GPU)" aria-label="Generar imagen">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-        </button>
         <button id="btn-send" class="btn-send" title="Enviar" aria-label="Enviar mensaje">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -152,22 +149,6 @@
     </div>
   </div>
 
-  <div id="imagegen-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Generar imagen</h2>
-      <textarea id="ig-prompt" rows="3" placeholder="Describe la imagen..."></textarea>
-      <select id="ig-engine" class="model-select">
-        <option value="a1111">A1111 (127.0.0.1:7860)</option>
-        <option value="comfyui" disabled>ComfyUI (próximamente)</option>
-      </select>
-      <div id="ig-status" class="progress-text hidden">Generando...</div>
-      <img id="ig-result" class="ig-result hidden" alt="imagen generada">
-      <div class="modal-actions">
-        <button id="ig-generate" class="btn-primary">Generar</button>
-        <button id="ig-cancel" class="btn-secondary">Cancelar</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script src="vendor/marked.min.js"></script>

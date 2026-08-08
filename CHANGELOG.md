@@ -6,6 +6,11 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 
 ### Fixed
 - **bin/randi**: auto-reparacion de PATH. Si el script no está en PATH, lo agrega automaticamente al ejecutarse. Corrige el problema en Windows nativo donde `randi` no se detectaba tras la instalación.
+- **Instalador Termux**: deteccion de dependencias (`ensure_dep`) — salta `python`, `pip`, `git`, `curl`, `wget`, `jq` y las librerias Python si ya estan instaladas. Eliminados `pkg update`/`pkg upgrade` automaticos (evitaban el lock de dpkg y actualizaciones no pedidas).
+- **Instalador**: `run_step -s` (modo soft) para pasos opcionales — en fallo avisa en amarillo y continua (Vulkan, npm, pip), sin errores rojos. Vulkan muestra mensaje amigable si el paquete no existe.
+- **Instalador**: si Ollama no se instala, avisa y continua (antes abortaba con `exit 1`).
+- **WebGPU**: corregido `Unsupported device: 'cpu'` — el fallback usa `wasm` en vez de `cpu` (Transformers.js v4).
+- **Web UI movil**: quitado el boton `🎨` (Generar imagen) de la fila de entrada y su modal; el textarea ahora es dominante (min-height 48px, auto-crece hasta 160px) y ya no lo aprietan los botones.
 - **Instalador Windows nativo (sin WSL)**: Ollama ahora se instala automaticamente via `winget` (o descarga el instalador si winget no esta disponible). Antes solo mostraba un aviso para instalar manualmente.
 - **Instalador Windows nativo**: `configure_shell` ahora configura `~/.bash_profile` (archivo que Git Bash carga realmente) en vez de `~/.bashrc`.
 - **Instalador Windows nativo**: ya no intenta iniciar `ollama serve` directamente ni usar `pkill` (no aplican a Windows donde Ollama corre como servicio). Ahora verifica si el servicio responde y da instrucciones claras si no.
