@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Auto-reparar PATH: si este script no está en PATH, agregar su directorio
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+if [[ -n "$_SCRIPT_DIR" && ":$PATH:" != *":$_SCRIPT_DIR:"* ]]; then
+    export PATH="$_SCRIPT_DIR:$PATH"
+fi
+
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
 RANDI_VERSION="1.4.1"

@@ -5,6 +5,7 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 ## [Unreleased]
 
 ### Fixed
+- **bin/randi**: auto-reparacion de PATH. Si el script no está en PATH, lo agrega automaticamente al ejecutarse. Corrige el problema en Windows nativo donde `randi` no se detectaba tras la instalación.
 - **Instalador Windows nativo (sin WSL)**: Ollama ahora se instala automaticamente via `winget` (o descarga el instalador si winget no esta disponible). Antes solo mostraba un aviso para instalar manualmente.
 - **Instalador Windows nativo**: `configure_shell` ahora configura `~/.bash_profile` (archivo que Git Bash carga realmente) en vez de `~/.bashrc`.
 - **Instalador Windows nativo**: ya no intenta iniciar `ollama serve` directamente ni usar `pkill` (no aplican a Windows donde Ollama corre como servicio). Ahora verifica si el servicio responde y da instrucciones claras si no.

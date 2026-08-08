@@ -619,6 +619,14 @@ main() {
     fi
 
     show_summary
+
+    if [ "$PLATFORM" = "windows" ]; then
+        echo ""
+        info "En Windows nativo, para usar 'randi' inmediatamente ejecuta:"
+        echo '  source ~/.bash_profile'
+        echo ""
+        info "O simplemente cierra y vuelve a abrir Git Bash."
+    fi
 }
 
 main "$@"
