@@ -29,7 +29,7 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 - Web: cache del service worker a `v1.4.3` para que el navegador no sirva el CSS viejo.
 - CI: `ruff.toml` con reglas curadas (`E4,E9,F,I,W`) y errores de lint resueltos (imports, f-strings, globals innecesarios).
 - CI: subidas `actions/checkout@v5` y `actions/setup-node@v5` (deprecacion de Node 20).
-- Repo: `.opencode/` y `*.log` anadidos a `.gitignore`; ***REMOVED*** locales de `.opencode` fuera del tracking.
+- Repo: `.opencode/` y `*.log` anadidos a `.gitignore`; configuracion local de `.opencode` fuera del tracking.
 - Web: imagen adjunta ya se muestra en el mensaje (se usaba base64 sin prefijo `data:`).
 - Web: el streaming no quedaba colgado si Ollama cerraba el stream sin `done:true`.
 - Web: acciones WebGPU visibles al recargar con backend webgpu guardado.

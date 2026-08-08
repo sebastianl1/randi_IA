@@ -95,12 +95,12 @@ bin/randi web  ->  python3 web/server.py (127.0.0.1:8080-8099)
 
 - **Contexto**: la lista de modelos aparecia duplicada en bash, TUI y web.
 - **Decision**: un solo `models.json` consumido por `catalog.py`, `pull.py`,
-  `catalog.js`. `***REMOVED***` (***REMOVED*** local) fija esta regla y el CI valida IDs
-  unicos y campos obligatorios.
+  `catalog.js`. Esta regla la fija el repo y el CI valida IDs unicos y campos
+  obligatorios.
 
 ## Deuda tecnica conocida
 
-Detectada por `***REMOVED***` del ***REMOVED*** `***REMOVED***`:
+Detectada en la revision de arquitectura:
 
 | Archivo | Lineas | Problema |
 |---------|--------|----------|

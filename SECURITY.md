@@ -17,7 +17,6 @@ Incluye en tu reporte:
 
 - **Local por diseno**: los modelos y datos nunca salen de tu dispositivo por defecto.
 - **Modelos**: descarga solo modelos oficiales de `https://ollama.com/library`. RANDI no ejecuta codigo de modelos de terceros.
-- *****REMOVED*** de terceros**: si instalas ***REMOVED*** de repositorios externos (p. ej. `***REMOVED***`), auditalas antes. Puedes usar la ***REMOVED*** `***REMOVED***` de ese ecosistema.
 - **Endpoints locales**: `randi web` solo escucha en `localhost` y no debe exponerse a Internet.
 
 ## Alcance
