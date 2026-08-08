@@ -331,9 +331,10 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             print(f"  {msg}")
 
 def shutdown_server(signum, frame):
-    if server_instance:
-        print("\n  Deteniendo servidor...")
-        server_instance.shutdown()
+    # No llamar a server_instance.shutdown() desde el handler: bloquea
+    # esperando a serve_forever y causa deadlock. Con sys.exit basta
+    # (el kernel cierra los sockets).
+    print("\n  Deteniendo servidor...")
     sys.exit(0)
 
 def main():
