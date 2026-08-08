@@ -6,6 +6,7 @@ Uso:  pull.py            -> menu interactivo
       pull.py <modelo>   -> descarga directa
 """
 import os
+import platform
 import subprocess
 import sys
 import time
@@ -13,6 +14,7 @@ import time
 from catalog import get_models
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+IS_WINDOWS = platform.system() == "Windows"
 
 GREEN = "\033[0;32m"; YELLOW = "\033[1;33m"; CYAN = "\033[0;36m"
 RED = "\033[0;31m"; DIM = "\033[2m"; BOLD = "\033[1m"; R = "\033[0m"
@@ -110,6 +112,12 @@ def main():
         return
 
     if not server_running():
+        if IS_WINDOWS:
+            err("El servidor Ollama no esta respondiendo.")
+            warn("En Windows, Ollama corre como servicio de Windows.")
+            warn("  Verifica que este iniciado (busca 'Ollama' en la bandeja del sistema)")
+            warn("  o reinicia la aplicacion Ollama desde el menu de inicio.")
+            return
         info("Iniciando servidor Ollama...")
         try:
             subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

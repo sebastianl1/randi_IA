@@ -268,9 +268,21 @@ install_ollama() {
             curl -fsSL https://ollama.com/install.sh | sh
             ;;
         windows)
-            warn "En Windows nativo instalalo con el instalador oficial:"
-            warn "  winget install Ollama.Ollama"
-            warn "  o descarga de https://ollama.com/download"
+            if command -v winget >/dev/null 2>&1; then
+                run_step "Instalando Ollama (winget)" 300 winget install Ollama.Ollama --accept-source-agreements --accept-package-agreements || true
+            else
+                info "Descargando instalador de Ollama..."
+                local installer="$HOME/ollama-installer.exe"
+                if run_step "Descargando Ollama" 300 curl -fsSL -o "$installer" https://ollama.com/download/OllamaSetup.exe; then
+                    run_step "Ejecutando instalador" 300 cmd.exe /c "$installer" /SILENT || true
+                    rm -f "$installer" 2>/dev/null || true
+                else
+                    warn "No se pudo descargar Ollama. Instalalo manualmente:"
+                    warn "  winget install Ollama.Ollama"
+                    warn "  o https://ollama.com/download"
+                    return 1
+                fi
+            fi
             ;;
     esac
 
@@ -360,9 +372,22 @@ configure_shell() {
     echo ""
     info "Configurando shell..."
 
-    for sf in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
+    local profile_files=()
+
+    if [ "$PLATFORM" = "windows" ]; then
+        # Git Bash carga .bash_profile > .bash_login > .profile
+        profile_files=("$HOME/.bash_profile" "$HOME/.profile" "$HOME/.bashrc")
+    else
+        profile_files=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish")
+    fi
+
+    local configured=0
+    for sf in "${profile_files[@]}"; do
         touch "$sf" 2>/dev/null || continue
-        grep -q 'PATH.*HOME/bin' "$sf" 2>/dev/null && continue
+        if grep -q 'PATH.*HOME/bin' "$sf" 2>/dev/null; then
+            configured=1
+            continue
+        fi
 
         case "$(basename "$sf")" in
             config.fish)
@@ -385,7 +410,17 @@ configure_shell() {
                 ;;
         esac
         ok "Configurado: $(basename $sf)"
+        configured=1
+        break
     done
+
+    if [ "$configured" -eq 0 ]; then
+        warn "No se pudo configurar el perfil de shell automaticamente."
+        if [ "$PLATFORM" = "windows" ]; then
+            warn "  Agrega manualmente a ~/.bash_profile:"
+            warn '    export PATH="$HOME/bin:$PATH"'
+        fi
+    fi
 
     export PATH="$HOME/bin:$PATH"
     export OLLAMA_KEEP_ALIVE="-1"
@@ -555,20 +590,33 @@ main() {
     configure_opencode
 
     echo ""
-    info "Iniciando servidor Ollama..."
+    info "Verificando servidor Ollama..."
     if command -v ollama >/dev/null 2>&1; then
-        nohup ollama serve > /dev/null 2>&1 &
-        local serve_pid=$!
-        disown "$serve_pid" 2>/dev/null || true
-        sleep 3
+        if [ "$PLATFORM" = "windows" ]; then
+            # En Windows nativo Ollama se instala como servicio y arranca solo
+            sleep 3
+            if curl -sf "$OLLAMA_HOST/api/tags" >/dev/null 2>&1; then
+                ok "Servidor Ollama activo (servicio de Windows)"
+            else
+                warn "Ollama instalado pero el servicio no responde todavia."
+                warn "  Espera unos segundos o inicia manualmente desde el menu de Windows."
+            fi
+        else
+            nohup ollama serve > /dev/null 2>&1 &
+            local serve_pid=$!
+            disown "$serve_pid" 2>/dev/null || true
+            sleep 3
+        fi
     else
         warn "Ollama no disponible; instala modelos luego con: randi pull"
     fi
 
     download_models
 
-    pkill -f "ollama serve" 2>/dev/null || true
-    sleep 1
+    if [ "$PLATFORM" != "windows" ]; then
+        pkill -f "ollama serve" 2>/dev/null || true
+        sleep 1
+    fi
 
     show_summary
 }

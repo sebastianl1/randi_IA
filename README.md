@@ -57,14 +57,15 @@ cd randi_IA
 bash install-ollama.sh
 ```
 
-Opcion B — **Git Bash / MSYS2** (Ollama nativo de Windows):
+Opcion B — **Git Bash / MSYS2** (Ollama nativo de Windows, instalacion automatica):
 
 ```bash
-winget install Ollama.Ollama
 git clone https://github.com/sebastianl1/randi_IA.git
 cd randi_IA
 bash install-ollama.sh
 ```
+
+> El instalador detecta Windows nativo e instala Ollama automaticamente via `winget` (o descarga el instalador si winget no esta disponible).
 
 El instalador detecta la plataforma automaticamente (Termux, Linux, macOS, Windows, WSL2).
 

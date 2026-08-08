@@ -88,6 +88,20 @@ cmd_serve() {
         err "Ollama no esta instalado. Ejecuta: bash install-ollama.sh"
         return 1
     fi
+    if [ "$PLATFORM" = "windows" ]; then
+        info "En Windows nativo, Ollama corre como servicio de Windows."
+        info "Verifica que este iniciado (busca 'Ollama' en la bandeja del sistema)"
+        info "o reinicia la aplicacion Ollama desde el menu de inicio."
+        for i in $(seq 1 10); do
+            sleep 2
+            if server_running; then
+                ok "Servidor Ollama activo (servicio de Windows)"
+                return 0
+            fi
+        done
+        err "El servicio Ollama no responde. Inicialo manualmente."
+        return 1
+    fi
     info "Iniciando servidor Ollama..."
     nohup ollama serve > /dev/null 2>&1 &
     local pid=$!
@@ -224,11 +238,7 @@ cmd_chat() {
     fi
 
     if ! server_running; then
-        info "Iniciando servidor Ollama..."
-        nohup ollama serve > /dev/null 2>&1 &
-        local pid=$!
-        disown "$pid" 2>/dev/null || true
-        sleep 3
+        cmd_serve || return 1
     fi
     if [ -n "$model" ]; then
         python3 "$chat_script" -m "$model"

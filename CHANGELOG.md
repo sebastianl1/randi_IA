@@ -5,6 +5,11 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 ## [Unreleased]
 
 ### Fixed
+- **Instalador Windows nativo (sin WSL)**: Ollama ahora se instala automaticamente via `winget` (o descarga el instalador si winget no esta disponible). Antes solo mostraba un aviso para instalar manualmente.
+- **Instalador Windows nativo**: `configure_shell` ahora configura `~/.bash_profile` (archivo que Git Bash carga realmente) en vez de `~/.bashrc`.
+- **Instalador Windows nativo**: ya no intenta iniciar `ollama serve` directamente ni usar `pkill` (no aplican a Windows donde Ollama corre como servicio). Ahora verifica si el servicio responde y da instrucciones claras si no.
+- `randi serve` en Windows: detecta que Ollama es un servicio de Windows y espera a que responda en lugar de intentar iniciarlo como proceso.
+- `randi pull` / `pull.py` en Windows: no intenta iniciar `ollama serve` manualmente; da instrucciones para verificar el servicio de Windows.
 - Instalador: log en `$RANDI_DIR/install.log` (antes `/install.log`, read-only en Android, que silenciaba `pkg install`). Con fallback a `$HOME/randi-install.log` si el directorio no es escribible.
 - Instalador: fallback de `timeout` en macOS (GNU coreutils no incluido); los pasos corren sin limite de tiempo.
 - Instalador: `pull.py` ya no crashea si `ollama` no esta en el PATH (Windows nativo).
