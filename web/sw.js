@@ -1,4 +1,4 @@
-const CACHE = 'randi-v1.4.3';
+const CACHE = 'randi-v1.4.4';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

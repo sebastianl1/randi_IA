@@ -11,6 +11,7 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 - **Instalador**: si Ollama no se instala, avisa y continua (antes abortaba con `exit 1`).
 - **WebGPU**: corregido `Unsupported device: 'cpu'` — el fallback usa `wasm` en vez de `cpu` (Transformers.js v4).
 - **Web UI movil**: quitado el boton `🎨` (Generar imagen) de la fila de entrada y su modal; el textarea ahora es dominante (min-height 48px, auto-crece hasta 160px) y ya no lo aprietan los botones.
+- **WebGPU**: corregida la descarga de modelos — el CSP bloqueaba los dominios de Hugging Face (`cdn.huggingface.co`, redirects 307). `connect-src` ahora permite `https://*.huggingface.co` y `https://*.hf.co`; `worker-src` permite jsdelivr.
 - **Instalador Windows nativo (sin WSL)**: Ollama ahora se instala automaticamente via `winget` (o descarga el instalador si winget no esta disponible). Antes solo mostraba un aviso para instalar manualmente.
 - **Instalador Windows nativo**: `configure_shell` ahora configura `~/.bash_profile` (archivo que Git Bash carga realmente) en vez de `~/.bashrc`.
 - **Instalador Windows nativo**: ya no intenta iniciar `ollama serve` directamente ni usar `pkill` (no aplican a Windows donde Ollama corre como servicio). Ahora verifica si el servicio responde y da instrucciones claras si no.
