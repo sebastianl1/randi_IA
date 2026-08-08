@@ -59,6 +59,7 @@ html, body {
   height: 100vh;
   height: 100dvh;
   position: relative;
+  overflow-x: hidden;
 }
 
 /* ─── Top Bar ─── */
@@ -237,6 +238,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 /* ─── Welcome ─── */
@@ -331,7 +333,6 @@ html, body {
   min-width: 0;
   overflow-wrap: break-word;
   word-break: break-word;
-}
   line-height: 1.65;
   overflow-x: auto;
   word-wrap: break-word;
@@ -499,6 +500,7 @@ html, body {
 
 #chat-input {
   flex: 1;
+  min-width: 0;
   resize: none;
   padding: 11px 16px;
   background: rgba(0,0,0,0.3);

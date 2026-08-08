@@ -16,6 +16,9 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 - Repo: nuevo `.gitattributes` fuerza finales de linea LF en Windows/Git Bash (evita `syntax error` por CRLF).
 - Web UI movil: fallback `100vh` para `100dvh` (evita el layout roto en navegadores/WebViews sin soporte `dvh`).
 - Web UI movil: `word-break`/`overflow-wrap` en mensajes y tablas con scroll interno (evita desbordes horizontales).
+- Web UI movil: restaurada la regla `.msg-content` (un commit previo dejo declaraciones huerfanas y un `}` extra que rompian line-height, font-size y overflow del chat). Balance de llaves del CSS verificado.
+- Web UI movil: `min-width: 0` en `#chat-input` y guardas de overflow horizontal en `#app`/`#messages` (evita desbordes en pantallas <=360px).
+- Web: cache del service worker a `v1.4.3` para que el navegador no sirva el CSS viejo.
 - CI: `ruff.toml` con reglas curadas (`E4,E9,F,I,W`) y errores de lint resueltos (imports, f-strings, globals innecesarios).
 - CI: subidas `actions/checkout@v5` y `actions/setup-node@v5` (deprecacion de Node 20).
 - Repo: `.opencode/` y `*.log` anadidos a `.gitignore`; ***REMOVED*** locales de `.opencode` fuera del tracking.
