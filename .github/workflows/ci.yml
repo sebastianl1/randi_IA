@@ -37,7 +37,7 @@ jobs:
 
       - name: JS - sintaxis
         run: |
-          for f in web/js/*.js docs/lang/*.js; do node --check "$f"; done
+          for f in web/js/*.js web/js/views/*.js docs/lang/*.js; do node --check "$f"; done
 
       - name: models.json valido y sin duplicados
         run: |

@@ -744,8 +744,130 @@ show_menu() {
     done
 }
 
+find_py_lib() {
+    local name="$1"
+    local candidates=(
+        "$REPO_DIR/bin/lib/$name"
+        "$RANDI_DIR/lib/$name"
+        "$(dirname "$0")/lib/$name"
+    )
+    for c in "${candidates[@]}"; do
+        if [ -f "$c" ]; then
+            echo "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# ── Deteccion y recomendacion (motor compat) ────────────────────────────
+
+_py_compat() {
+    local script
+    script=$(find_py_lib "$1") || {
+        err "No se encuentra $1 (reinstala RANDI)"
+        return 1
+    }
+    shift
+    PYTHONPATH="$(dirname "$script")" python3 "$script" "$@"
+}
+
+cmd_hardware() {
+    echo ""
+    title "Deteccion de hardware"
+    _py_compat hardware.py detect || {
+        PYTHONPATH="$(find_py_lib . && echo "$(dirname "$(find_py_lib hardware.py)")")" python3 -c "
+import sys; sys.path.insert(0, sys.argv[1])
+import hardware
+import json
+print(json.dumps(hardware.to_dict(hardware.detect_hardware()), ensure_ascii=False, indent=2))
+" "$(dirname "$(find_py_lib hardware.py)")"
+    }
+}
+
+cmd_recommend() {
+    local use_case=""
+    local limit=5
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --use-case) use_case="$2"; shift 2 ;;
+            --limit) limit="$2"; shift 2 ;;
+            *) use_case="${use_case:-$1}"; shift ;;
+        esac
+    done
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib hardware.py)") || { err "Modulo no encontrado"; return 1; }
+    echo ""
+    title "Recomendacion de modelos${use_case:+ — ${use_case}}"
+    PYTHONPATH="$lib_dir" python3 -c "
+import sys; sys.path.insert(0, sys.argv[1])
+import hardware, recommend
+hw = hardware.detect_hardware()
+use_case = sys.argv[2] or None
+limit = int(sys.argv[3])
+recs = recommend.rank_models(recommend.get_models(), hw, use_case=use_case, limit=limit)
+from compat import GRADES
+if not recs:
+    print('  No hay modelos compatibles con tu hardware' + (' para '+use_case if use_case else '') + '.')
+for r in recs:
+    m, ev = r['model'], r['evaluation']
+    g = GRADES.get(ev.grade, {}).get('color','')
+    print(f'  [{ev.grade}] {m[\"id\"]:<24} {ev.status:<12} quant={ev.quant or \"-\"} tok/s={ev.toks_per_sec or \"-\"} grade={ev.score}')
+" "$lib_dir" "$use_case" "$limit"
+    echo ""
+    dim "  Usa 'randi recommend --use-case code' para filtrar. Instala con 'randi pull <modelo>'."
+}
+
+cmd_tier() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib hardware.py)") || { err "Modulo no encontrado"; return 1; }
+    echo ""
+    title "Tier list — modelos para tu hardware"
+    PYTHONPATH="$lib_dir" python3 -c "
+import sys; sys.path.insert(0, sys.argv[1])
+import hardware, recommend
+from compat import GRADES
+hw = hardware.detect_hardware()
+tiers = recommend.tier_list(recommend.get_models(), hw)
+for grade in 'SABCDEF?':
+    items = tiers.get(grade, [])
+    if not items:
+        continue
+    color = GRADES.get(grade, {}).get('color', '')
+    print(f'  ─ [{grade}] {GRADES.get(grade,{}).get(\"label\",\"\")}' )
+    for it in items:
+        print(f'       {it[\"model\"][\"id\"]}')
+" "$lib_dir"
+}
+
+cmd_compare() {
+    if [ $# -lt 2 ]; then
+        echo "Uso: randi compare <modeloA> <modeloB>"
+        return 1
+    fi
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib hardware.py)") || { err "Modulo no encontrado"; return 1; }
+    echo ""
+    title "Comparacion: $1 vs $2"
+    PYTHONPATH="$lib_dir" python3 -c "
+import sys; sys.path.insert(0, sys.argv[1])
+import hardware, recommend
+from compat import GRADES, evaluate_model_best
+hw = hardware.detect_hardware()
+models = recommend.get_models()
+ids = set(m['id'] for m in models)
+for target in (sys.argv[2], sys.argv[3]):
+    model = next((m for m in models if m['id'] == target), None)
+    if not model:
+        print(f'  Modelo no encontrado: {target}')
+        continue
+    ev = evaluate_model_best(model, hw)
+    print(f'  {model[\"id\"]:<26} [{ev.grade}] {ev.status:<12} quant={ev.quant} tok/s={ev.toks_per_sec} score={ev.score}')
+" "$lib_dir" "$1" "$2"
+}
+
 case "${1:-}" in
-    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor)
+    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor|hardware|recommend|tier|compare)
         cmd="$1"
         shift
         "cmd_$cmd" "$@"
@@ -772,6 +894,10 @@ case "${1:-}" in
         echo -e "  ${B}randi web${R} ${D}[puerto]${R}      ${D}Interfaz web local${R}"
         echo -e "  ${B}randi img${R} ${D}\"prompt\"${R}       ${D}Generar imagen (A1111/GPU)${R}"
         echo -e "  ${B}randi doctor${R}             ${D}Diagnostico del sistema${R}"
+        echo -e "  ${B}randi hardware${R}           ${D}Detecta CPU/GPU/RAM/VRAM/bandwidth${R}"
+        echo -e "  ${B}randi recommend${R} ${D}[uc]${R}    ${D}Mejores modelos para TU equipo${R}"
+        echo -e "  ${B}randi tier${R}               ${D}Tier list S-F de tu hardware${R}"
+        echo -e "  ${B}randi compare${R} ${D}a b${R}        ${D}Compara 2 modelos${R}"
         ;;
     *)
         if [ -n "${1:-}" ]; then

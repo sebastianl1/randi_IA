@@ -16,6 +16,21 @@ import urllib.request
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
+# Motor de compatibilidad RANDI (skills globales, compartido con la CLI)
+_BIN_LIB = Path(__file__).parent.parent / "bin" / "lib"
+if str(_BIN_LIB) not in sys.path:
+    sys.path.insert(0, str(_BIN_LIB))
+try:
+    import hardware as randi_hardware
+    import compat as randi_compat
+    import recommend as randi_recommend
+    _HAS_COMPAT = True
+except Exception:  # pragma: no cover - fallback de CI sin bin/lib
+    randi_hardware = None
+    randi_compat = None
+    randi_recommend = None
+    _HAS_COMPAT = False
+
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 WEB_DIR = Path(__file__).parent.resolve()
 
@@ -268,6 +283,159 @@ class ProxyHandler(SimpleHTTPRequestHandler):
         else:
             _json_response(self, 400, {"error": "engine desconocido"})
 
+    def _read_json_body(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            if not length:
+                return {}
+            return json.loads(self.rfile.read(length)) if length else {}
+        except Exception:
+            return None
+
+    def _hardware_from_body(self, body):
+        """Convierte el perfil hardware del cliente (JSON) en HardwareInfo."""
+        if not _HAS_COMPAT:
+            return randi_hardware.detect_hardware() if randi_hardware else None
+        hw_data = body.get("hardware") if isinstance(body, dict) else None
+        if not hw_data or not isinstance(hw_data, dict):
+            return randi_hardware.detect_hardware()
+        return randi_hardware.hardware_from_dict(hw_data)
+
+    def handle_api_hardware(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de hardware no disponible"})
+            return
+        hw = randi_hardware.detect_hardware()
+        _json_response(self, 200, randi_hardware.to_dict(hw))
+
+    def handle_api_models(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de compat no disponible"})
+            return
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        models = randi_recommend.get_models(data)
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        provider = (qs.get("provider") or [None])[0]
+        use_case = (qs.get("useCase") or [None])[0]
+        if provider:
+            models = [m for m in models if m.get("provider") == provider]
+        if use_case:
+            models = [m for m in models if randi_recommend.model_matches_use_case(m, use_case)]
+        _json_response(self, 200, {"models": models})
+
+    def handle_api_model_detail(self, model_id):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de compat no disponible"})
+            return
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        model = None
+        for m in randi_recommend.get_models(data):
+            if m.get("id") == model_id or model_id in m.get("id", ""):
+                model = m
+                break
+        if not model:
+            _json_response(self, 404, {"error": f"modelo no encontrado: {model_id}"})
+            return
+        quants = randi_compat.make_quants(float(model.get("paramsBillions", 0) or 0))
+        _json_response(self, 200, {"model": model, "quants": quants})
+
+    def handle_api_compatibility(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de compat no disponible"})
+            return
+        body = self._read_json_body()
+        if body is None:
+            _json_response(self, 400, {"error": "body JSON invalido"})
+            return
+        if not body.get("modelId"):
+            _json_response(self, 400, {"error": "modelId requerido"})
+            return
+        hw = self._hardware_from_body(body)
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        model = next((m for m in randi_recommend.get_models(data)
+                      if m.get("id") == body["modelId"]), None)
+        if not model:
+            _json_response(self, 404, {"error": "modelo no encontrado"})
+            return
+        quant_name = body.get("quantization")
+        quants = randi_compat.make_quants(float(model.get("paramsBillions", 0) or 0))
+        quant = next((q for q in quants if q["name"] == quant_name), None)
+        if quant_name and not quant:
+            _json_response(self, 400, {"error": f"quant invalida: {quant_name}"})
+            return
+        if quant:
+            ev = randi_compat.evaluate_quant(model, quant, hw)
+        else:
+            ev = randi_compat.evaluate_model_best(model, hw)
+        _json_response(self, 200, {
+            "modelId": model.get("id"),
+            "grade": ev.grade,
+            "score": ev.score,
+            "status": ev.status,
+            "quantization": ev.quant,
+            "recommendedQuantization": ev.quant,
+            "estimated": {
+                "tokensPerSecond": ev.toks_per_sec,
+                "vramRequiredGb": quant["vramGB"] if quant else None,
+                "memoryHeadroomGb": None,
+                "memoryPercent": ev.mem_pct,
+            },
+            "notes": [f"Modelo {model.get('name')} ({model.get('paramsBillions')}B)"],
+        })
+
+    def handle_api_recommend(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de compat no disponible"})
+            return
+        body = self._read_json_body()
+        if body is None:
+            _json_response(self, 400, {"error": "body JSON invalido"})
+            return
+        hw = self._hardware_from_body(body)
+        use_case = body.get("useCase")
+        limit = body.get("limit", 5)
+        try:
+            limit = max(1, min(int(limit), 25))
+        except (TypeError, ValueError):
+            limit = 5
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        recs = randi_recommend.rank_models(
+            randi_recommend.get_models(data), hw,
+            use_case=use_case, limit=limit,
+        )
+        out = []
+        for r in recs:
+            m, ev = r["model"], r["evaluation"]
+            out.append({
+                "modelId": m.get("id"),
+                "name": m.get("name"),
+                "params": m.get("paramsBillions"),
+                "grade": ev.grade,
+                "score": ev.score,
+                "status": ev.status,
+                "quantization": ev.quant,
+                "tokensPerSecond": ev.toks_per_sec,
+                "useCase": m.get("useCase", []),
+                "size": m.get("size"),
+            })
+        _json_response(self, 200, {"hardware": randi_hardware.to_dict(hw), "recommendations": out})
+
     def do_GET(self):
         api = self.path.startswith("/api/")
         if not self._gate(api):
@@ -277,6 +445,17 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             self.handle_tts()
         elif self.path == "/api/health":
             _json_response(self, 200, {"status": "ok", "ollama": self._proxy_health()})
+        elif self.path == "/api/hardware":
+            self.handle_api_hardware()
+        elif self.path == "/api/models":
+            self.handle_api_models()
+        elif self.path.startswith("/api/models/"):
+            model_id = urllib.parse.unquote(self.path[len("/api/models/"):])
+            self.handle_api_model_detail(model_id)
+        elif self.path == "/api/compatibility":
+            _json_response(self, 405, {"error": "usa POST /api/compatibility"})
+        elif self.path == "/api/recommend":
+            _json_response(self, 405, {"error": "usa POST /api/recommend"})
         elif self.path.startswith("/api/"):
             self._proxy_request("GET")
         elif RANDI_TOKEN and self.path in ("/", "/index.html"):
@@ -299,6 +478,10 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             self.handle_stt()
         elif self.path.startswith("/api/imagegen"):
             self.handle_imagegen()
+        elif self.path == "/api/compatibility":
+            self.handle_api_compatibility()
+        elif self.path == "/api/recommend":
+            self.handle_api_recommend()
         elif self.path.startswith("/api/"):
             self._proxy_request("POST")
         else:

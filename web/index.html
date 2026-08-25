@@ -1,164 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://*.huggingface.co https://*.hf.co; worker-src 'self' blob: https://cdn.jsdelivr.net;">
-<title>RANDI</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#0b0d12">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <meta name="description" content="RANDI — Asistente de IA local. Detecta tu hardware y te recomienda los modelos que corren en tu equipo. Ollama + WebGPU, 100% privado.">
+  <meta name="theme-color" content="#0a0b10">
+  <title>RANDI — IA local en tu dispositivo</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co https://*.hf.co; worker-src 'self' blob: https://cdn.jsdelivr.net">
 </head>
 <body>
-<div id="app">
-  <header id="top-bar">
-    <button id="btn-model" class="top-model" aria-label="Cambiar modelo">
-      <span id="model-name">RANDI</span>
-      <svg class="top-chevron" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
-    </button>
-    <span id="connection-dot" class="conn-dot offline" role="status" aria-label="Estado de conexión"></span>
-  </header>
+  <header class="topbar" id="nav"></header>
+  <main id="app" class="wrap"></main>
 
-  <div id="model-bar" class="model-bar hidden">
-    <span id="model-bar-icon" class="model-bar-icon"></span>
-    <span id="model-bar-text" class="model-bar-text"></span>
-    <button id="model-bar-close" class="model-bar-close" aria-label="Cerrar barra de modelo">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
-    </button>
-  </div>
+  <div id="toast" class="toast" hidden></div>
 
-  <main id="main">
-    <div id="chat-container">
-      <div id="messages">
-        <div class="welcome-card" id="welcome-card">
-          <div class="welcome-logo">R</div>
-          <div class="welcome-sub">RANDI</div>
-          <p class="welcome-title">Toca arriba y elige un modelo para empezar</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="input-area">
-      <div id="context-bar" class="context-bar hidden">
-        <span id="ctx-indicator" class="ctx-indicator"></span>
-      </div>
-      <div id="attach-preview" class="attach-preview hidden">
-        <img id="attach-img" alt="adjunto">
-        <button id="attach-remove" class="attach-remove" title="Quitar imagen" aria-label="Quitar imagen">✕</button>
-      </div>
-      <div class="input-row">
-        <button id="btn-attach" class="btn-tool" title="Adjuntar imagen (vision)" aria-label="Adjuntar imagen">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/></svg>
-        </button>
-        <button id="btn-mic" class="btn-tool" title="Voz a texto (Whisper)" aria-label="Voz a texto">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
-        </button>
-        <textarea id="chat-input" rows="1" placeholder="Escribe un mensaje..." enterkeyhint="send" aria-label="Mensaje"></textarea>
-        <button id="btn-send" class="btn-send" title="Enviar" aria-label="Enviar mensaje">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-        <button id="btn-stop" class="btn-stop hidden" title="Detener" aria-label="Detener generación">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect fill="currentColor" x="4" y="4" width="16" height="16" rx="2"/></svg>
-        </button>
-      </div>
-      <input type="file" id="file-input" accept="image/*" hidden>
-    </div>
-  </main>
-
-  <div id="sheet-backdrop" class="sheet-backdrop hidden"></div>
-
-  <section id="settings-sheet" class="sheet hidden">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <span class="sheet-brand">RANDI</span>
-      <h2>Configuración</h2>
-    </div>
-
-    <div class="sheet-body">
-      <div class="sheet-group">
-        <label>Backend</label>
-        <div class="btn-group">
-          <button class="backend-btn active" data-backend="ollama" id="btn-backend-ollama">Ollama</button>
-          <button class="backend-btn" data-backend="webgpu" id="btn-backend-webgpu">WebGPU</button>
-        </div>
-      </div>
-
-      <div class="sheet-group">
-        <div class="label-row">
-          <label>Modelo</label>
-          <span id="model-status" class="status-indicator"></span>
-        </div>
-        <select id="model-select" class="model-select">
-          <option value="">Seleccionar...</option>
-        </select>
-        <div id="webgpu-actions" class="webgpu-actions hidden">
-          <button id="btn-download-model" class="btn-primary btn-full">Descargar modelo</button>
-          <div id="model-loading" class="model-loading hidden">
-            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-            <span id="progress-text" class="progress-text">Preparando...</span>
-          </div>
-        </div>
-        <div id="available-models-section" class="available-section hidden">
-          <div class="available-header">
-            <span class="available-title">Descargados</span>
-            <span id="available-count" class="available-count">0</span>
-          </div>
-          <div id="available-models-list" class="available-list"></div>
-        </div>
-      </div>
-
-      <div class="sheet-group">
-        <label for="temperature">Temp: <span id="temp-value">0.7</span></label>
-        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
-      </div>
-
-      <div class="sheet-group">
-        <label>Modos</label>
-        <label class="toggle-row"><span>Modo eco (menos RAM)</span><input type="checkbox" id="eco-toggle"></label>
-        <label class="toggle-row"><span>Modo programador</span><input type="checkbox" id="code-toggle"></label>
-        <label class="toggle-row"><span>Texto a voz (respuestas)</span><input type="checkbox" id="tts-toggle"></label>
-      </div>
-
-      <div class="sheet-group sheet-actions">
-        <button id="btn-save-session" class="btn-secondary">Guardar</button>
-        <button id="btn-load-session" class="btn-secondary">Cargar</button>
-        <button id="btn-clear" class="btn-secondary">Limpiar</button>
-      </div>
-
-      <div class="sheet-group sheet-status">
-        <div class="status-row">
-          <span class="status-dot offline" id="ollama-dot"></span>
-          <span>Ollama: <span id="ollama-status-text">desconectado</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div id="toast-container" class="toast-container"></div>
-
-  <div id="session-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2 id="modal-title">Guardar sesión</h2>
-      <input type="text" id="modal-input" placeholder="Nombre de la sesión">
-      <div id="session-list" class="session-list"></div>
-      <div class="modal-actions">
-        <button id="modal-confirm" class="btn-primary">Aceptar</button>
-        <button id="modal-cancel" class="btn-secondary">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<script src="vendor/marked.min.js"></script>
-<script type="module" src="js/app.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    });
-  }
-</script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

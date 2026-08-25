@@ -49,7 +49,7 @@ def test_index_served():
     status, body = f.request("GET", "/")
     f.close()
     assert status == 200
-    assert b"<title>RANDI</title>" in body
+    assert b"RANDI" in body and b"js/main.js" in body
 
 
 def test_bad_host_blocked():
