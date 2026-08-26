@@ -6,7 +6,7 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
 
 ### Added
 
-- **Windows nativo con npm**: paquete `randi` (npm i -g randi / npx randi) con
+- **Windows nativo con npm**: paquete `randi-ai` (npm i -g randi-ai / npx randi-ai) con
   shim `bin/randi.js` que ejecuta el CLI via bash (Git for Windows) y primer
   arranque que instala Git/Python/Ollama por **winget** (`randi ensure`). Sin WSL.
 - **Landing rediseñada (base canirun.ai)**: nuevo sistema de diseño near-black

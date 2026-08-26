@@ -1,7 +1,7 @@
 # RANDI - Referencia rapida de comandos
 
-> **Windows nativo:** `npm install -g randi` (luego `randi ensure` para las
-> dependencias nativas por winget). O directo sin instalar: `npx randi setup`.
+> **Windows nativo:** `npm install -g randi-ai` (luego `randi ensure` para las
+> dependencias nativas por winget). O directo sin instalar: `npx randi-ai setup`.
 
 ## Comandos principales
 

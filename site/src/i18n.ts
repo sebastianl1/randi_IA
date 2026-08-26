@@ -200,7 +200,7 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     faq: [
       { q: '¿Cuesta algo usar RANDI?', a: 'No. Es 100% local, gratuito y open source (MIT). Solo consumes los recursos de tu propio equipo.' },
-      { q: '¿En qué plataformas funciona?', a: 'Android (Termux), Linux, macOS y Windows nativo. En Windows se instala con `npm install -g randi` (o `npx randi`) y Ollama corre como servicio nativo — sin WSL.' },
+      { q: '¿En qué plataformas funciona?', a: 'Android (Termux), Linux, macOS y Windows nativo. En Windows se instala con `npm install -g randi-ai` (o `npx randi-ai`) y Ollama corre como servicio nativo — sin WSL.' },
       { q: '¿Necesito internet?', a: 'Solo la primera vez para descargar modelos e instaladores. Después funciona sin conexión.' },
       { q: '¿Puedo correr modelos grandes?', a: 'Depende de tu hardware. El motor de compatibilidad te dice el grado (S–F) y, si no corre, el hardware mínimo necesario.' },
       { q: '¿Qué onda la privacidad?', a: 'Toda la inferencia ocurre en tu dispositivo. No se envía nada a ninguna nube.' },
@@ -263,7 +263,7 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     faq: [
       { q: 'Does RANDI cost anything?', a: 'No. It is 100% local, free and open source (MIT). You only use your own device\u2019s resources.' },
-      { q: 'Which platforms does it run on?', a: 'Android (Termux), Linux, macOS and native Windows. On Windows install it with `npm install -g randi` (or `npx randi`) and Ollama runs as a native service \u2014 no WSL.' },
+      { q: 'Which platforms does it run on?', a: 'Android (Termux), Linux, macOS and native Windows. On Windows install it with `npm install -g randi-ai` (or `npx randi-ai`) and Ollama runs as a native service \u2014 no WSL.' },
       { q: 'Do I need internet?', a: 'Only the first time, to download models and installers. After that it works offline.' },
       { q: 'Can I run big models?', a: 'It depends on your hardware. The compat engine tells you the grade (S–F) and, if it can\u2019t run, the minimum hardware needed.' },
       { q: 'What about privacy?', a: 'All inference happens on your device. Nothing is sent to any cloud.' },
@@ -278,7 +278,7 @@ export const installSteps: Record<OSKey, string[]> = {
   linux: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   macos: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   'windows-wsl': ['sudo apt-get update && sudo apt-get install -y git', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
-  'windows-gitbash': ['npm install -g randi', 'npx randi doctor    # verifica y habilita dependencias', 'randi setup'],
+  'windows-gitbash': ['npm install -g randi-ai', 'npx randi-ai doctor    # verifica y habilita dependencias', 'randi setup'],
 };
 
 export const osLabels: Record<OSKey, string> = {
