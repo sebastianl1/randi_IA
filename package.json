@@ -5,6 +5,14 @@
   "license": "MIT",
   "type": "module",
   "author": "Sebastian Laguna <sebasbele11@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sebastianl1/randi_IA.git"
+  },
+  "homepage": "https://sebastianl1.github.io/randi_IA/",
+  "bugs": {
+    "url": "https://github.com/sebastianl1/randi_IA/issues"
+  },
   "publishConfig": {
     "access": "public"
   },
