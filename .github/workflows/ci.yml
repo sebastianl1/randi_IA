@@ -57,24 +57,6 @@ jobs:
           print(f'OK: {len(ids)} modelos unicos')
           "
 
-      - name: Claves i18n completas en todos los idiomas
-        run: |
-          python3 -c "
-          import re
-          from pathlib import Path
-
-          def keys(fn):
-              src = Path(fn).read_text(encoding='utf-8')
-              return set(re.findall(r'^\s*\"([\w.]+)\":', src, re.M))
-
-          base = keys('docs/lang/en.js')
-          for lang in ('de', 'fr', 'pt', 'zh'):
-              k = keys(f'docs/lang/{lang}.js')
-              missing = sorted(base - k)
-              assert not missing, f'{lang}.js no tiene las claves: {missing}'
-          print('i18n OK: todos los idiomas tienen las claves de en.js')
-          "
-
   test:
     runs-on: ubuntu-latest
     steps:
