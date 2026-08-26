@@ -2,6 +2,29 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.1] - 2026-08-26
+
+### Added
+
+- **Windows nativo con npm**: paquete `randi` (npm i -g randi / npx randi) con
+  shim `bin/randi.js` que ejecuta el CLI via bash (Git for Windows) y primer
+  arranque que instala Git/Python/Ollama por **winget** (`randi ensure`). Sin WSL.
+- **Landing rediseñada (base canirun.ai)**: nuevo sistema de diseño near-black
+  (`#0a0a0a`), formas `rounded-2xl`, chips y grados S-F, panel de deteccion de
+  hardware sin imagenes. **Sin capturas ni og-image** en todo el repo.
+- **Rebrand multiplataforma**: copy, SEO (JSON-LD, llms.txt, sitemap) y mensajes
+  del CLI/instalador pasan de "Termux" a "multiplataforma"; Windows nativo es la
+  opción recomendada (WSL2 queda como legado).
+- `randi ensure`: verifica/instala dependencias nativas (winget en Windows).
+- `LICENSE` (MIT) y `prepack` de npm que incluye el build de `web/dist` en el paquete.
+
+### Fixed
+
+- **Deploy GitHub Pages**: faltaba `actions/deploy-pages@v5`; el workflow subia el
+  artefacto pero nunca lo publicaba. Ahora la landing nueva queda en vivo tras el push.
+- **CI lint**: 13 errores de `ruff` corregidos (imports desordenados y sin usar).
+- Deprecada la landing legacy `docs/` (Termux-only) e imagenes del repo.
+
 ## [2.0.0] - 2026-08-26
 
 ### Added

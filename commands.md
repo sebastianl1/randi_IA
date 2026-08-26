@@ -1,5 +1,8 @@
 # RANDI - Referencia rapida de comandos
 
+> **Windows nativo:** `npm install -g randi` (luego `randi ensure` para las
+> dependencias nativas por winget). O directo sin instalar: `npx randi setup`.
+
 ## Comandos principales
 
 ```bash
@@ -12,6 +15,7 @@ randi stop               # Detener servidor
 randi setup              # Onboarding: analiza tu hardware y recomienda modelos
 randi install <modelo>   # Descarga + configura automaticamente
 randi requirements <m>   # Hardware minimo que necesita un modelo
+randi ensure             # Verifica/instala deps nativas (winget en Windows)
 randi pull               # Menu para descargar modelos (desde models.json)
 randi pull <modelo>      # Descargar modelo especifico
 randi list               # Listar modelos instalados

@@ -15,15 +15,16 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 from catalog import get_media_models, get_models
-from compat import GRADES, evaluate_model_best, notes_for, required_hardware
-from hardware import detect_hardware, hardware_profile, to_dict
-from recommend import load_catalog, rank_models
+from compat import evaluate_model_best, required_hardware
+from hardware import detect_hardware, hardware_profile
+from recommend import rank_models
 
 GREEN = "\033[0;32m"; YELLOW = "\033[1;33m"; CYAN = "\033[0;36m"; MAG = "\033[0;35m"
 RED = "\033[0;31m"; DIM = "\033[2m"; BOLD = "\033[1m"; R = "\033[0m"
@@ -155,6 +156,42 @@ def requirements_for(model: dict) -> dict:
     }
 
 
+def ensure_native() -> int:
+    """Instala/verifica las dependencias nativas (multiplataforma).
+
+    En Windows nativo se usan winget (Git, Python, Ollama como servicio).
+    En el resto se indica el gestor de paquetes correspondiente.
+    """
+    missing = []
+    if shutil.which("python3") is None and shutil.which("python") is None:
+        missing.append("python3")
+    if shutil.which("ollama") is None:
+        missing.append("ollama")
+    if sys.platform == "win32" and shutil.which("bash") is None:
+        missing.append("bash (Git for Windows)")
+    if not missing:
+        ok("Dependencias nativas presentes.")
+        return 0
+    warn("Faltan dependencias nativas: " + ", ".join(missing))
+    if sys.platform == "win32":
+        info("Instalando nativo con winget (sin WSL)...")
+        cmds = []
+        if shutil.which("bash") is None:
+            cmds.append(["winget", "install", "--silent", "Git.Git"])
+        if shutil.which("python3") is None and shutil.which("python") is None:
+            cmds.append(["winget", "install", "--silent", "Python.Python.3.12"])
+        if shutil.which("ollama") is None:
+            cmds.append(["winget", "install", "--silent", "Ollama.Ollama"])
+        for c in cmds:
+            info("winget " + " ".join(c[2:]))
+            subprocess.call(c)
+        ok("Cierra y abre la terminal y ejecuta 'randi doctor' para verificar.")
+        return 0
+    print("  Usa tu gestor de paquetes: apt/brew/pacman")
+    print("  python3 + el script oficial de Ollama (https://ollama.com/download)")
+    return 0
+
+
 def install_model(model_id: str) -> int:
     model = find_model(model_id)
     if not model:
@@ -188,7 +225,6 @@ def print_dashboard(hw, models, limit=4):
         print(f"\n  {BOLD}{label}:{R}")
         for r in recs:
             m, ev = r["model"], r["evaluation"]
-            g = GRADES.get(ev.grade, {}).get("color", "")
             fit = "SI" if ev.status in ("can-run", "tight", "can-run-slow") else "NO"
             print(f"   {BOLD}[{ev.grade}]{R} {m['id']:<26} "
                   f"{MAG if fit == 'SI' else DIM}{fit}{R}  "
@@ -212,7 +248,6 @@ def setup_wizard() -> int:
     select = []
     for m in runs[:10]:
         ev = evaluate_model_best(m, hw)
-        g = GRADES.get(ev.grade, {}).get("color", "")
         select.append(m)
         print(f"   {len(select):>2})  {BOLD}[{ev.grade}]{R} {m['id']:<24} {m.get('size', '?')}")
     try:
@@ -243,10 +278,12 @@ def main():
             err(f"Modelo '{args[1]}' no encontrado.")
             sys.exit(1)
         print(json.dumps(requirements_for(m), ensure_ascii=False, indent=2))
+    elif cmd == "ensure":
+        sys.exit(ensure_native())
     elif cmd == "setup":
         sys.exit(setup_wizard())
     else:
-        print("uso: install.py [setup|install <m>|show <m>|requirements <m>]")
+        print("uso: install.py [setup|install <m>|show <m>|requirements <m>|ensure]")
         sys.exit(1)
 
 

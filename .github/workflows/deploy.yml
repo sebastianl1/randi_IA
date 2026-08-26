@@ -37,3 +37,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

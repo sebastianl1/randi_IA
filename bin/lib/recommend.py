@@ -6,8 +6,7 @@ import json
 import os
 from pathlib import Path
 
-from compat import (HardwareInfo, evaluate_model_best, evaluate_quant,
-                    make_quants, best_quant_for_hardware)
+from compat import HardwareInfo, evaluate_model_best
 
 
 def catalog_paths():

@@ -72,14 +72,14 @@ const guidesEs: OSGuide[] = [
   },
   {
     key: 'windows-gitbash',
-    label: 'Windows · Git Bash',
-    intro: 'RANDI nativo en Windows (sin WSL) usando Git Bash / MSYS2.',
+    label: 'Windows · Nativo (npm)',
+    intro: 'Instalacion NATIVA en Windows (sin WSL). Se instala desde npm con node y winget para Ollama.',
     steps: [
-      { title: '1. Requisitos', body: ['Instala Git for Windows (Git Bash). Ollama se instalará automáticamente vía winget.'] },
-      { title: '2. Clona e instala', body: ['Abre Git Bash, cloná el repo y ejecutá `bash install-ollama.sh`. El instalador detecta Windows nativo.'] },
-      { title: '3. Onboarding y uso', body: ['`randi setup` y `randi install <modelo>` igual que el resto.', 'Ollama corre como servicio de Windows (bandeja del sistema): RANDI lo detecta.'] },
+      { title: '1. Requisitos', body: ['Node.js 18+ y Git for Windows (Git Bash). `winget install Git.Git` si falta.', 'Ollama se instala nativo como servicio de Windows y RANDI lo detecta.'] },
+      { title: '2. Instala el paquete', body: ['Instala RANDI global (o ejecutalo sin instalar con npx).', 'El primer arranque verifica Git, Python y Ollama y los instala nativo por winget si faltan.'] },
+      { title: '3. Onboarding y uso', body: ['`randi setup` analiza tu GPU/VRAM y recomienda modelos.', '`randi install <modelo>`, `randi chat` y `randi web` funcionan desde cualquier terminal de Windows.'] },
     ],
-    after: ['Si winget no está, el instalador descarga el instalador de Ollama.'],
+    after: ['Sin WSL: todo corre sobre Windows nativo (Ollama como servicio, Python vía winget).'],
   },
 ];
 
@@ -133,14 +133,14 @@ const guidesEn: OSGuide[] = [
   },
   {
     key: 'windows-gitbash',
-    label: 'Windows · Git Bash',
-    intro: 'Native RANDI on Windows (no WSL) using Git Bash / MSYS2.',
+    label: 'Windows · Native (npm)',
+    intro: 'NATIVE install on Windows (no WSL). Installed from npm with node and winget for Ollama.',
     steps: [
-      { title: '1. Requirements', body: ['Install Git for Windows (Git Bash). Ollama installs automatically via winget.'] },
-      { title: '2. Clone & install', body: ['Open Git Bash, clone the repo and run `bash install-ollama.sh`. The installer detects native Windows.'] },
-      { title: '3. Onboarding & use', body: ['`randi setup` and `randi install <model>` work the same as everywhere.', 'Ollama runs as a Windows service (system tray): RANDI detects it.'] },
+      { title: '1. Requirements', body: ['Node.js 18+ and Git for Windows (Git Bash). `winget install Git.Git` if missing.', 'Ollama installs natively as a Windows service and RANDI detects it.'] },
+      { title: '2. Install the package', body: ['Install RANDI globally (or run it without installing via npx).', 'First run checks Git, Python and Ollama and installs them natively via winget if missing.'] },
+      { title: '3. Onboarding & use', body: ['`randi setup` analyzes your GPU/VRAM and recommends models.', '`randi install <model>`, `randi chat` and `randi web` work from any Windows terminal.'] },
     ],
-    after: ['If winget is missing, the installer downloads the Ollama installer.'],
+    after: ['No WSL: everything runs on native Windows (Ollama as a service, Python via winget).'],
   },
 ];
 
@@ -148,9 +148,9 @@ export const content: Record<'es' | 'en', Landing> = {
   es: {
     nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub' },
     hero: {
-      badge: 'Asistente de IA 100% local · Termux, Linux, macOS, Windows',
+      badge: 'IA local multiplataforma · Termux, Linux, macOS y Windows nativo',
       title: ['IA local para tu', 'equipo real'],
-      sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. Sin internet, sin tokens, sin nube.',
+      sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. En Windows se instala nativo (npm), sin WSL.',
       cta1: 'Instalar ahora',
       cta2: 'Ver la instalación',
       stats: '85 modelos · 5 plataformas · 100% privado',
@@ -184,35 +184,36 @@ export const content: Record<'es' | 'en', Landing> = {
       title: 'Instalación paso a paso',
       sub: 'Elige tu plataforma. Cada paso ha sido probado en el ecosistema correspondiente.',
       guides: guidesEs,
-      note: 'El instalador detecta la plataforma automáticamente y configura shell, Ollama y OpenCode. Requisitos: 4GB RAM (8GB+ recomendado), 3GB libres.',
+      note: 'En Windows se instala nativo con npm (sin WSL); en el resto, el instalador configura shell, Ollama y OpenCode. Requisitos: 4GB RAM (8GB+ recomendado), 3GB libres.',
     },
     features: {
       title: 'Funcionalidades',
       items: [
+        'Multiplataforma: Android (Termux), Linux, macOS y Windows nativo (npm, sin WSL)',
         'Chat TUI con streaming, visión y voz',
-        'Web local con Ollama + WebGPU',
-        'Motor de compatibilidad tipo canirun.ai (grados S–F, 7 cuantizaciones)',
-        'Instalación y configuración automática de modelos',
+        'Web local con Ollama + WebGPU (modelos en la GPU del navegador)',
+        'Motor de compatibilidad estilo canirun.ai (grados S–F, 7 cuantizaciones)',
+        'Instalación y configuración automática de modelos por hardware',
         'Sesiones, modo eco y modo programador',
         'Integración con OpenCode',
-        'Multiplataforma con un solo script',
       ],
     },
     faq: [
       { q: '¿Cuesta algo usar RANDI?', a: 'No. Es 100% local, gratuito y open source (MIT). Solo consumes los recursos de tu propio equipo.' },
+      { q: '¿En qué plataformas funciona?', a: 'Android (Termux), Linux, macOS y Windows nativo. En Windows se instala con `npm install -g randi` (o `npx randi`) y Ollama corre como servicio nativo — sin WSL.' },
       { q: '¿Necesito internet?', a: 'Solo la primera vez para descargar modelos e instaladores. Después funciona sin conexión.' },
       { q: '¿Puedo correr modelos grandes?', a: 'Depende de tu hardware. El motor de compatibilidad te dice el grado (S–F) y, si no corre, el hardware mínimo necesario.' },
       { q: '¿Qué onda la privacidad?', a: 'Toda la inferencia ocurre en tu dispositivo. No se envía nada a ninguna nube.' },
       { q: '¿Genera imágenes y video?', a: 'Imágenes y video con modelos abiertos (FLUX.2, Wan 2.2…) vía ComfyUI; requiere GPU dedicada y se indica claramente.' },
     ],
-    footer: 'RANDI © 2026 — hecho con dedicación para la comunidad. Licencia MIT.',
+    footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
     nav: { models: 'Models', install: 'Installation', github: 'GitHub' },
     hero: {
-      badge: '100% local AI assistant · Termux, Linux, macOS, Windows',
+      badge: '100% local cross-platform AI · Termux, Linux, macOS and native Windows',
       title: ['Local AI for your', 'actual device'],
-      sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. No internet, no tokens, no cloud.',
+      sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. On Windows it installs natively (npm), no WSL.',
       cta1: 'Install now',
       cta2: 'See installation',
       stats: '85 models · 5 platforms · 100% private',
@@ -246,28 +247,29 @@ export const content: Record<'es' | 'en', Landing> = {
       title: 'Step-by-step installation',
       sub: 'Pick your platform. Every step is tested on the corresponding ecosystem.',
       guides: guidesEn,
-      note: 'The installer auto-detects your platform and configures shell, Ollama and OpenCode. Requirements: 4GB RAM (8GB+ recommended), 3GB free.',
+      note: 'On Windows it installs natively via npm (no WSL); elsewhere the installer configures shell, Ollama and OpenCode. Requirements: 4GB RAM (8GB+ recommended), 3GB free.',
     },
     features: {
       title: 'Features',
       items: [
+        'Cross-platform: Android (Termux), Linux, macOS and native Windows (npm, no WSL)',
         'Chat TUI with streaming, vision and voice',
-        'Local web with Ollama + WebGPU',
+        'Local web with Ollama + WebGPU (models on the browser GPU)',
         'canirun-style compat engine (S–F grades, 7 quantizations)',
-        'Automatic model install & configuration',
+        'Automatic model install & configuration by hardware',
         'Sessions, eco mode and programmer mode',
         'OpenCode integration',
-        'One script for every platform',
       ],
     },
     faq: [
       { q: 'Does RANDI cost anything?', a: 'No. It is 100% local, free and open source (MIT). You only use your own device\u2019s resources.' },
+      { q: 'Which platforms does it run on?', a: 'Android (Termux), Linux, macOS and native Windows. On Windows install it with `npm install -g randi` (or `npx randi`) and Ollama runs as a native service \u2014 no WSL.' },
       { q: 'Do I need internet?', a: 'Only the first time, to download models and installers. After that it works offline.' },
       { q: 'Can I run big models?', a: 'It depends on your hardware. The compat engine tells you the grade (S–F) and, if it can\u2019t run, the minimum hardware needed.' },
       { q: 'What about privacy?', a: 'All inference happens on your device. Nothing is sent to any cloud.' },
       { q: 'Can it generate images and video?', a: 'Images and video with open models (FLUX.2, Wan 2.2…) via ComfyUI; it needs a dedicated GPU and that is clearly indicated.' },
     ],
-    footer: 'RANDI © 2026 — made with dedication for the community. MIT license.',
+    footer: 'RANDI © 2026 — cross-platform local AI, open source. MIT license.',
   },
 };
 
@@ -276,7 +278,7 @@ export const installSteps: Record<OSKey, string[]> = {
   linux: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   macos: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   'windows-wsl': ['sudo apt-get update && sudo apt-get install -y git', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
-  'windows-gitbash': ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+  'windows-gitbash': ['npm install -g randi', 'npx randi doctor    # verifica y habilita dependencias', 'randi setup'],
 };
 
 export const osLabels: Record<OSKey, string> = {
@@ -284,5 +286,5 @@ export const osLabels: Record<OSKey, string> = {
   linux: 'Linux',
   macos: 'macOS',
   'windows-wsl': 'Windows · WSL2',
-  'windows-gitbash': 'Windows · Git Bash',
+  'windows-gitbash': 'Windows · Nativo (npm)',
 };

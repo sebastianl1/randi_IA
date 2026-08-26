@@ -28,10 +28,10 @@ if not _BIN_LIB.is_dir():
 if str(_BIN_LIB) not in sys.path:
     sys.path.insert(0, str(_BIN_LIB))
 try:
-    import hardware as randi_hardware
     import compat as randi_compat
-    import recommend as randi_recommend
+    import hardware as randi_hardware
     import install as randi_install
+    import recommend as randi_recommend
     _HAS_COMPAT = True
 except Exception:  # pragma: no cover - fallback de CI sin bin/lib
     randi_hardware = None

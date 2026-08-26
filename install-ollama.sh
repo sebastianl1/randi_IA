@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  RANDI — Instalador para Termux
+#  RANDI — Instalador multiplataforma
 #  Asistente IA local con Ollama
 #  Creado por Sebastian Laguna
 # ═══════════════════════════════════════════════════════════════════════════
@@ -225,7 +225,14 @@ install_deps() {
             fi
             ;;
         windows)
-            # Git Bash: python y git ya vienen con la instalacion
+            # Windows nativo (sin WSL): Python y Git via winget si faltan.
+            if ! command -v python3 >/dev/null 2>&1 && ! command -v python >/dev/null 2>&1; then
+                run_step -s "Instalando Python (winget)" 600 winget install --silent Python.Python.3.12 || true
+            fi
+            if ! command -v bash >/dev/null 2>&1; then
+                run_step -s "Instalando Git for Windows (winget)" 600 winget install --silent Git.Git || true
+            fi
+            command -v curl >/dev/null 2>&1 || true
             ;;
         linux|wsl)
             local pm=""
@@ -603,7 +610,7 @@ cmd_uninstall() {
 main() {
     clear
     echo ""
-    echo "  RANDI — Asistente IA local para Termux"
+    echo "  RANDI — Asistente IA local multiplataforma"
     echo "  por Sebastian Laguna"
     echo ""
     echo "  1) Instalar"

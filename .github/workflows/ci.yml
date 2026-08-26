@@ -41,7 +41,6 @@ jobs:
           node web/node_modules/astro/astro.js build --root web
           npm --prefix site ci --no-audit --no-fund
           node site/node_modules/astro/astro.js build --root site
-          for f in docs/lang/*.js; do node --check "$f"; done
 
       - name: models.json valido y sin duplicados
         run: |

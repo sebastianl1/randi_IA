@@ -9,7 +9,7 @@ la deteccion nativa de hardware. La web ademas tiene un espejo en TS
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 # ── Tipos ────────────────────────────────────────────────────────────────
@@ -375,7 +375,6 @@ def status_to_canirun(status: ModelStatus) -> str:
 def notes_for(model: dict, ev: ModelEvaluation, hw: HardwareInfo) -> list[str]:
     """Notas humanas explicando la evaluacion (paridad canirun)."""
     notes = [f"Modelo {model.get('name')} ({model.get('paramsBillions')}B, q{ev.quant or 'auto'})"]
-    status = status_to_canirun(ev.status)
     if ev.status == "cannot-run":
         req = required_hardware(model, ev.quant)
         notes.append(

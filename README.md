@@ -6,8 +6,8 @@
 [![Plataformas](https://img.shields.io/badge/Termux%20%E2%80%A2%20Linux%20%E2%80%A2%20macOS%20%E2%80%A2%20Windows%20%E2%80%A2%20WSL2-6c8cff?style=flat-square)]()
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square)]()
 
-**RANDI** — Asistente de IA local para Termux en Android, Linux, macOS y Windows (WSL2 / Git Bash).
-Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, vision (chat con imagenes), texto a voz y generacion de imagenes.
+**RANDI** — Asistente de IA local **multiplataforma**: Android (Termux), Linux, macOS y **Windows nativo** (se instala desde npm, sin WSL).
+Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, deteccion de hardware con recomendacion automatica, vision, voz, texto a voz y generacion de imagenes.
 
 ## Requisitos
 
@@ -45,9 +45,20 @@ bash install-ollama.sh
 
 Ollama se instala con el script oficial (`curl -fsSL https://ollama.com/install.sh`). En macOS se requiere Homebrew.
 
-### Windows
+### Windows — nativo con npm (sin WSL)
 
-Opcion A (recomendada) — **WSL2**:
+**Opcion A (recomendada) — Nativa desde npm:**
+
+```bash
+npm install -g randi
+randi ensure     # verifica/instala Git, Python y Ollama por winget (nativo)
+randi setup      # analiza tu GPU/VRAM y recomienda modelos
+```
+
+También puedes correrlo sin instalarlo: `npx randi setup`. RANDI funciona desde
+PowerShell o Windows Terminal; Ollama corre como **servicio nativo de Windows**.
+
+**Opcion B — Legado (WSL2):** ya no es necesaria. Solo si prefieres el flujo Linux:
 
 ```bash
 # Dentro de la terminal de WSL2
@@ -57,17 +68,7 @@ cd randi_IA
 bash install-ollama.sh
 ```
 
-Opcion B — **Git Bash / MSYS2** (Ollama nativo de Windows, instalacion automatica):
-
-```bash
-git clone https://github.com/sebastianl1/randi_IA.git
-cd randi_IA
-bash install-ollama.sh
-```
-
-> El instalador detecta Windows nativo e instala Ollama automaticamente via `winget` (o descarga el instalador si winget no esta disponible).
-
-El instalador detecta la plataforma automaticamente (Termux, Linux, macOS, Windows, WSL2).
+> El instalador detecta la plataforma automaticamente (Termux, Linux, macOS, Windows nativo, WSL2).
 
 El instalador guiara todo el proceso:
 - Instalacion de dependencias
@@ -129,6 +130,7 @@ randi img "un perro astronauta"
 | `randi setup` | Onboarding: analiza tu hardware y recomienda modelos |
 | `randi install <modelo>` | Descarga y configura un modelo automáticamente |
 | `randi requirements <modelo>` | Hardware mínimo que necesita un modelo |
+| `randi ensure` | Verifica/instala dependencias nativas (winget en Windows) |
 | `randi config` | Ver configuracion |
 | `randi update` | Actualizar RANDI desde GitHub o local |
 
@@ -268,10 +270,12 @@ por defecto.
 
 ```
 randi/
-├── install-ollama.sh       # Instalador multiplataforma
+├── package.json            # Paquete npm (Windows nativo: npm i -g randi)
+├── install-ollama.sh       # Instalador multiplataforma (Termux/Linux/macOS/WSL)
 ├── README.md               # Este archivo
 ├── commands.md             # Referencia rapida de comandos
 ├── bin/
+│   ├── randi.js           # Shim npm -> CLI real
 │   ├── randi              # Comando principal
 │   ├── ollama-chat         # Wrapper para chat TUI
 │   └── lib/
@@ -280,14 +284,14 @@ randi/
 │       ├── compat.py       # Motor de compatibilidad (skills globales)
 │       ├── hardware.py     # Deteccion de hardware + perfil
 │       ├── recommend.py    # Ranking, tier y best picks
-│       ├── install.py      # randi setup / install / requirements
+│       ├── install.py      # randi setup / install / requirements / ensure
 │       └── pull.py         # Menu de descarga de modelos
 ├── web/                    # SPA `randi web` (Astro 5 + Tailwind 4)
 │   ├── server.py          # Servidor web (proxy + motor compat + jobs de install)
 │   ├── models.json        # Catalogo central v2 (85 modelos)
 │   └── src/               # Paginas y scripts de la SPA
 ├── site/                   # Landing GitHub Pages (Astro, ES/EN) + guias por SO
-└── docs/                   # Documentacion: ARCHITECTURE, ROADMAP, landing legacy
+└── docs/                   # Documentacion: ARCHITECTURE, ROADMAP
 ```
 
 ## Solucion de problemas
@@ -314,14 +318,6 @@ Usa modelos mas pequenos. Revisa:
 randi ps  # Modelos en RAM
 free -h      # Memoria disponible
 ```
-
-## Capturas
-
-![RANDI en Termux](imagenes/randi1.jpg)
-*Interfaz web de RANDI en Termux (Android).*
-
-![Chat y modelos de RANDI](imagenes/randi2.jpg)
-*Chat y seleccion de modelos de RANDI.*
 
 ## Licencia
 

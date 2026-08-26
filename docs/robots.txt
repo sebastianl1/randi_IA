@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://sebastianl1.github.io/randi_IA/sitemap.xml

@@ -8,7 +8,7 @@ fi
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="2.0.0"
+RANDI_VERSION="2.0.1"
 RANDI_AUTHOR="Sebastian Laguna"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
@@ -688,7 +688,7 @@ show_menu() {
         echo ""
         echo -e "${BLU}${B}  ┌─────────────────────────────────────────┐${R}"
         echo -e "${BLU}${B}  │${R}  ${CYN}RANDI${R} — ${GRN}Local AI Terminal${R}           ${BLU}${B}│${R}"
-        echo -e "${BLU}${B}  │${R}  Asistente IA en Termux               ${BLU}${B}│${R}"
+        echo -e "${BLU}${B}  │${R}  Asistente IA multiplataforma          ${BLU}${B}│${R}"
         echo -e "${BLU}${B}  │${R}  por ${D}Sebastian Laguna${R}                  ${BLU}${B}│${R}"
         echo -e "${BLU}${B}  └─────────────────────────────────────────┘${R}"
         echo ""
@@ -888,6 +888,12 @@ cmd_requirements() {
     _py_compat install.py requirements "$1"
 }
 
+cmd_ensure() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib install.py)") || { err "Modulo no encontrado"; return 1; }
+    _py_compat install.py ensure
+}
+
 cmd_install() {
     local lib_dir
     lib_dir=$(dirname "$(find_py_lib install.py)") || { err "Modulo no encontrado"; return 1; }
@@ -901,14 +907,14 @@ cmd_setup() {
 }
 
 case "${1:-}" in
-    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor|hardware|recommend|tier|compare|install|setup|requirements)
+    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor|hardware|recommend|tier|compare|install|setup|requirements|ensure)
         cmd="$1"
         shift
         "cmd_$cmd" "$@"
         ;;
     -h|--help|help)
         echo ""
-        echo -e "${BLU}${B}RANDI v$RANDI_VERSION${R} - ${GRN}Asistente IA local en Termux${R}"
+        echo -e "${BLU}${B}RANDI v$RANDI_VERSION${R} - ${GRN}Asistente IA local multiplataforma${R}"
         echo -e "${D}Creado por $RANDI_AUTHOR${R}"
         echo ""
         echo -e "${CYN}Uso:${R} randi ${D}<comando>${R} ${D}[opciones]${R}"
@@ -935,6 +941,7 @@ case "${1:-}" in
         echo -e "  ${B}randi install${R} ${D}<m>${R}       ${D}Instala + configura un modelo${R}"
         echo -e "  ${B}randi setup${R}              ${D}Onboarding: hardware -> mejores modelos${R}"
         echo -e "  ${B}randi requirements${R} ${D}<m>${R}   ${D}Hardware que necesita un modelo${R}"
+        echo -e "  ${B}randi ensure${R}              ${D}Verifica/instala deps nativas (winget en Windows)${R}"
         ;;
     *)
         if [ -n "${1:-}" ]; then
