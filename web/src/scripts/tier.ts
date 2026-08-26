@@ -11,11 +11,7 @@ const COLOR: Record<string, string> = {
 };
 
 export async function mount() {
-  let hw = null;
-  try { hw = await api.getHardware(); } catch {
-    const { detectHardware } = await import('../lib/hardware.js');
-    hw = await detectHardware();
-  }
+  const hw = await api.fastHardware();
   let models: CatalogModel[] = [];
   try { models = await api.getModels({ media: true }); } catch { models = [...cat.llmModels, ...cat.mediaModels]; }
 

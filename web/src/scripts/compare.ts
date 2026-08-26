@@ -5,11 +5,7 @@ import { findModel } from '../lib/catalog.js';
 import * as u from '../lib/ui.js';
 
 export async function mount() {
-  let hw = null;
-  try { hw = await api.getHardware(); } catch {
-    const { detectHardware } = await import('../lib/hardware.js');
-    hw = await detectHardware();
-  }
+  const hw = await api.fastHardware();
   const a = document.getElementById('a') as HTMLSelectElement;
   const b = document.getElementById('b') as HTMLSelectElement;
   const box = document.getElementById('cmp');

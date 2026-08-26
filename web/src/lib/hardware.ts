@@ -41,7 +41,6 @@ const IS_APPLE = /\bm[1-9]\b|apple/i;
 
 async function webgpuEstimates() {
   let gpuVram: number | null = null;
-  let bw: number | null = null;
   try {
     if ('gpu' in navigator) {
       const adapter = await (navigator as any).gpu?.requestAdapter?.();
@@ -55,9 +54,15 @@ async function webgpuEstimates() {
       }
     }
   } catch { /* webgpu no disponible */ }
-  if (!gpuVram) return { gpuVram: null, bw: null };
-  if (!bw) bw = commonVramBw(gpuVram);
+  const bw = gpuVram ? commonVramBw(gpuVram) : null;
   return { gpuVram, bw };
+}
+
+// La estimacion WebGPU se limita a 400ms: nunca bloquea el render inicial.
+function webgpuEstimatesBounded() {
+  const res = webgpuEstimates().catch(() => null);
+  const t = new Promise<{ gpuVram: null; bw: null } | null>((r) => setTimeout(() => r(null), 400));
+  return Promise.race([res, t]);
 }
 
 export async function detectHardware(): Promise<Hw> {
@@ -66,8 +71,10 @@ export async function detectHardware(): Promise<Hw> {
   const deviceMemory = (navigator as any).deviceMemory || null;
   const cores = navigator.hardwareConcurrency || null;
   const isApple = platform === 'macOS' && (renderer ? IS_APPLE.test(renderer) : /mac/i.test(vendor || ''));
-  const { gpuVram, bw } = await webgpuEstimates();
-  const vram = isApple ? null : (parseVRAM(renderer) ?? gpuVram);
+  const parsedVram = parseVRAM(renderer);
+  const estimate = await webgpuEstimatesBounded();
+  const vram = isApple ? null : (parsedVram ?? estimate?.gpuVram ?? null);
+  const bw = isApple ? null : (parsedVram ? commonVramBw(parsedVram) : (estimate?.bw ?? null));
   const isMobile = platform === 'iOS' || platform === 'Android';
   return {
     platform: platform || undefined,
@@ -77,7 +84,7 @@ export async function detectHardware(): Promise<Hw> {
     system_ram_gb: null,
     gpu_name: renderer || undefined,
     gpu_vram_gb: vram ?? undefined,
-    gpu_memory_bw: isApple ? undefined : (bw ?? undefined),
+    gpu_memory_bw: bw ?? undefined,
     is_apple_silicon: isApple,
     is_mobile: isMobile,
   };

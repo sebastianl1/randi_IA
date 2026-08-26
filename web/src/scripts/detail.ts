@@ -89,8 +89,5 @@ function spec(k: string, v: string) {
 }
 
 async function detectHw(): Promise<Hw> {
-  try { return await api.getHardware(); } catch {
-    const { detectHardware } = await import('../lib/hardware.js');
-    return (await detectHardware()) as Hw;
-  }
+  return api.fastHardware();
 }

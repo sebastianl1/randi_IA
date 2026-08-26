@@ -57,6 +57,20 @@ export async function getHardware(): Promise<Hw> {
   return hwCache;
 }
 
+// Deteccion rapida: primero el navegador (instantaneo), luego se enriquece
+// con el servidor local sin bloquear (resultado igualmente rapido con cache).
+export async function fastHardware(): Promise<Hw> {
+  const { detectHardware } = await import('./hardware.js');
+  let fromClient: Hw = {};
+  try { fromClient = (await detectHardware()) as Hw; } catch { /* sin navegador */ }
+  try {
+    const srv = await apiGet<Hw>('/api/hardware');
+    return { ...fromClient, ...srv };
+  } catch {
+    return fromClient;
+  }
+}
+
 export interface CatalogModel {
   id: string;
   name: string;

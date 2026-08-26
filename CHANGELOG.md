@@ -2,6 +2,28 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.5] - 2026-08-26
+
+### Added
+
+- **Deteccion de hardware al entrar en la landing** (`site/`): boton real
+  "Detectar mi equipo" (y auto-deteccion a los 0.7s) 100% en el navegador,
+  con chips de RAM/GPU/VRAM/nucleos/plataforma, clase de equipo y
+  **sugerencias clasificadas y organizadas** por potencia (movil / basico sin
+  GPU / graficos integrados / GPU dedicada / GPU potente), incluyendo la
+  cuantizacion recomendada (Q2/Q4/Q6...). Sin imagenes, sin servidor.
+- **Seccion "Cuantizados para equipos basicos (sin GPU)"** en la web de
+  `randi`: modelos pequenos con su quant optima (qwen3:0.6b, qwen2.5-coder:0.5b/1.5b,
+  gemma3:1b, llama3.2:1b, deepseek-r1:1.5b, phi3:mini, nomic-embed-text, ...).
+- Deteccion rapida en toda la web: el navegador detecta primero (instantaneo)
+  y el servidor se usa en segundo plano (cached) solo para enriquecer.
+
+### Changed
+
+- `web` y `site`: flujo client-first para que el render de hardware aparicion
+  al instante (<100ms) en lugar de esperar al servidor.
+- `hardware.py`: cache por proceso (30s) y timeouts de subprocesos 10s -> 3s.
+
 ## [2.0.4] - 2026-08-26
 
 ### Added

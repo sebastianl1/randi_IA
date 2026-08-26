@@ -3,17 +3,6 @@ import { content, installSteps } from '../i18n.js';
 interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const t = content[lang];
-const hwChips = [
-  ['GPU', 'RTX 3060'],
-  ['VRAM', '12 GB'],
-  ['RAM', '32 GB'],
-  ['BW', '360 GB/s'],
-];
-const demos = [
-  { g: 'S', n: 'Qwen 3 8B', m: '4.6GB · qQ4_K_M · ~55 tok/s' },
-  { g: 'A', n: 'Qwen2.5 Coder 7B', m: '4.1GB · qQ4_K_M · ~60 tok/s' },
-  { g: 'B', n: 'Gemma 3 4B', m: '2.5GB · qQ5_K_M · ~70 tok/s' },
-];
 ---
 <section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-12">
   <div class="mx-auto max-w-3xl text-center">
@@ -24,36 +13,19 @@ const demos = [
     <p class="mx-auto mt-6 max-w-2xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
     <div class="mt-9 flex flex-wrap justify-center gap-3">
       <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
-      <a class="btn" href="#what">{t.hero.cta2}</a>
+      <a class="btn" href="#detect-btn">⌖ {lang === 'es' ? 'Detectar mi equipo' : 'Detect my device'}</a>
     </div>
     <p class="mt-6 text-xs text-muted mono">{t.hero.stats}</p>
   </div>
 
-  <!-- Deteccion de hardware: mock estatico (sin imagenes) -->
+  <!-- Deteccion real de hardware (client-side, sin imagenes) -->
   <div class="card mx-auto mt-12 max-w-3xl p-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● deteccion</span>
-      <span class="mono text-xs text-muted">navegador · 100% local</span>
+      <span class="mono text-xs text-muted" id="dMeta">navegador · 100% local</span>
     </div>
-    <div class="mt-5 flex flex-wrap gap-3">
-      {hwChips.map(([k, v]) => (
-        <div class="hw-chip"><span class="k">{k}</span><span class="v">{v}</span></div>
-      ))}
-    </div>
-    <div class="hairline my-5"></div>
-    <p class="mono text-[11px] uppercase tracking-widest text-muted mb-3">Recomendados para tu equipo</p>
-    <div class="space-y-2">
-      {demos.map((d) => (
-        <div class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3">
-          <span class="grade" style={`--grade-color:${d.g === 'S' ? '#22c55e' : d.g === 'A' ? '#4ade80' : '#a3e635'}`}>{d.g}</span>
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm font-semibold">{d.n}</span>
-            <span class="mono text-xs text-muted">{d.m}</span>
-          </div>
-          <span class="ml-auto status-dot sd-can-run"></span>
-        </div>
-      ))}
-    </div>
+    <button id="dBtn" class="btn btn-dark mt-5">⌖ {lang === 'es' ? 'Detectar mi equipo' : 'Detect my device'}</button>
+    <div id="dOut" class="mt-5"></div>
   </div>
 </section>
 
@@ -165,6 +137,7 @@ const demos = [
 </section>
 
 <script>
+  // ── Tabs de instalacion ──────────────────────────────────────────────
   const tabs = document.querySelectorAll<HTMLButtonElement>('[data-tab]');
   let active = tabs[0]?.dataset.tab;
   const show = () => {
@@ -173,4 +146,103 @@ const demos = [
   };
   tabs.forEach((b) => b.addEventListener('click', () => { active = b.dataset.tab; show(); }));
   show();
+
+  // ── Deteccion real de hardware (client-side, ~instantanea) ───────────
+  const isEs = document.documentElement.lang.startsWith('es');
+  const TXT = {
+    title: isEs ? 'Sugerencias para tu equipo' : 'Suggestions for your device',
+    class: isEs ? 'Equipo' : 'Device class',
+    basic: isEs ? 'Básico / sin GPU (4GB+)' : 'Basic / no GPU (4GB+)',
+    igpu: isEs ? 'PC con gráficos integrados (8-16GB)' : 'PC with integrated graphics (8-16GB)',
+    gpu: isEs ? 'GPU dedicada (8-12GB)' : 'Dedicated GPU (8-12GB)',
+    pro: isEs ? 'GPU potente (24GB+)' : 'Powerful GPU (24GB+)',
+    mobile: isEs ? 'Móvil / tablet' : 'Mobile / tablet',
+    vs: isEs ? 'detectado en' : 'detected in',
+    more: isEs ? 'Detalle completo y evaluación por cuantización en la web local:  randi web' : 'Full detail and per-quant eval in the local web:  randi web',
+  };
+  const LITS: Record<string, Array<[string, string, string]>> = {
+    mobile: [['qwen3:0.6b', '0.4GB · Q4', 'chat + razonamiento'], ['qwen2.5-coder:0.5b', '0.4GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat + visión'], ['llama3.2:1b', '0.8GB · Q4', 'chat / tools'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento'], ['nomic-embed-text', '0.3GB', 'RAG / embeddings']],
+    basic: [['qwen3:0.6b', '0.4GB · Q4', 'chat'], ['qwen2.5-coder:1.5b', '0.9GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat + visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento'], ['qwen3:1.7b', '1.3GB · Q4', 'chat multilingüe'], ['llama3.2:3b', '2.0GB · Q4', 'general / tools']],
+    igpu: [['qwen2.5-coder:3b', '1.9GB · Q4', 'código (punto dulce)'], ['qwen3:4b', '2.5GB · Q4', 'chat'], ['llama3.1:8b', '4.6GB · Q4', 'general / tools'], ['qwen2.5-coder:7b', '4.1GB · Q4', 'código'], ['deepseek-r1:7b', '4.1GB · Q4', 'razonamiento'], ['qwen2.5-vl:7b', '6.5GB · Q4', 'visión']],
+    gpu: [['qwen3:8b', '4.6GB · Q6', 'chat + razonamiento'], ['qwen2.5-coder:7b', '4.1GB · Q6', 'código'], ['deepseek-r1:14b', '8.0GB · Q4', 'razonamiento'], ['qwen3:14b', '7.5GB · Q5', 'todo terreno'], ['gpt-oss:20b', '11.3GB · Q4', 'MoE 3.6B activos'], ['qwen3-vl:8b', '5.0GB · Q4', 'visión / VLM']],
+    pro: [['qwen3:32b', '17GB · Q4', 'chat + código'], ['gpt-oss:120b', '60GB · Q4', 'MoE 5.1B activos'], ['llama3.3:70b', '37GB · Q4', 'general frontier'], ['qwen3:235b-a22b', '120GB · Q4', 'MoE 22B activos'], ['deepseek-r1:671b', '350GB · Q4', 'MoE razonamiento'], ['gemma3:12b', '6.6GB · Q8', 'visión / chat']],
+  };
+  const CLASS_LABELS: Record<string, string> = { mobile: TXT.mobile, basic: TXT.basic, igpu: TXT.igpu, gpu: TXT.gpu, pro: TXT.pro };
+
+  function detectPlatform(): string {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad/.test(ua)) return 'ios';
+    if (/Mac OS X/.test(ua)) return 'macos';
+    if (/Windows/.test(ua)) return 'windows';
+    if (/Android/.test(ua)) return 'android';
+    if (/Linux/.test(ua)) return 'linux';
+    return 'desconocido';
+  }
+  function gpuInfo() {
+    try {
+      const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+      const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      return gl ? (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : null;
+    } catch { return null; }
+  }
+  function vramOf(renderer: string | null): number | null {
+    const m = renderer && (renderer.match(/\((\d+)\s*GB\)/i) || renderer.match(/\b(\d+)\s*GB\b/i));
+    return m ? parseInt(m[1], 10) : null;
+  }
+  function classify(p: string, renderer: string | null, mem: number | null, vram: number | null): string {
+    if (p === 'ios' || p === 'android') return 'mobile';
+    const apple = p === 'macos' && (renderer ? /\bm[1-9]\b|apple/i.test(renderer) : true);
+    if (apple) return (mem || 0) >= 32 ? 'pro' : 'gpu';
+    if (vram && vram >= 24) return 'pro';
+    if (vram && vram >= 8) return 'gpu';
+    if (mem && mem >= 12) return 'igpu';
+    return 'basic';
+  }
+
+  function detect() {
+    const btn = document.getElementById('dBtn') as HTMLButtonElement;
+    const out = document.getElementById('dOut');
+    const meta = document.getElementById('dMeta');
+    if (!out || !btn) return;
+    const start = performance.now();
+    btn.disabled = true;
+    btn.textContent = isEs ? 'Detectando…' : 'Detecting…';
+    const p = detectPlatform();
+    const renderer = gpuInfo();
+    const mem = (navigator as any).deviceMemory ?? null;
+    const cores = navigator.hardwareConcurrency ?? null;
+    const vram = vramOf(renderer);
+    const cls = classify(p, renderer, mem, vram);
+    const ms = Math.round(performance.now() - start);
+    meta!.textContent = `${isEs ? 'navegador' : 'browser'} · 100% ${isEs ? 'local' : 'local'} · ${TXT.vs} ${ms}ms`;
+
+    const chips: Array<[string, string]> = [['RAM', mem ? `${mem}GB` : '—'], ['GPU', renderer || (isEs ? 'No detectada' : 'Not detected')]];
+    if (vram) chips.push(['VRAM', `${vram}GB`]);
+    chips.push([isEs ? 'Núcleos' : 'Cores', String(cores ?? '—')]);
+    chips.push([isEs ? 'Plataforma' : 'Platform', p]);
+
+    const items = LITS[cls] || LITS.basic;
+    out.innerHTML = `
+      <div class="flex flex-wrap gap-3">${chips.map(([k, v]) => `<div class="hw-chip"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
+      <div class="hairline my-5"></div>
+      <p class="mono text-[11px] uppercase tracking-widest text-muted mb-1">${TXT.title}</p>
+      <p class="mono text-xs text-muted mb-3">${TXT.class}: <span class="text-ink">${CLASS_LABELS[cls] || cls}</span></p>
+      <div class="space-y-2">
+        ${items.map(([id, quant, why], i) => `
+          <div class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3">
+            <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b', '#f97316'][i] || '#56565f'}">${'SABDC'[i] || '?'}</span>
+            <div class="flex flex-col min-w-0">
+              <span class="mono text-sm font-semibold">${id}</span>
+              <span class="mono text-xs text-muted">${why}</span>
+            </div>
+            <span class="ml-auto mono text-xs text-muted">${quant}</span>
+          </div>`).join('')}
+      </div>
+      <p class="mt-4 text-xs text-muted">💡 ${TXT.more}</p>`;
+    btn.disabled = false;
+    btn.textContent = isEs ? '↻ Detectar de nuevo' : '↻ Detect again';
+  }
+
+  document.getElementById('dBtn')?.addEventListener('click', detect);
+  setTimeout(detect, 700); // deteccion automatica al entrar
 </script>

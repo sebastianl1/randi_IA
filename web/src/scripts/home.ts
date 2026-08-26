@@ -2,6 +2,7 @@
 import * as api from '../lib/api.js';
 import * as c from '../lib/compat.js';
 import { hardwareProfile, detectHardware } from '../lib/hardware.js';
+import { findModel } from '../lib/catalog.js';
 import { el, gradeBadge, spinner, fmtCtx } from '../lib/ui.js';
 import type { CatalogModel, Hw } from '../lib/api.js';
 
@@ -10,14 +11,6 @@ let hw: Hw | null = null;
 function scanState(): HTMLSpanElement {
   const s = el('span', {}, [spinner(), ' Analizando hardware y modelos…']);
   return s;
-}
-
-async function detect(): Promise<Hw> {
-  try {
-    return await api.getHardware();
-  } catch {
-    return (await detectHardware()) as Hw;
-  }
 }
 
 async function evaluateSet(models: CatalogModel[], limit: number) {
@@ -105,9 +98,19 @@ export function mount() {
 
   async function run() {
     if (state) state.replaceChildren(scanState());
-    hw = await detect();
-    const profile = (hw as any).profile || hardwareProfile(hw);
-    renderHw(profile);
+    // Paso 1: deteccion en el navegador (instantanea) y render inmediato.
+    let client: Hw = {};
+    try { client = (await detectHardware()) as Hw; } catch { /* sin navegador */ }
+    hw = client;
+    renderHw(profileOf(client));
+    // Paso 2: enriquecer con el servidor local (cached, rapido).
+    try {
+      const srv = await api.getHardware();
+      hw = { ...client, ...srv };
+      renderHw(profileOf(hw));
+    } catch { /* sin servidor: queda la deteccion del navegador */ }
+    renderBasic();
+
     await renderPicks();
     await renderLists();
 
@@ -119,6 +122,23 @@ export function mount() {
       btn.addEventListener('click', run);
     }
     if (state) state.textContent = '';
+  }
+
+  function profileOf(h: Hw) { return (h as any).profile || hardwareProfile(h); }
+
+  // Modelos cuantizados (Q2/Q4) para equipos basicos sin GPU dedicada.
+  const BASIC_IDS = ['qwen3:0.6b', 'qwen2.5-coder:0.5b', 'gemma3:1b', 'llama3.2:1b', 'qwen3:1.7b', 'deepseek-r1:1.5b', 'qwen2.5-coder:1.5b', 'phi3:mini', 'qwen3-moe:0.6b', 'nomic-embed-text'];
+  function renderBasic() {
+    const box = document.getElementById('basic');
+    if (!box || !hw) return;
+    const list = BASIC_IDS.map(findModel).filter(Boolean) as CatalogModel[];
+    if (!list.length) return;
+    const evals = list.map((m) => ({ m, ev: c.evaluateModel(m, hw!) }));
+    box.innerHTML = '';
+    box.appendChild(el('h2', { class: 'text-xl font-bold mb-3', text: 'Cuantizados para equipos básicos (sin GPU)' }));
+    const grid = el('div', { class: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4' });
+    evals.forEach(({ m, ev }) => grid.appendChild(modelRow(m, ev, { install: true })));
+    box.appendChild(grid);
   }
 
   function renderHw(profile: any) {

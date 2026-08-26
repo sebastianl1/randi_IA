@@ -18,6 +18,7 @@ import platform as _platform
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from compat import HardwareInfo  # noqa: F401  (re-export para el servidor)
@@ -167,7 +168,7 @@ MOBILE_GPU_DB: dict[str, dict] = {
 
 def _run(cmd: list[str]) -> str:
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
         return out.stdout.strip()
     except Exception:
         return ""
@@ -371,7 +372,15 @@ def is_apple_silicon(platform: str, gpu_name: str | None) -> bool:
     return False
 
 
-def detect_hardware() -> HardwareInfo:
+# Cache simple por proceso (30s): evita re-detecta subprocesos en la web.
+_DETECT_CACHE: dict = {"t": 0.0, "hw": None}
+
+
+def detect_hardware(cache: bool = True) -> HardwareInfo:
+    now = time.time()
+    if cache and _DETECT_CACHE["hw"] and (now - _DETECT_CACHE["t"]) < 30:
+        return _DETECT_CACHE["hw"]
+
     platform = detect_platform()
     cpu_name, cores, threads = detect_cpu()
     ram = detect_ram()
@@ -397,6 +406,8 @@ def detect_hardware() -> HardwareInfo:
     if apple and ram:
         hw.ram_gb = ram
         hw.gpu_vram_gb = None
+    if cache:
+        _DETECT_CACHE.update(t=now, hw=hw)
     return hw
 
 

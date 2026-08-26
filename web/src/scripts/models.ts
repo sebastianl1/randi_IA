@@ -174,8 +174,5 @@ export async function mount() {
 }
 
 async function detectHw(): Promise<c.Hw> {
-  try { return await api.getHardware(); } catch {
-    const { detectHardware } = await import('../lib/hardware.js');
-    return (await detectHardware()) as c.Hw;
-  }
+  return api.fastHardware();
 }
