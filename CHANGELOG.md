@@ -2,6 +2,17 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.3] - 2026-08-26
+
+### Fixed
+
+- **Windows nativo**: el shim npm ahora localiza y usa **explicitamente el bash de
+  Git for Windows** (en vez de confiar en un `bash` cualquiera del PATH). Soluciona el
+  error `No such file or directory` al ejecutar `randi` (los `/c/...` solo existen en
+  el montaje de Git Bash; con WSL o bash generico no resolvian). Como fallback detecta
+  si el `bash` es MSYS o WSL y usa `/c/` o `/mnt/c/`.
+- Paquete npm: la salida ya no incluye `__pycache__` ni `.pyc` (`.npmignore`).
+
 ## [2.0.2] - 2026-08-26
 
 ### Fixed

@@ -1,44 +1,54 @@
 #!/usr/bin/env node
 /* RANDI — shim npm (bin `randi`).
-   Ejecuta el CLI real (bash) via `bash` (Git for Windows en Windows nativo).
-   La instalacion npm/npx permite usar RANDI desde cualquier terminal de
-   Windows sin WSL; las dependencias (Git, Python, Ollama) se instalan nativo
-   por winget si faltan (ver `randi ensure`). */
-import { spawn } from 'node:child_process';
+   Ejecuta el CLI real (bash `bin/randi`) sin depender de montajes de PATH:
+   - En Windows usa EXPLICITAMENTE el bash de Git for Windows (path real), con
+     la ruta del script en formato MSYS (/c/Users/...), que es el que entiende.
+   - Fallback: si no hay Git Bash, detecta si el `bash` del PATH es MSYS o WSL
+     y usa el mapeo correspondiente (/c/... o /mnt/c/...).
+   Dependencias nativas (Git, Python, Ollama) se instalan por winget: `randi ensure`. */
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CLI = join(here, 'randi');
 const args = process.argv.slice(2);
+const isWin = process.platform === 'win32';
 
-// Git Bash (MSYS) trata las rutas con backslash como escapes: una ruta
-// C:\Users\... llega a bash como C:Users... y falla. Se convierte a POSIX.
-function toPosix(p) {
-  if (process.platform !== 'win32') return p;
+// Git for Windows: bash.exe real para no depender del `bash` del PATH.
+function findGitBash() {
+  const roots = [];
+  if (process.env.ProgramFiles) roots.push(join(process.env.ProgramFiles, 'Git'));
+  if (process.env.LOCALAPPDATA) roots.push(join(process.env.LOCALAPPDATA, 'Programs', 'Git'));
+  roots.push('C:\\Program Files\\Git');
+  for (const root of roots) {
+    for (const rel of ['bin\\bash.exe', 'usr\\bin\\bash.exe']) {
+      const p = join(root, rel);
+      if (existsSync(p)) return p;
+    }
+  }
+  return '';
+}
+
+function msysPath(p) {          // C:\x -> /c/x
   let s = p.replace(/\\/g, '/');
-  s = s.replace(/^([A-Za-z]):/, (_m, d) => '/' + d.toLowerCase());
-  return s;
+  return s.replace(/^([A-Za-z]):/, (_m, d) => '/' + d.toLowerCase());
 }
-const CLI_POSIX = toPosix(CLI);
-
-function bashAvailable() {
-  return new Promise((resolve) => {
-    const c = spawn('bash', ['-c', 'exit 0'], { stdio: 'ignore' });
-    c.on('error', () => resolve(false));
-    c.on('exit', () => resolve(true));
-  });
+function wslPath(p) {           // C:\x -> /mnt/c/x
+  let s = p.replace(/\\/g, '/');
+  return s.replace(/^([A-Za-z]):/, (_m, d) => '/mnt/' + d.toLowerCase());
 }
 
-function runBash() {
-  const child = spawn('bash', [CLI_POSIX, ...args], { stdio: 'inherit' });
+function run(bashBin, scriptArg) {
+  const child = spawn(bashBin, [scriptArg, ...args], { stdio: 'inherit' });
   child.on('exit', (code) => process.exit(code ?? 0));
   child.on('error', (err) => {
     if (err.code === 'ENOENT') {
-      console.error('\n  bash no esta en el PATH.');
-      if (process.platform === 'win32') {
-        console.error('  En Windows nativo necesitas Git for Windows (incluye bash):');
-        console.error('    winget install Git.Git\n  Luego cierra y abre la terminal y ejecuta: randi doctor');
+      console.error('\n  No se encontro el bash.');
+      if (isWin) {
+        console.error('  En Windows nativo instala Git for Windows (incluye bash):');
+        console.error('    winget install Git.Git\n  Luego cierra y abre la terminal y ejecuta: randi');
       } else {
         console.error('  Instala bash (tu gestor de paquetes: apt/brew/pacman).');
       }
@@ -49,28 +59,22 @@ function runBash() {
   });
 }
 
-const isWin = process.platform === 'win32';
-const ok = isWin && args[0] !== 'ensure' ? await bashAvailable() : true;
+function main() {
+  if (!existsSync(CLI)) {
+    console.error('\n  No se encuentra bin/randi en el paquete instalado.');
+    console.error('  Reinstala el paquete:  npm install -g randi-ai@latest');
+    process.exit(1);
+  }
+  if (!isWin) { run('bash', CLI); return; }
 
-if (!ok) {
-  console.error('');
-  console.error('  RANDI necesita bash (Git for Windows) en Windows nativo.');
-  console.error('  Instalamos Git y volvemos a intentar? (s/N)');
-  process.stdin.once('data', (d) => {
-    if (!/^s/i.test(String(d).trim())) {
-      console.error('  Ejecuta: winget install Git.Git\n  y luego de nuevo: randi');
-      process.exit(1);
-    }
-    const w = spawn('winget', ['install', '--silent', 'Git.Git'], { stdio: 'inherit' });
-    w.on('exit', (code) => {
-      if (code === 0) {
-        console.error('\n  Git instalado. Cierra y abre la terminal y ejecuta: randi');
-      } else {
-        console.error('  No se pudo instalar Git automaticamente. Corre: winget install Git.Git');
-      }
-      process.exit(code ?? 1);
-    });
-  });
-} else {
-  runBash();
+  const gitBash = findGitBash();
+  if (gitBash) { run(gitBash, msysPath(CLI)); return; }
+
+  // Sin Git Bash: detectar el tipo de `bash` del PATH.
+  const probe = spawnSync('bash', ['-c', 'printf %s "$MSYSTEM"'], { encoding: 'utf8' });
+  const isMsys = probe.status === 0 && /MINGW|MSYS/i.test(probe.stdout || '');
+  if (isMsys) { run('bash', msysPath(CLI)); return; }
+  run('bash', wslPath(CLI)); // WSL o similar (montaje /mnt/c)
 }
+
+main();
