@@ -1,80 +1,78 @@
 #!/usr/bin/env node
 /* RANDI — shim npm (bin `randi`).
-   Ejecuta el CLI real (bash `bin/randi`) sin depender de montajes de PATH:
-   - En Windows usa EXPLICITAMENTE el bash de Git for Windows (path real), con
-     la ruta del script en formato MSYS (/c/Users/...), que es el que entiende.
-   - Fallback: si no hay Git Bash, detecta si el `bash` del PATH es MSYS o WSL
-     y usa el mapeo correspondiente (/c/... o /mnt/c/...).
-   Dependencias nativas (Git, Python, Ollama) se instalan por winget: `randi ensure`. */
+   - Windows nativo: ejecuta el CLI en Python (bin/randi.py) directamente con
+     python.exe. NO requiere bash ni Git for Windows. Si falta Python se
+     ofrece instalarlo por winget (Python.Python.3.12).
+   - Resto de plataformas (Linux/macOS/Termux): usa bash con bin/randi. */
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const CLI = join(here, 'randi');
+const CLI_BASH = join(here, 'randi');       // CLI bash (no-Windows)
+const CLI_PY = join(here, 'randi.py');      // CLI nativo Python (Windows)
 const args = process.argv.slice(2);
 const isWin = process.platform === 'win32';
 
-// Git for Windows: bash.exe real para no depender del `bash` del PATH.
-function findGitBash() {
-  const roots = [];
-  if (process.env.ProgramFiles) roots.push(join(process.env.ProgramFiles, 'Git'));
-  if (process.env.LOCALAPPDATA) roots.push(join(process.env.LOCALAPPDATA, 'Programs', 'Git'));
-  roots.push('C:\\Program Files\\Git');
-  for (const root of roots) {
-    for (const rel of ['bin\\bash.exe', 'usr\\bin\\bash.exe']) {
-      const p = join(root, rel);
-      if (existsSync(p)) return p;
-    }
+function findPython() {
+  for (const c of ['py', 'python', 'python3']) {
+    const r = spawnSync(c, ['-c', 'import sys; print(1)'], { stdio: 'ignore' });
+    if (r.status === 0) return c;
   }
   return '';
 }
 
-function msysPath(p) {          // C:\x -> /c/x
-  let s = p.replace(/\\/g, '/');
-  return s.replace(/^([A-Za-z]):/, (_m, d) => '/' + d.toLowerCase());
-}
-function wslPath(p) {           // C:\x -> /mnt/c/x
-  let s = p.replace(/\\/g, '/');
-  return s.replace(/^([A-Za-z]):/, (_m, d) => '/mnt/' + d.toLowerCase());
-}
-
-function run(bashBin, scriptArg) {
-  const child = spawn(bashBin, [scriptArg, ...args], { stdio: 'inherit' });
+function run(cmd, script) {
+  const child = spawn(cmd, [script, ...args], { stdio: 'inherit' });
   child.on('exit', (code) => process.exit(code ?? 0));
   child.on('error', (err) => {
-    if (err.code === 'ENOENT') {
-      console.error('\n  No se encontro el bash.');
-      if (isWin) {
-        console.error('  En Windows nativo instala Git for Windows (incluye bash):');
-        console.error('    winget install Git.Git\n  Luego cierra y abre la terminal y ejecuta: randi');
-      } else {
-        console.error('  Instala bash (tu gestor de paquetes: apt/brew/pacman).');
-      }
-      process.exit(1);
-    }
-    console.error('  Error al lanzar RANDI:', err.message);
+    console.error('\n  Error al lanzar RANDI:', err.message);
     process.exit(1);
   });
 }
 
-function main() {
-  if (!existsSync(CLI)) {
-    console.error('\n  No se encuentra bin/randi en el paquete instalado.');
-    console.error('  Reinstala el paquete:  npm install -g randi-ai@latest');
+function ensurePython() {
+  let python = findPython();
+  if (python) return python;
+  if (!isWin) {
+    console.error('\n  RANDI necesita Python 3. Instalalo (apt/brew/pacman) y reintenta.');
     process.exit(1);
   }
-  if (!isWin) { run('bash', CLI); return; }
+  return new Promise((resolve) => {
+    console.error('\n  RANDI necesita Python 3 en Windows nativo.');
+    console.error('  Instalamos Python por winget? (s/N)');
+    process.stdin.once('data', (d) => {
+      if (!/^s/i.test(String(d).trim())) {
+        console.error('  Ejecuta: winget install Python.Python.3.12\n  y luego de nuevo: randi');
+        process.exit(1);
+      }
+      const w = spawn('winget', ['install', '--silent', 'Python.Python.3.12'], { stdio: 'inherit' });
+      w.on('exit', (code) => {
+        if (code === 0 && findPython()) {
+          console.error('\n  Python instalado.');
+          resolve(findPython());
+        } else {
+          console.error('  No se pudo instalar Python. Cierra y abre la terminal y reintenta.');
+          process.exit(code ?? 1);
+        }
+      });
+    });
+  });
+}
 
-  const gitBash = findGitBash();
-  if (gitBash) { run(gitBash, msysPath(CLI)); return; }
-
-  // Sin Git Bash: detectar el tipo de `bash` del PATH.
-  const probe = spawnSync('bash', ['-c', 'printf %s "$MSYSTEM"'], { encoding: 'utf8' });
-  const isMsys = probe.status === 0 && /MINGW|MSYS/i.test(probe.stdout || '');
-  if (isMsys) { run('bash', msysPath(CLI)); return; }
-  run('bash', wslPath(CLI)); // WSL o similar (montaje /mnt/c)
+async function main() {
+  if (!isWin) {
+    if (!existsSync(CLI_BASH)) {
+      console.error('\n  No se encuentra bin/randi en el paquete instalado.');
+      console.error('  Reinstala: npm install -g randi-ai@latest');
+      process.exit(1);
+    }
+    run('bash', CLI_BASH);
+    return;
+  }
+  const python = await ensurePython();
+  run(python, CLI_PY);
 }
 
 main();

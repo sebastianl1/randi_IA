@@ -159,25 +159,21 @@ def requirements_for(model: dict) -> dict:
 def ensure_native() -> int:
     """Instala/verifica las dependencias nativas (multiplataforma).
 
-    En Windows nativo se usan winget (Git, Python, Ollama como servicio).
-    En el resto se indica el gestor de paquetes correspondiente.
+    Windows nativo: usa winget (Python y Ollama como servicio). No requiere
+    bash ni Git for Windows. En el resto se indica el gestor de paquetes.
     """
     missing = []
     if shutil.which("python3") is None and shutil.which("python") is None:
         missing.append("python3")
     if shutil.which("ollama") is None:
         missing.append("ollama")
-    if sys.platform == "win32" and shutil.which("bash") is None:
-        missing.append("bash (Git for Windows)")
     if not missing:
         ok("Dependencias nativas presentes.")
         return 0
     warn("Faltan dependencias nativas: " + ", ".join(missing))
     if sys.platform == "win32":
-        info("Instalando nativo con winget (sin WSL)...")
+        info("Instalando nativo con winget (sin WSL, sin Git Bash)...")
         cmds = []
-        if shutil.which("bash") is None:
-            cmds.append(["winget", "install", "--silent", "Git.Git"])
         if shutil.which("python3") is None and shutil.which("python") is None:
             cmds.append(["winget", "install", "--silent", "Python.Python.3.12"])
         if shutil.which("ollama") is None:

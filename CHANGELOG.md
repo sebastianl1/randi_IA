@@ -2,6 +2,23 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.4] - 2026-08-26
+
+### Added
+
+- **RANDI 100% nativo en Windows / PowerShell**: nuevo CLI en Python (`bin/randi.py`)
+  con paridad de comandos con el bash (`setup`, `install`, `requirements`, `ensure`,
+  `chat`, `serve`, `pull`, `web`, `doctor`, `recommend`, `tier`, `compare`, ...).
+  El shim npm (`bin/randi.js`) lo ejecuta con `python.exe` en Windows: ya **no
+  requiere bash ni Git for Windows**, solo Python y Ollama (ambos nativos, instalados
+  por `randi ensure` / winget). En el resto de plataformas sigue usando bash.
+
+### Fixed
+
+- Eliminada la dependencia de Git/Git Bash del flujo npm de Windows (antes fallaba
+  con errores de montaje `/c/...`). `randi ensure` ahora instala Python y Ollama nativos.
+- Paquete npm: se incluye `bin/randi.py` y se mantiene el tarball limpio de `.pyc`.
+
 ## [2.0.3] - 2026-08-26
 
 ### Fixed

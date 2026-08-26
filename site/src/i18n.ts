@@ -73,13 +73,13 @@ const guidesEs: OSGuide[] = [
   {
     key: 'windows-gitbash',
     label: 'Windows · Nativo (npm)',
-    intro: 'Instalacion NATIVA en Windows (sin WSL). Se instala desde npm con node y winget para Ollama.',
+    intro: 'Instalacion NATIVA en Windows (sin WSL y sin Git Bash): solo Node, Python y Ollama (servicio) instalados por winget.',
     steps: [
-      { title: '1. Requisitos', body: ['Node.js 18+ y Git for Windows (Git Bash). `winget install Git.Git` si falta.', 'Ollama se instala nativo como servicio de Windows y RANDI lo detecta.'] },
-      { title: '2. Instala el paquete', body: ['Instala RANDI global (o ejecutalo sin instalar con npx).', 'El primer arranque verifica Git, Python y Ollama y los instala nativo por winget si faltan.'] },
-      { title: '3. Onboarding y uso', body: ['`randi setup` analiza tu GPU/VRAM y recomienda modelos.', '`randi install <modelo>`, `randi chat` y `randi web` funcionan desde cualquier terminal de Windows.'] },
+      { title: '1. Requisitos', body: ['Node.js 18+. Python y Ollama se instalan solos por winget (nativo).', 'Ollama corre como servicio de Windows y RANDI lo detecta.'] },
+      { title: '2. Instala el paquete', body: ['Instala RANDI global (o ejecutalo sin instalar con npx).', '`randi ensure` verifica/instala Python y Ollama por winget si faltan.'] },
+      { title: '3. Onboarding y uso', body: ['`randi setup` analiza tu GPU/VRAM y recomienda modelos.', '`randi install <modelo>`, `randi chat` y `randi web` funcionan directo en PowerShell.'] },
     ],
-    after: ['Sin WSL: todo corre sobre Windows nativo (Ollama como servicio, Python vía winget).'],
+    after: ['Sin WSL y sin Git Bash: corre 100% nativo (Python winget + Ollama servicio).'],
   },
 ];
 
@@ -134,13 +134,13 @@ const guidesEn: OSGuide[] = [
   {
     key: 'windows-gitbash',
     label: 'Windows · Native (npm)',
-    intro: 'NATIVE install on Windows (no WSL). Installed from npm with node and winget for Ollama.',
+    intro: 'NATIVE install on Windows (no WSL, no Git Bash): only Node, Python and Ollama (service) installed via winget.',
     steps: [
-      { title: '1. Requirements', body: ['Node.js 18+ and Git for Windows (Git Bash). `winget install Git.Git` if missing.', 'Ollama installs natively as a Windows service and RANDI detects it.'] },
-      { title: '2. Install the package', body: ['Install RANDI globally (or run it without installing via npx).', 'First run checks Git, Python and Ollama and installs them natively via winget if missing.'] },
-      { title: '3. Onboarding & use', body: ['`randi setup` analyzes your GPU/VRAM and recommends models.', '`randi install <model>`, `randi chat` and `randi web` work from any Windows terminal.'] },
+      { title: '1. Requirements', body: ['Node.js 18+. Python and Ollama install themselves via winget (native).', 'Ollama runs as a Windows service and RANDI detects it.'] },
+      { title: '2. Install the package', body: ['Install RANDI globally (or run it without installing via npx).', '`randi ensure` checks/installs Python and Ollama via winget if missing.'] },
+      { title: '3. Onboarding & use', body: ['`randi setup` analyzes your GPU/VRAM and recommends models.', '`randi install <model>`, `randi chat` and `randi web` run directly in PowerShell.'] },
     ],
-    after: ['No WSL: everything runs on native Windows (Ollama as a service, Python via winget).'],
+    after: ['No WSL and no Git Bash: runs 100% native (winget Python + Ollama service).'],
   },
 ];
 
@@ -200,7 +200,7 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     faq: [
       { q: '¿Cuesta algo usar RANDI?', a: 'No. Es 100% local, gratuito y open source (MIT). Solo consumes los recursos de tu propio equipo.' },
-      { q: '¿En qué plataformas funciona?', a: 'Android (Termux), Linux, macOS y Windows nativo. En Windows se instala con `npm install -g randi-ai` (o `npx randi-ai`) y Ollama corre como servicio nativo — sin WSL.' },
+      { q: '¿En qué plataformas funciona?', a: 'Android (Termux), Linux, macOS y Windows nativo. En Windows se instala con `npm install -g randi-ai` (o `npx randi-ai`) y funciona directo en PowerShell, sin WSL ni Git Bash — solo Python y Ollama nativos.' },
       { q: '¿Necesito internet?', a: 'Solo la primera vez para descargar modelos e instaladores. Después funciona sin conexión.' },
       { q: '¿Puedo correr modelos grandes?', a: 'Depende de tu hardware. El motor de compatibilidad te dice el grado (S–F) y, si no corre, el hardware mínimo necesario.' },
       { q: '¿Qué onda la privacidad?', a: 'Toda la inferencia ocurre en tu dispositivo. No se envía nada a ninguna nube.' },
@@ -263,7 +263,7 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     faq: [
       { q: 'Does RANDI cost anything?', a: 'No. It is 100% local, free and open source (MIT). You only use your own device\u2019s resources.' },
-      { q: 'Which platforms does it run on?', a: 'Android (Termux), Linux, macOS and native Windows. On Windows install it with `npm install -g randi-ai` (or `npx randi-ai`) and Ollama runs as a native service \u2014 no WSL.' },
+      { q: 'Which platforms does it run on?', a: 'Android (Termux), Linux, macOS and native Windows. On Windows install it with `npm install -g randi-ai` (or `npx randi-ai`) and it runs directly in PowerShell, no WSL or Git Bash \u2014 just native Python and Ollama.' },
       { q: 'Do I need internet?', a: 'Only the first time, to download models and installers. After that it works offline.' },
       { q: 'Can I run big models?', a: 'It depends on your hardware. The compat engine tells you the grade (S–F) and, if it can\u2019t run, the minimum hardware needed.' },
       { q: 'What about privacy?', a: 'All inference happens on your device. Nothing is sent to any cloud.' },
@@ -278,7 +278,7 @@ export const installSteps: Record<OSKey, string[]> = {
   linux: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   macos: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   'windows-wsl': ['sudo apt-get update && sudo apt-get install -y git', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
-  'windows-gitbash': ['npm install -g randi-ai', 'npx randi-ai doctor    # verifica y habilita dependencias', 'randi setup'],
+  'windows-gitbash': ['npm install -g randi-ai', 'randi ensure    # python + ollama nativos por winget', 'randi setup'],
 };
 
 export const osLabels: Record<OSKey, string> = {

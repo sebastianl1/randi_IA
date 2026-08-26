@@ -45,18 +45,19 @@ bash install-ollama.sh
 
 Ollama se instala con el script oficial (`curl -fsSL https://ollama.com/install.sh`). En macOS se requiere Homebrew.
 
-### Windows — nativo con npm (sin WSL)
+### Windows — nativo con npm (sin WSL, sin Git Bash)
 
-**Opcion A (recomendada) — Nativa desde npm:**
+**Opcion A (recomendada) — Natal desde npm, 100% PowerShell:**
 
-```bash
+```powershell
 npm install -g randi-ai
-randi ensure     # verifica/instala Git, Python y Ollama por winget (nativo)
+randi ensure     # instala solo Python y Ollama por winget (nativos)
 randi setup      # analiza tu GPU/VRAM y recomienda modelos
 ```
 
-También puedes correrlo sin instalarlo: `npx randi-ai setup`. RANDI funciona desde
-PowerShell o Windows Terminal; Ollama corre como **servicio nativo de Windows**.
+RANDI corre **directo en PowerShell / Windows Terminal** con **Python nativo**
+(no usa bash ni Git for Windows). Ollama funciona como **servicio nativo de
+Windows**. También puedes correrlo sin instalarlo: `npx randi-ai setup`.
 
 **Opcion B — Legado (WSL2):** ya no es necesaria. Solo si prefieres el flujo Linux:
 
