@@ -2,6 +2,15 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.2] - 2026-08-26
+
+### Fixed
+
+- **Ejecucion en Windows nativo**: el shim npm (`bin/randi.js`) pasaba el path del CLI a
+  `bash` con backslashes (`C:\Users\...`), que MSYS interpretaba como escapes y fallaba
+  con `/bin/bash: C:Users... No such file or directory`. Ahora se convierte a ruta POSIX
+  (`/c/Users/...`) antes de lanzar `bash`. `randi doctor`/`randi setup` vuelven a funcionar.
+
 ## [2.0.1] - 2026-08-26
 
 ### Added

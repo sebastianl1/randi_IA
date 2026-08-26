@@ -12,6 +12,16 @@ const here = dirname(fileURLToPath(import.meta.url));
 const CLI = join(here, 'randi');
 const args = process.argv.slice(2);
 
+// Git Bash (MSYS) trata las rutas con backslash como escapes: una ruta
+// C:\Users\... llega a bash como C:Users... y falla. Se convierte a POSIX.
+function toPosix(p) {
+  if (process.platform !== 'win32') return p;
+  let s = p.replace(/\\/g, '/');
+  s = s.replace(/^([A-Za-z]):/, (_m, d) => '/' + d.toLowerCase());
+  return s;
+}
+const CLI_POSIX = toPosix(CLI);
+
 function bashAvailable() {
   return new Promise((resolve) => {
     const c = spawn('bash', ['-c', 'exit 0'], { stdio: 'ignore' });
@@ -21,7 +31,7 @@ function bashAvailable() {
 }
 
 function runBash() {
-  const child = spawn('bash', [CLI, ...args], { stdio: 'inherit' });
+  const child = spawn('bash', [CLI_POSIX, ...args], { stdio: 'inherit' });
   child.on('exit', (code) => process.exit(code ?? 0));
   child.on('error', (err) => {
     if (err.code === 'ENOENT') {
