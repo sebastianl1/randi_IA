@@ -1,0 +1,288 @@
+// RANDI landing — contenido i18n (es/en).
+
+export type OSKey = 'android' | 'linux' | 'macos' | 'windows-wsl' | 'windows-gitbash';
+
+export interface OSGuide {
+  key: OSKey;
+  label: string;
+  intro: string;
+  steps: Array<{ title: string; body: string[]; code?: string[] }>;
+  after: string[];
+}
+
+export interface Landing {
+  nav: { models: string; install: string; github: string };
+  hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string[] };
+  stats: Array<{ v: string; l: string }>;
+  what: { title: string; sub: string; cards: Array<{ t: string; d: string; tag: string }> };
+  how: { title: string; sub: string; steps: Array<{ t: string; d: string }> };
+  install: { title: string; sub: string; guides: OSGuide[]; note: string };
+  features: { title: string; items: string[] };
+  faq: Array<{ q: string; a: string }>;
+  footer: string;
+}
+
+const guidesEs: OSGuide[] = [
+  {
+    key: 'android',
+    label: 'Android · Termux',
+    intro: 'Termux es tu terminal de Android. Instala RANDI directo (Requisitos: Android 11+, 4GB RAM, 6GB+ libres).',
+    steps: [
+      { title: '1. Instala Termux', body: ['Descargalo desde F-Droid (NO desde Google Play, está desactualizado).', 'Abre Termux y actualiza los paquetes.'] },
+      { title: '2. Clona e instala RANDI', body: ['Estos comandos instalan herramientas, Ollama (nativo de Termux) y configuran tu shell. El wizard de instalación te guía.'] },
+      { title: '3. Onboarding por hardware', body: ['Analiza tu CPU/GPU/RAM y elige los modelos que corren en tu equipo.', `Elegí un modelo: se descarga y configura automáticamente, listo para chatear.`] },
+      { title: '4. Usa RANDI', body: ['Listo. Sin internet, sin tokens, 100% privado.', 'Puedes abrir `randi web` para la interfaz en el navegador.'] },
+    ],
+    after: ['Tips: instala `pkg install espeak-ng` para voz y `ollama-backend-vulkan` para acelerar con la GPU Adreno/Mali.'],
+  },
+  {
+    key: 'linux',
+    label: 'Linux',
+    intro: 'RANDI corre en cualquier distro Linux con bash y Python 3.8+.',
+    steps: [
+      { title: '1. Requisitos', body: ['4GB de RAM mínimo (8GB+ recomendado). `git`, `curl` y Python 3 disponibles.'] },
+      { title: '2. Clona e instala', body: ['Instala dependencias, Ollama (script oficial) y configura la shell.'] },
+      { title: '3. Onboarding', body: ['`randi setup` detecta tu GPU (nvidia-smi/rocm-smi) y recomienda modelos.', '`randi install <modelo>` descarga y configura automáticamente.'] },
+      { title: '4. Integración OpenCode', body: ['El instalador configura el provider local. Usa `opencode -m ollama/qwen2.5-coder:3b` para programar.'] },
+    ],
+    after: ['NVIDIA/AMD: el motor compat te dice exactamente qué modela corre en tu GPU.'],
+  },
+  {
+    key: 'macos',
+    label: 'macOS',
+    intro: 'RANDI soporta Apple Silicon (M1–M4) y Mac Intel. Requiere Homebrew.',
+    steps: [
+      { title: '1. Requisitos', body: ['Homebrew instalado. Apple Silicon aprovecha la memoria unificada en el motor de compatibilidad.'] },
+      { title: '2. Clona e instala', body: ['El instalador detecta macOS, instala Ollama con el script oficial y configura la shell + zshrc.'] },
+      { title: '3. Onboarding', body: ['`randi setup` clasifica tu Mac como Apple Silicon y calcula cuánta memoria necesitan los modelos.', 'Modelos MoE mid-size (Qwen3-30B-A3B, GPT-OSS 20B) corren muy bien en M-series.'] },
+      { title: '4. Usa', body: ['`randi web` abre la interfaz; `randi chat` para el TUI; voz con `pip piper-tts`.'] },
+    ],
+    after: ['En Apple Silicon el motor usa el 75% de la RAM total como memoria usable unificada.'],
+  },
+  {
+    key: 'windows-wsl',
+    label: 'Windows · WSL2',
+    intro: 'La opción recomendada en Windows: todo corre dentro de una distro de WSL2.',
+    steps: [
+      { title: '1. Activa WSL2', body: ['Instala WSL2 (wsl --install) y una distro (Ubuntu). Abre la terminal de WSL.'] },
+      { title: '2. Clona e instala', body: ['Dentro de WSL: `sudo apt-get update && sudo apt-get install -y git`, cloná y ejecutá el instalador.'] },
+      { title: '3. Onboarding y uso', body: ['`randi setup` detecta hardware dentro de la VM.', 'Igual que Linux: `randi install <modelo>` y `randi chat`.'] },
+    ],
+    after: ['GPU en WSL2: NVIDIA tiene soporte CUDA directo para Ollama.'],
+  },
+  {
+    key: 'windows-gitbash',
+    label: 'Windows · Git Bash',
+    intro: 'RANDI nativo en Windows (sin WSL) usando Git Bash / MSYS2.',
+    steps: [
+      { title: '1. Requisitos', body: ['Instala Git for Windows (Git Bash). Ollama se instalará automáticamente vía winget.'] },
+      { title: '2. Clona e instala', body: ['Abre Git Bash, cloná el repo y ejecutá `bash install-ollama.sh`. El instalador detecta Windows nativo.'] },
+      { title: '3. Onboarding y uso', body: ['`randi setup` y `randi install <modelo>` igual que el resto.', 'Ollama corre como servicio de Windows (bandeja del sistema): RANDI lo detecta.'] },
+    ],
+    after: ['Si winget no está, el instalador descarga el instalador de Ollama.'],
+  },
+];
+
+const guidesEn: OSGuide[] = [
+  {
+    key: 'android',
+    label: 'Android · Termux',
+    intro: 'Termux is your Android terminal. Install RANDI directly (Requires Android 11+, 4GB RAM, 6GB+ free).',
+    steps: [
+      { title: '1. Install Termux', body: ['Get it from F-Droid (NOT Google Play, it is outdated).', 'Open Termux and update packages.'] },
+      { title: '2. Clone & install RANDI', body: ['These commands install tools, Ollama (Termux native) and configure your shell. The wizard guides you.'] },
+      { title: '3. Hardware onboarding', body: ['It analyzes your CPU/GPU/RAM and picks models that run on your device.', 'Pick a model: it downloads and configures automatically, ready to chat.'] },
+      { title: '4. Use RANDI', body: ['Done. No internet, no tokens, 100% private.', 'Run `randi web` for the browser UI.'] },
+    ],
+    after: ['Tips: install `pkg install espeak-ng` for voice and `ollama-backend-vulkan` to speed up on Adreno/Mali GPUs.'],
+  },
+  {
+    key: 'linux',
+    label: 'Linux',
+    intro: 'RANDI runs on any Linux distro with bash and Python 3.8+.',
+    steps: [
+      { title: '1. Requirements', body: ['4GB RAM minimum (8GB+ recommended). git, curl and Python 3 available.'] },
+      { title: '2. Clone & install', body: ['Installs dependencies, Ollama (official script) and configures the shell.'] },
+      { title: '3. Onboarding', body: ['`randi setup` detects your GPU (nvidia-smi/rocm-smi) and recommends models.', '`randi install <model>` downloads and configures automatically.'] },
+      { title: '4. OpenCode integration', body: ['The installer configures the local provider. Use `opencode -m ollama/qwen2.5-coder:3b` to code.'] },
+    ],
+    after: ['NVIDIA/AMD: the compat engine tells you exactly what fits your GPU.'],
+  },
+  {
+    key: 'macos',
+    label: 'macOS',
+    intro: 'RANDI supports Apple Silicon (M1–M4) and Intel Mac. Requires Homebrew.',
+    steps: [
+      { title: '1. Requirements', body: ['Homebrew installed. Apple Silicon leverages unified memory in the compat engine.'] },
+      { title: '2. Clone & install', body: ['The installer detects macOS, installs Ollama with the official script and configures your shell + zshrc.'] },
+      { title: '3. Onboarding', body: ['`randi setup` classifies your Mac as Apple Silicon and sizes model memory needs.', 'Mid-size MoE models (Qwen3-30B-A3B, GPT-OSS 20B) run great on M-series.'] },
+      { title: '4. Use', body: ['`randi web` opens the UI; `randi chat` for the TUI; voice via `pip piper-tts`.'] },
+    ],
+    after: ['On Apple Silicon the engine uses 75% of total RAM as usable unified memory.'],
+  },
+  {
+    key: 'windows-wsl',
+    label: 'Windows · WSL2',
+    intro: 'The recommended Windows option: everything runs inside a WSL2 distro.',
+    steps: [
+      { title: '1. Enable WSL2', body: ['Install WSL2 (wsl --install) and a distro (Ubuntu). Open the WSL terminal.'] },
+      { title: '2. Clone & install', body: ['Inside WSL run the install as on Linux: the script sets up Ollama and the shell.'] },
+      { title: '3. Onboarding & use', body: ['`randi setup` detects hardware inside the VM.', 'Same as Linux: `randi install <model>` and `randi chat`.'] },
+    ],
+    after: ['GPU on WSL2: NVIDIA has direct CUDA support for Ollama.'],
+  },
+  {
+    key: 'windows-gitbash',
+    label: 'Windows · Git Bash',
+    intro: 'Native RANDI on Windows (no WSL) using Git Bash / MSYS2.',
+    steps: [
+      { title: '1. Requirements', body: ['Install Git for Windows (Git Bash). Ollama installs automatically via winget.'] },
+      { title: '2. Clone & install', body: ['Open Git Bash, clone the repo and run `bash install-ollama.sh`. The installer detects native Windows.'] },
+      { title: '3. Onboarding & use', body: ['`randi setup` and `randi install <model>` work the same as everywhere.', 'Ollama runs as a Windows service (system tray): RANDI detects it.'] },
+    ],
+    after: ['If winget is missing, the installer downloads the Ollama installer.'],
+  },
+];
+
+export const content: Record<'es' | 'en', Landing> = {
+  es: {
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub' },
+    hero: {
+      badge: 'Asistente de IA 100% local · Termux, Linux, macOS, Windows',
+      title: ['IA local para tu', 'equipo real'],
+      sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. Sin internet, sin tokens, sin nube.',
+      cta1: 'Instalar ahora',
+      cta2: 'Ver la instalación',
+      stats: '85 modelos · 5 plataformas · 100% privado',
+    },
+    stats: [
+      { v: '85+', l: 'modelos curados' },
+      { v: '5', l: 'plataformas' },
+      { v: '7', l: 'cuantizaciones' },
+      { v: '0', l: 'datos a la nube' },
+    ],
+    what: {
+      title: 'Qué puedes hacer',
+      sub: 'Un catálogo unificado: de LLMs ligeros a MoE de frontier, generación de imagen y video.',
+      cards: [
+        { t: 'Texto y código', d: 'Chat, razonamiento y coding con Qwen, DeepSeek, Llama, Gemma, Mistral y más.', tag: '60+ LLMs' },
+        { t: 'Imágenes', d: 'FLUX.2, Z-Image, Qwen Image: generación local con ComfyUI en tu GPU.', tag: 'imagen' },
+        { t: 'Video', d: 'Wan 2.2, HunyuanVideo, LTX 2.3: video local con GPU dedicada.', tag: 'video' },
+        { t: 'WebGPU', d: 'Modelos <4B corriendo directo en la GPU del navegador, sin servidor.', tag: 'navegador' },
+      ],
+    },
+    how: {
+      title: 'Cómo funciona',
+      sub: 'De cero a modelo corriendo en tres pasos.',
+      steps: [
+        { t: 'Analiza tu equipo', d: 'CPU, núcleos, RAM, GPU, VRAM y bandwidth — por CLI o en el navegador.' },
+        { t: 'Recomienda y clasifica', d: 'Solo los modelos compatibles, organizados por tipo. Los que no corren te dicen qué hardware necesitas.' },
+        { t: 'Instala y configura solo', d: 'Un clic: descarga, configura el modelo por defecto y queda listo para chatear.' },
+      ],
+    },
+    install: {
+      title: 'Instalación paso a paso',
+      sub: 'Elige tu plataforma. Cada paso ha sido probado en el ecosistema correspondiente.',
+      guides: guidesEs,
+      note: 'El instalador detecta la plataforma automáticamente y configura shell, Ollama y OpenCode. Requisitos: 4GB RAM (8GB+ recomendado), 3GB libres.',
+    },
+    features: {
+      title: 'Funcionalidades',
+      items: [
+        'Chat TUI con streaming, visión y voz',
+        'Web local con Ollama + WebGPU',
+        'Motor de compatibilidad tipo canirun.ai (grados S–F, 7 cuantizaciones)',
+        'Instalación y configuración automática de modelos',
+        'Sesiones, modo eco y modo programador',
+        'Integración con OpenCode',
+        'Multiplataforma con un solo script',
+      ],
+    },
+    faq: [
+      { q: '¿Cuesta algo usar RANDI?', a: 'No. Es 100% local, gratuito y open source (MIT). Solo consumes los recursos de tu propio equipo.' },
+      { q: '¿Necesito internet?', a: 'Solo la primera vez para descargar modelos e instaladores. Después funciona sin conexión.' },
+      { q: '¿Puedo correr modelos grandes?', a: 'Depende de tu hardware. El motor de compatibilidad te dice el grado (S–F) y, si no corre, el hardware mínimo necesario.' },
+      { q: '¿Qué onda la privacidad?', a: 'Toda la inferencia ocurre en tu dispositivo. No se envía nada a ninguna nube.' },
+      { q: '¿Genera imágenes y video?', a: 'Imágenes y video con modelos abiertos (FLUX.2, Wan 2.2…) vía ComfyUI; requiere GPU dedicada y se indica claramente.' },
+    ],
+    footer: 'RANDI © 2026 — hecho con dedicación para la comunidad. Licencia MIT.',
+  },
+  en: {
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub' },
+    hero: {
+      badge: '100% local AI assistant · Termux, Linux, macOS, Windows',
+      title: ['Local AI for your', 'actual device'],
+      sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. No internet, no tokens, no cloud.',
+      cta1: 'Install now',
+      cta2: 'See installation',
+      stats: '85 models · 5 platforms · 100% private',
+    },
+    stats: [
+      { v: '85+', l: 'curated models' },
+      { v: '5', l: 'platforms' },
+      { v: '7', l: 'quantizations' },
+      { v: '0', l: 'data to the cloud' },
+    ],
+    what: {
+      title: 'What you can do',
+      sub: 'A unified catalog: from lightweight LLMs to frontier MoE, image and video generation.',
+      cards: [
+        { t: 'Text & code', d: 'Chat, reasoning and coding with Qwen, DeepSeek, Llama, Gemma, Mistral and more.', tag: '60+ LLMs' },
+        { t: 'Images', d: 'FLUX.2, Z-Image, Qwen Image: local generation with ComfyUI on your GPU.', tag: 'image' },
+        { t: 'Video', d: 'Wan 2.2, HunyuanVideo, LTX 2.3: local video with a dedicated GPU.', tag: 'video' },
+        { t: 'WebGPU', d: '<4B models running directly on your browser GPU, no server needed.', tag: 'browser' },
+      ],
+    },
+    how: {
+      title: 'How it works',
+      sub: 'From zero to a running model in three steps.',
+      steps: [
+        { t: 'It analyzes your device', d: 'CPU, cores, RAM, GPU, VRAM and bandwidth — from the CLI or the browser.' },
+        { t: 'It recommends & classifies', d: 'Only compatible models, organized by type. What can\u2019t run tells you the hardware you need.' },
+        { t: 'It installs & configures', d: 'One click: download, set as default model, ready to chat.' },
+      ],
+    },
+    install: {
+      title: 'Step-by-step installation',
+      sub: 'Pick your platform. Every step is tested on the corresponding ecosystem.',
+      guides: guidesEn,
+      note: 'The installer auto-detects your platform and configures shell, Ollama and OpenCode. Requirements: 4GB RAM (8GB+ recommended), 3GB free.',
+    },
+    features: {
+      title: 'Features',
+      items: [
+        'Chat TUI with streaming, vision and voice',
+        'Local web with Ollama + WebGPU',
+        'canirun-style compat engine (S–F grades, 7 quantizations)',
+        'Automatic model install & configuration',
+        'Sessions, eco mode and programmer mode',
+        'OpenCode integration',
+        'One script for every platform',
+      ],
+    },
+    faq: [
+      { q: 'Does RANDI cost anything?', a: 'No. It is 100% local, free and open source (MIT). You only use your own device\u2019s resources.' },
+      { q: 'Do I need internet?', a: 'Only the first time, to download models and installers. After that it works offline.' },
+      { q: 'Can I run big models?', a: 'It depends on your hardware. The compat engine tells you the grade (S–F) and, if it can\u2019t run, the minimum hardware needed.' },
+      { q: 'What about privacy?', a: 'All inference happens on your device. Nothing is sent to any cloud.' },
+      { q: 'Can it generate images and video?', a: 'Images and video with open models (FLUX.2, Wan 2.2…) via ComfyUI; it needs a dedicated GPU and that is clearly indicated.' },
+    ],
+    footer: 'RANDI © 2026 — made with dedication for the community. MIT license.',
+  },
+};
+
+export const installSteps: Record<OSKey, string[]> = {
+  android: ['pkg update && pkg upgrade -y', 'pkg install git -y', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+  linux: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+  macos: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+  'windows-wsl': ['sudo apt-get update && sudo apt-get install -y git', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+  'windows-gitbash': ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
+};
+
+export const osLabels: Record<OSKey, string> = {
+  android: 'Android · Termux',
+  linux: 'Linux',
+  macos: 'macOS',
+  'windows-wsl': 'Windows · WSL2',
+  'windows-gitbash': 'Windows · Git Bash',
+};

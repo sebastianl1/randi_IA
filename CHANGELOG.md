@@ -2,6 +2,51 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.0] - 2026-08-26
+
+### Added
+
+- **Onboarding por hardware (CLI + web)**: `randi setup` y la home de la web analizan
+  CPU, RAM, GPU, VRAM y bandwidth, clasifican el dispositivo (movil / iGPU / dedicada /
+  workstation / Apple Silicon) y recomiendan por categoria (texto, codigo, razonamiento,
+  vision), con lo que corre y lo que no.
+- **Instalacion automatica de modelos**: `randi install <modelo>` y los botones de la web
+  descargan (Ollama) y configuran el modelo por defecto (`~/.config/randi/config.json`).
+  Nuevo endpoint `POST /api/install` con jobs en background y `GET /api/install/status`
+  para progreso en la UI.
+- **"Necesitas este hardware"**: los modelos no compatibles muestran el hardware minimo
+  (VRAM, clase de GPU, RAM total, bandwidth) via `required_hardware()` / `randi requirements`.
+- **Catalogo v2**: 85 modelos curados (60 LLMs Ollama + 12 de imagen/video + 13 WebGPU)
+  con categorias `llm`/`imagen`/`video`, MoE con `activeParams`, `tools`, `thinking`,
+  `installer` y `featured`. Base: portafolio canirun.ai.
+- **Frontend web rediseñado (Astro 5 + Tailwind 4)**: SPA `randi web` con home/onboarding,
+  browse de modelos (filtros, busqueda y atajos `/`, `j`/`k`, 3 modos de vista), detalle con
+  tabla de quants + requisitos, **tier list** S-F, **compare** y **chat/playground** con
+  doble backend (Ollama + WebGPU/Transformers.js re-implementado), vision, TTS, STT,
+  sesiones locales, modo eco y programador. Build estatico servido por `server.py` desde
+  `web/dist/` (ADR-004).
+- **Landing rediseñada (Astro + Tailwind, `site/`)**: hero con deteccion, secciones por
+  categoria, **instalacion paso a paso por SO** (Android/Termux, Linux, macOS, Windows WSL2
+  y Git Bash), FAQ, SEO/AEO (JSON-LD, llms.txt, sitemap) y version en ES/EN.
+- **`docs/ROADMAP.md`**: backlog priorizado referenciado en la arquitectura.
+
+### Changed
+
+- `web/models.json` es la unica fuente de verdad (esquema v2); `catalog.py`, `recommend.py`
+  y `pull.py` ampliados con capa `media` y categorias.
+- `hardware.py`: `hardware_profile()`, `device_class()` y deteccion client-side ampliada.
+- `compat.py`: `required_hardware()`, `notes_for()` y mapeo a status canirun
+  (`comfortable|tight|cpu-offload|insufficient`).
+- Comandos nuevos: `randi install`, `randi setup`, `randi requirements`.
+- Version interna unificada a 2.0.0 (CLI, SPA `sw.js`, manifest, landing).
+
+### Fixed
+
+- `catalog.py` preferia el catalogo instalado (`~/.local/share/randi/lib`) sobre el del repo;
+  ahora prioriza `web/models.json` en desarrollo.
+- Referencias colgantes de la SPA anterior (WebGPU sin cliente, botones/modal fantasma):
+  el WebGPU se re-implemento y se limpiaron las referencias muertas.
+
 ## [Unreleased]
 
 ### Fixed

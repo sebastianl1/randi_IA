@@ -206,6 +206,11 @@ install_deps() {
             ensure_dep curl curl || deps_ok=1
             ensure_dep wget wget || deps_ok=1
             ensure_dep jq jq || deps_ok=1
+            # termux-exec: hace que los shebangs `#!/usr/bin/env` funcionen
+            # (sin él, `randi` directo falla al ejecutarse en Termux).
+            if [ ! -x /usr/bin/env ]; then
+                run_step -s "Instalando termux-exec (shebangs)" 120 pkg install -y termux-exec || true
+            fi
             if python3 -c "import requests, rich" >/dev/null 2>&1; then
                 ok "Librerias Python (requests, rich) ya instaladas"
             else
@@ -388,6 +393,13 @@ install_scripts() {
         cp "$REPO_DIR/bin/lib/pull.py" "$RANDI_DIR/lib/pull.py"
         chmod +x "$RANDI_DIR/lib/pull.py"
     fi
+
+    # Resto de la libreria (motor compat, hardware, install/setup, recommend)
+    for lib in compat.py hardware.py install.py recommend.py; do
+        if [ -f "$REPO_DIR/bin/lib/$lib" ]; then
+            cp "$REPO_DIR/bin/lib/$lib" "$RANDI_DIR/lib/$lib" || true
+        fi
+    done
 
     if [ -d "$REPO_DIR/web" ]; then
         cp -r "$REPO_DIR/web/." "$RANDI_DIR/web/"

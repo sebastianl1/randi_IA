@@ -45,3 +45,24 @@ def test_model_info_match():
 def test_model_info_prefix():
     info = model_info("deepseek-r1:7b")
     assert info and info["type"] == "reasoning"
+
+
+def test_media_section():
+    from catalog import get_media_models, get_categories
+    media = get_media_models()
+    assert media, "models.json debe incluir generacion de imagen/video"
+    for m in media:
+        assert m["id"] and m.get("category") in ("image", "video")
+        assert m.get("installer"), f"media {m['id']} sin installer"
+    cats = get_categories()
+    assert cats["image"] and cats["video"] and cats["llm"]
+
+
+def test_v2_enriched_fields():
+    for m in get_models():
+        for field in ("paramsBillions", "provider", "license", "architecture", "useCase", "ollamaId", "installer", "category"):
+            assert field in m, f"falta {field} en {m.get('id')}"
+        assert m["installer"] == "ollama"
+        m["architecture"] in ("dense", "moe")
+        if m["architecture"] == "moe":
+            assert m.get("activeParams"), f"MoE sin activeParams: {m['id']}"

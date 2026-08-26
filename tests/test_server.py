@@ -49,7 +49,7 @@ def test_index_served():
     status, body = f.request("GET", "/")
     f.close()
     assert status == 200
-    assert b"RANDI" in body and b"js/main.js" in body
+    assert b"RANDI" in body and (b"/_astro/" in body or b"/js/" in body)
 
 
 def test_bad_host_blocked():
@@ -121,3 +121,79 @@ def test_token_injected_in_index():
         assert b'name="randi-token"' in body
     finally:
         f.close()
+
+
+def test_setup_endpoint():
+    import json
+    f = make()
+    status, body = f.request("GET", "/api/setup")
+    f.close()
+    assert status == 200
+    d = json.loads(body)
+    assert "hardware" in d and "categories" in d and "recommendations" in d
+    for uc in ("chat", "code", "reasoning", "vision"):
+        assert uc in d["recommendations"]
+    assert d["categories"]["llm"] and d["categories"]["video"] and d["categories"]["image"]
+
+
+def test_requirements_endpoint():
+    import json
+    f = make()
+    status, body = f.request(
+        "POST", "/api/requirements",
+        body=b'{"modelId":"qwen3:8b"}',
+        headers={"Content-Type": "application/json"},
+    )
+    f.close()
+    assert status == 200
+    d = json.loads(body)
+    assert d["modelId"] == "qwen3:8b"
+    assert d["vramRequiredGb"] > 0
+    assert d["gpuClass"]
+
+
+def test_install_requires_ollama_up():
+    import json
+    f = make()
+    status, body = f.request(
+        "POST", "/api/install",
+        body=b'{"modelId":"qwen3:8b"}',
+        headers={"Content-Type": "application/json"},
+    )
+    f.close()
+    # Ollama no responde en tests -> 502 con instrucciones
+    assert status == 502
+    assert b"randi serve" in body
+
+
+def test_install_media_rejected():
+    f = make()
+    status, _ = f.request(
+        "POST", "/api/install",
+        body=b'{"modelId":"wan2.2-ti2v-5b"}',
+        headers={"Content-Type": "application/json"},
+    )
+    f.close()
+    assert status == 400
+
+
+def test_install_unknown_model_404():
+    f = make()
+    status, _ = f.request(
+        "POST", "/api/install",
+        body=b'{"modelId":"no-existe"}',
+        headers={"Content-Type": "application/json"},
+    )
+    f.close()
+    assert status == 404
+
+
+def test_models_media_and_category_filter():
+    import json
+    f = make()
+    status, body = f.request("GET", "/api/models?media=1&category=video")
+    f.close()
+    assert status == 200
+    d = json.loads(body)
+    assert d["models"], "debe haber modelos de video"
+    assert all(m.get("category") == "video" for m in d["models"])

@@ -1,0 +1,134 @@
+---
+import { content, installSteps, osLabels } from '../i18n.js';
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const t = content[lang];
+---
+<section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-10 text-center">
+  <span class="pill mx-auto">{t.hero.badge}</span>
+  <h1 class="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-[1.05]">
+    {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
+  </h1>
+  <p class="mx-auto mt-6 max-w-2xl text-muted text-lg">{t.hero.sub}</p>
+  <div class="mt-8 flex flex-wrap justify-center gap-3">
+    <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
+    <a class="btn" href="#what">{t.hero.cta2}</a>
+  </div>
+  <p class="mt-5 text-xs text-muted mono">{t.hero.stats}</p>
+</section>
+
+<section class="border-y border-line bg-bg-soft/50">
+  <div class="mx-auto max-w-6xl px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+    {t.stats.map((s) => (
+      <div>
+        <div class="text-3xl font-black grad-text">{s.v}</div>
+        <div class="text-sm text-muted">{s.l}</div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section id="what" class="mx-auto max-w-6xl px-4 py-14">
+  <h2 class="text-3xl font-black tracking-tight text-center">{t.what.title}</h2>
+  <p class="mt-2 text-center text-muted max-w-2xl mx-auto">{t.what.sub}</p>
+  <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {t.what.cards.map((c) => (
+      <div class="card p-5 flex flex-col gap-2">
+        <span class="pill self-start" style="border-color:var(--color-accent);color:var(--color-accent)">{c.tag}</span>
+        <h3 class="font-bold">{c.t}</h3>
+        <p class="text-sm text-muted">{c.d}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section id="how" class="border-y border-line bg-bg-soft/50 py-14">
+  <div class="mx-auto max-w-6xl px-4">
+    <h2 class="text-3xl font-black tracking-tight text-center">{t.how.title}</h2>
+    <p class="mt-2 text-center text-muted max-w-2xl mx-auto">{t.how.sub}</p>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      {t.how.steps.map((s, i) => (
+        <div class="card p-5 gap-2 flex flex-col">
+          <span class="grade" style="--grade-color:var(--color-accent)">{i + 1}</span>
+          <h3 class="font-bold">{s.t}</h3>
+          <p class="text-sm text-muted">{s.d}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section id="install" class="mx-auto max-w-6xl px-4 py-14">
+  <h2 class="text-3xl font-black tracking-tight text-center">{t.install.title}</h2>
+  <p class="mt-2 text-center text-muted max-w-2xl mx-auto">{t.install.sub}</p>
+
+  <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    {t.install.guides.map((g) =>
+      <button class="btn btn-ghost text-sm justify-center" data-tab={g.key} aria-controls={`os-${g.key}`} class:list={{ 'tab-active': true }}>{g.label}</button>)}
+  </div>
+  <p class="mt-4 text-xs text-muted card p-3">{t.install.note}</p>
+
+  {t.install.guides.map((g) => (
+    <div id={`os-${g.key}`} class="mt-4 card p-5" data-pane={g.key} hidden>
+      <p class="text-sm text-muted mb-4">{g.intro}</p>
+      <div class="grid gap-4 md:grid-cols-2">
+        <ol class="space-y-3 text-sm">
+          {g.steps.map((s) => (
+            <li class="flex gap-3">
+              <span class="pill self-start" style="border-color:var(--color-accent);color:var(--color-accent)">{s.title.split(' ')[0]}</span>
+              <div class="space-y-1">
+                <div class="font-semibold">{s.title.replace(/^[\d.]+\.\s*/, '')}</div>
+                {s.body.map((p) => <p class="text-muted">{p}</p>)}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div>
+          <h4 class="mono text-xs uppercase tracking-widest text-muted mb-2">Terminal</h4>
+          <code class="block rounded-xl bg-bg-soft border border-line p-3 text-sm mono whitespace-pre-wrap break-all">
+            {installSteps[g.key].join('\n')}
+          </code>
+          {g.after.map((a) => <p class="mt-3 text-xs text-muted">💡 {a}</p>)}
+        </div>
+      </div>
+    </div>
+  ))}
+</section>
+
+<section class="border-y border-line bg-bg-soft/50 py-14">
+  <div class="mx-auto max-w-3xl px-4">
+    <h2 class="text-2xl font-black tracking-tight text-center mb-6">{t.features.title}</h2>
+    <ul class="space-y-2 text-sm">
+      {t.features.items.map((it) => (
+        <li class="flex items-center gap-2"><span class="text-good">✓</span>{it}</li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<section id="faq" class="mx-auto max-w-3xl px-4 py-14">
+  <h2 class="text-2xl font-black tracking-tight mb-6">FAQ</h2>
+  <div class="space-y-3">
+    {t.faq.map((f) => (
+      <details class="card p-4">
+        <summary class="font-semibold cursor-pointer">{f.q}</summary>
+        <p class="mt-2 text-sm text-muted">{f.a}</p>
+      </details>
+    ))}
+  </div>
+</section>
+
+<script>
+  const tabs = document.querySelectorAll<HTMLButtonElement>('[data-tab]');
+  let active = tabs[0]?.dataset.tab;
+  const show = () => {
+    document.querySelectorAll<HTMLElement>('[data-pane]').forEach((p) => {
+      p.hidden = p.dataset.pane !== active;
+    });
+    tabs.forEach((b) => b.classList.toggle('tab-active', b.dataset.tab === active));
+  };
+  tabs.forEach((b) => {
+    b.addEventListener('click', () => { active = b.dataset.tab; show(); });
+  });
+  show();
+</script>

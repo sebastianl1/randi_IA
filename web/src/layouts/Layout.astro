@@ -1,0 +1,62 @@
+---
+import '../styles/global.css';
+const { title = 'RANDI — IA local' } = Astro.props;
+const nav = [
+  { href: '/', label: 'Inicio' },
+  { href: '/models', label: 'Modelos' },
+  { href: '/tier', label: 'Tier list' },
+  { href: '/compare', label: 'Comparar' },
+  { href: '/chat', label: 'Chat' },
+];
+---
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="RANDI — asiste tu IA local. Detecta tu hardware y ejecuta modelos de texto, imagen y video en tu equipo. Ollama + WebGPU, 100% privado." />
+  <meta name="generator" content={Astro.generator} />
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co https://*.hf.co; worker-src 'self' blob: https://cdn.jsdelivr.net; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'">
+  <title>{title}</title>
+</head>
+<body>
+  <div class="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center gap-6 px-4 h-14">
+      <a href="/" class="flex items-center gap-2 font-bold tracking-tight">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span>RANDI</span>
+      </a>
+      <nav class="hidden sm:flex items-center gap-5 text-sm text-muted">
+        {nav.map((n) => (
+          <a href={n.href} class="hover:text-ink transition-colors" aria-current={Astro.url.pathname === n.href ? 'page' : undefined}>{n.label}</a>
+        ))}
+      </nav>
+      <button id="themeToggle" class="btn btn-ghost ml-auto !border-transparent" aria-label="Alternar tema">◐</button>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-6xl px-4 py-8">
+    <slot />
+  </main>
+
+  <footer class="mx-auto max-w-6xl px-4 pb-10 text-xs text-muted flex flex-wrap gap-x-6 gap-y-2">
+    <span>RANDI © 2026 — IA local multiplataforma (Termux · Linux · macOS · Windows).</span>
+    <a href="https://github.com/sebastianl1/randi_IA" class="hover:text-ink" target="_blank" rel="noreferrer">GitHub</a>
+    <span class="mono">v2.0.0</span>
+  </footer>
+
+  <script>
+    const saved = localStorage.getItem('randi-theme');
+    document.documentElement.classList.toggle('light', saved === 'light');
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+      const light = document.documentElement.classList.toggle('light');
+      localStorage.setItem('randi-theme', light ? 'light' : 'dark');
+    });
+    if ('serviceWorker' in navigator && /^https|localhost/.test(location.protocol + location.host)) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ fi
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="1.4.1"
+RANDI_VERSION="2.0.0"
 RANDI_AUTHOR="Sebastian Laguna"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
@@ -72,7 +72,7 @@ find_chat_script() {
 
 find_py_script() {
     local name="$1" script
-    for base in "$RANDI_DIR/lib" "$(cd "$(dirname "$0")" 2>/dev/null && pwd)/lib" "$PWD/lib" "$HOME/.local/share/randi/lib"; do
+    for base in "$(cd "$(dirname "$0")" 2>/dev/null && pwd)/lib" "$REPO_DIR/lib" "$RANDI_DIR/lib" "$PWD/lib" "$HOME/.local/share/randi/lib"; do
         if [ -f "$base/$name" ]; then
             echo "$base/$name"
             return 0
@@ -343,7 +343,9 @@ cmd_models() {
     echo ""
     python3 "$catalog_script" models
     echo ""
-    echo -e "  ${GRN}Instalar:${R}  randi pull"
+    python3 "$catalog_script" media
+    echo ""
+    echo -e "  ${GRN}Instalar:${R}  randi install <modelo>  (descarga + configuracion automatica)"
     echo -e "  ${GRN}Chat:${R}      randi chat -m <modelo>"
 }
 
@@ -518,6 +520,9 @@ _do_update() {
     chmod +x "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
     cp "$src/bin/lib/catalog.py" "$RANDI_DIR/lib/catalog.py" 2>/dev/null || true
     cp "$src/bin/lib/pull.py" "$RANDI_DIR/lib/pull.py" 2>/dev/null || true
+    for lib in compat.py hardware.py install.py recommend.py; do
+        cp "$src/bin/lib/$lib" "$RANDI_DIR/lib/$lib" 2>/dev/null || true
+    done
 
     # Copiar interfaz web
     if [ -d "$src/web" ]; then
@@ -709,6 +714,8 @@ show_menu() {
         echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
         echo -e "  ${B}12${R}) ${CYN}Imagen${R}        ${D}Generar imagen (A1111, GPU)${R}"
         echo -e "  ${B}13${R}) ${D}Doctor${R}         ${D}Diagnostico del sistema${R}"
+        echo -e "  ${B}14${R}) ${CYN}Setup${R}         ${D}Onboarding: mejores modelos para tu equipo${R}"
+        echo -e "  ${B}15${R}) ${CYN}Instalar${R}      ${D}Descargar y configurar un modelo${R}"
         echo -e "  ${B}0${R})  ${RED}Salir${R}"
         echo ""
         echo -ne "  ${BLU}${B}❯${R} "
@@ -738,6 +745,13 @@ show_menu() {
                 cmd_img "$img_prompt"
                 echo ""; dim "Presiona Enter para continuar..."; read -r ;;
             13) cmd_doctor ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            14) cmd_setup ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
+            15)
+                echo ""
+                echo -n "  Modelo a instalar: "
+                read -r install_model_name
+                cmd_install "$install_model_name"
+                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
             0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
             *) err "Opcion invalida"; sleep 1 ;;
         esac
@@ -747,9 +761,11 @@ show_menu() {
 find_py_lib() {
     local name="$1"
     local candidates=(
-        "$REPO_DIR/bin/lib/$name"
+        "$(cd "$(dirname "$0")" 2>/dev/null && pwd)/lib/$name"
+        "$REPO_DIR/lib/$name"
         "$RANDI_DIR/lib/$name"
-        "$(dirname "$0")/lib/$name"
+        "$HOME/.local/share/randi/lib/$name"
+        "$PWD/lib/$name"
     )
     for c in "${candidates[@]}"; do
         if [ -f "$c" ]; then
@@ -866,8 +882,26 @@ for target in (sys.argv[2], sys.argv[3]):
 " "$lib_dir" "$1" "$2"
 }
 
+cmd_requirements() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib install.py)") || { err "Modulo no encontrado"; return 1; }
+    _py_compat install.py requirements "$1"
+}
+
+cmd_install() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib install.py)") || { err "Modulo no encontrado"; return 1; }
+    _py_compat install.py install "$1"
+}
+
+cmd_setup() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib install.py)") || { err "Modulo no encontrado"; return 1; }
+    _py_compat install.py setup
+}
+
 case "${1:-}" in
-    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor|hardware|recommend|tier|compare)
+    chat|serve|stop|run|pull|list|ps|models|config|status|update|web|img|doctor|hardware|recommend|tier|compare|install|setup|requirements)
         cmd="$1"
         shift
         "cmd_$cmd" "$@"
@@ -898,6 +932,9 @@ case "${1:-}" in
         echo -e "  ${B}randi recommend${R} ${D}[uc]${R}    ${D}Mejores modelos para TU equipo${R}"
         echo -e "  ${B}randi tier${R}               ${D}Tier list S-F de tu hardware${R}"
         echo -e "  ${B}randi compare${R} ${D}a b${R}        ${D}Compara 2 modelos${R}"
+        echo -e "  ${B}randi install${R} ${D}<m>${R}       ${D}Instala + configura un modelo${R}"
+        echo -e "  ${B}randi setup${R}              ${D}Onboarding: hardware -> mejores modelos${R}"
+        echo -e "  ${B}randi requirements${R} ${D}<m>${R}   ${D}Hardware que necesita un modelo${R}"
         ;;
     *)
         if [ -n "${1:-}" ]; then

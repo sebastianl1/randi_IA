@@ -12,22 +12,30 @@ from pathlib import Path
 
 
 def catalog_paths():
-    paths = []
+    """Rutas candidatas al models.json. Prioridad: override, repo, instalado.
+
+    Sample para no romper el flujo de datos instalado (randi update copia el
+    catalogo a ~/.local/share/randi/lib/models.json).
+    """
     env = os.environ.get("RANDI_MODELS")
     if env:
-        paths.append(Path(env))
+        yield Path(env)
+    here = Path(__file__).resolve().parent
+    for p in (
+        here / "models.json",
+        here.parent.parent / "web" / "models.json",  # repo
+        Path.cwd() / "web" / "models.json",
+        Path.cwd() / "models.json",
+    ):
+        if p.is_file():
+            yield p
     randi_dir = os.environ.get("RANDI_DIR", str(Path.home() / ".local" / "share" / "randi"))
-    paths.extend([
+    for p in (
         Path(randi_dir) / "lib" / "models.json",
         Path(randi_dir) / "web" / "models.json",
-    ])
-    here = Path(__file__).resolve().parent
-    paths.extend([
-        here / "models.json",
-        here.parent / ".." / "web" / "models.json",
-        here.parent / "models.json",
-    ])
-    return paths
+    ):
+        if p.is_file():
+            yield p
 
 
 def find_catalog_path():
@@ -49,6 +57,11 @@ def get_models():
     return load_catalog().get("ollama", [])
 
 
+def get_media_models():
+    """Generacion de imagen/video (ComfyUI u otro motor)."""
+    return load_catalog().get("media", [])
+
+
 def get_webgpu_models():
     return load_catalog().get("webgpu", [])
 
@@ -57,8 +70,18 @@ def get_tools():
     return load_catalog().get("tools", {})
 
 
-def model_info(model_id):
+def get_categories():
+    """Categorias por tipo de contenido para la clasificacion del onboarding."""
+    cats = {"llm": [], "image": [], "video": []}
     for m in get_models():
+        cats.setdefault(m.get("category", "llm"), []).append(m)
+    for m in get_media_models():
+        cats.setdefault(m.get("category", "image"), []).append(m)
+    return cats
+
+
+def model_info(model_id):
+    for m in get_models() + get_media_models():
         if model_id.startswith(m["id"]) or m["id"].startswith(model_id):
             return m
     return None
@@ -90,6 +113,22 @@ def _lines():
         print(f"{m['id']}\t{m.get('size','?')}\t{m.get('cat','')}\t{m.get('type','')}\t{m.get('desc','')}")
 
 
+def _media_table():
+    lines = []
+    for m in get_media_models():
+        cat = m.get("category", m.get("type", ""))
+        lines.append(
+            f"  {m['id']:<22} {str(m.get('size', '?')):>7}  "
+            f"[{cat:<5}] {m.get('desc', '')}  ({m.get('installer', '?')})"
+        )
+    return "\n".join(lines) if lines else "  (sin modelos media)"
+
+
+def _categories_table():
+    lines = [f"\n{label} ({len(items)}):" for label, items in get_categories().items() if items]
+    return "\n".join(lines)
+
+
 def main():
     args = sys.argv[1:]
     cmd = args[0] if args else "models"
@@ -97,6 +136,10 @@ def main():
         print(_table())
     elif cmd == "list":
         _lines()
+    elif cmd == "media":
+        print(_media_table())
+    elif cmd == "categories":
+        print(_categories_table())
     elif cmd == "vision":
         for m in get_models():
             if m.get("type") == "vision":
@@ -107,7 +150,7 @@ def main():
     elif cmd == "tools":
         print(json.dumps(get_tools(), indent=2, ensure_ascii=False))
     else:
-        print("uso: catalog.py [models|list|vision|path|tools]")
+        print("uso: catalog.py [models|list|media|categories|vision|path|tools]")
         sys.exit(1)
 
 

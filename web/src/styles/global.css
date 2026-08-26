@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/*
+  RANDI web 2.0 — theme tokens.
+  Estetica: neutra y minimalista (opencode) + grados S-F coloridos (canirun).
+  Dark-first, sin dependencias externas (offline).
+*/
+@theme {
+  --color-bg: #0b0b0f;
+  --color-bg-soft: #14141b;
+  --color-panel: #1a1a22;
+  --color-line: #2a2a35;
+  --color-ink: #ececf1;
+  --color-muted: #9aa0ac;
+  --color-accent: #6c8cff;
+  --color-accent-2: #a78bfa;
+  --color-good: #22c55e;
+  --color-warn: #f59e0b;
+  --color-bad: #ef4444;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+  --color-bg: #fafafa;
+  --color-bg-soft: #f0f0f3;
+  --color-panel: #ffffff;
+  --color-line: #e2e2ea;
+  --color-ink: #16161d;
+  --color-muted: #67676f;
+  --color-accent: #4f63e0;
+  --color-accent-2: #8b5cf6;
+  --color-good: #16a34a;
+  --color-warn: #d97706;
+  --color-bad: #dc2626;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2c2c38; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+a { color: inherit; text-decoration: none; }
+
+.grad-text {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 10px;
+  padding: .55rem 1rem;
+  font-weight: 600;
+  font-size: .875rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .05s;
+}
+.btn:hover { border-color: var(--color-accent); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0b0f;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { background: transparent; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.input, .select {
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: .55rem .8rem;
+  color: var(--color-ink);
+  font-size: .875rem;
+}
+.input:focus, .select:focus { border-color: var(--color-accent); outline: none; }
+
+.grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 .4rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: .9rem;
+  color: #0b0b0f;
+  background: var(--grade-color, #56565f);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  padding: .15rem .6rem;
+  font-size: .72rem;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+}
+
+.status-dot { width: .5rem; height: .5rem; border-radius: 999px; display: inline-block; }
+.sd-can-run, .sd-can-run-slow, .sd-tight { background: var(--color-good); }
+.sd-cannot-run { background: var(--color-bad); }
+.sd-unknown { background: var(--color-warn); }
+
+kbd {
+  border: 1px solid var(--color-line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: .05rem .4rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--color-bg-soft);
+}
+
+/* Transiciones de vista (astro client router) */
+@view-transition { navigation: auto; }
+
+/* Utility: texto mono */
+.mono { font-family: var(--font-mono); }

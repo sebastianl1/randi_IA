@@ -23,14 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configurar Pages
-        uses: actions/configure-pages@v5
+      - name: Configurar Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-      - name: Subir artefacto (docs/)
+      - name: Instalar y construir la landing (Astro)
+        run: |
+          npm --prefix site ci --no-audit --no-fund
+          node site/node_modules/astro/astro.js build --root site
+
+      - name: Subir artefacto (site/dist)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
-
-      - name: Desplegar
-        id: deployment
-        uses: actions/deploy-pages@v4
+          path: site/dist

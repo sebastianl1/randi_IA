@@ -1,0 +1,68 @@
+---
+import '../styles/global.css';
+import { content } from '../i18n.js';
+interface Props { lang?: 'es' | 'en'; title: string; description: string }
+const { lang = 'es', title, description } = Astro.props;
+const t = content[lang];
+const canonical = lang === 'es' ? Astro.site : new URL('en/', Astro.site!);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'RANDI',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Android, Linux, macOS, Windows, WSL2',
+  description: 'Asistente de IA 100% local multiplataforma para Termux, Linux, macOS y Windows. Detecta hardware y ejecuta modelos de texto, imagen y video.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Person', name: 'Sebastian Laguna' },
+  url: Astro.site?.href,
+};
+---
+<!doctype html>
+<html lang={lang === 'es' ? 'es' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="alternate" hreflang="es" href={Astro.site?.href} />
+    <link rel="alternate" hreflang="en" href={new URL('en/', Astro.site!).href} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL('/og-image.jpg', Astro.site!).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="generator" content={Astro.generator} />
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </head>
+  <body>
+    <header class="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center gap-6 px-4 h-14">
+        <a href={lang === 'es' ? '/' : '/en/'} class="flex items-center gap-2 font-bold tracking-tight">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>RANDI</span>
+        </a>
+        <nav class="hidden sm:flex items-center gap-5 text-sm text-muted">
+          <a href="#install" class="hover:text-ink transition-colors">{t.nav.install}</a>
+          <a href="#faq" class="hover:text-ink transition-colors">FAQ</a>
+          <a href="https://github.com/sebastianl1/randi_IA/tree/main/web" target="_blank" rel="noreferrer" class="hover:text-ink transition-colors">{t.nav.models}</a>
+        </nav>
+        <div class="ml-auto flex items-center gap-3 text-sm">
+          <a href={lang === 'es' ? 'en/' : '/'} class="pill hover:text-ink">{lang === 'es' ? 'EN' : 'ES'}</a>
+          <a href="https://github.com/sebastianl1/randi_IA" target="_blank" rel="noreferrer" class="hover:text-ink">{t.nav.github} ↗</a>
+        </div>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="border-t border-line mt-16">
+      <div class="mx-auto max-w-6xl px-4 py-8 text-xs text-muted flex flex-wrap gap-x-6 gap-y-2">
+        <span>{t.footer}</span>
+        <a href="https://github.com/sebastianl1/randi_IA" class="hover:text-ink" target="_blank" rel="noreferrer">GitHub</a>
+        <span class="mono">v2.0.0</span>
+      </div>
+    </footer>
+  </body>
+</html>

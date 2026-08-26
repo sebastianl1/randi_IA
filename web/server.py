@@ -10,6 +10,8 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -17,28 +19,39 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 # Motor de compatibilidad RANDI (skills globales, compartido con la CLI)
+# Soporta el layout del repo (web/ + bin/lib/) y el instalado
+# (~/.local/share/randi: web/ + lib/).
 _BIN_LIB = Path(__file__).parent.parent / "bin" / "lib"
+if not _BIN_LIB.is_dir():
+    _BIN_LIB = Path(os.environ.get(
+        "RANDI_DIR", str(Path.home() / ".local" / "share" / "randi"))) / "lib"
 if str(_BIN_LIB) not in sys.path:
     sys.path.insert(0, str(_BIN_LIB))
 try:
     import hardware as randi_hardware
     import compat as randi_compat
     import recommend as randi_recommend
+    import install as randi_install
     _HAS_COMPAT = True
 except Exception:  # pragma: no cover - fallback de CI sin bin/lib
     randi_hardware = None
     randi_compat = None
     randi_recommend = None
+    randi_install = None
     _HAS_COMPAT = False
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 WEB_DIR = Path(__file__).parent.resolve()
+# En produccion se sirve el build de Astro (web/dist); en desarrollo web/.
+SERVE_DIR = WEB_DIR / "dist" if (WEB_DIR / "dist").is_dir() else WEB_DIR
 
 # Seguridad: solo se aceptan peticiones dirigidas a hosts locales (anti DNS
 # rebinding) y, si se define RANDI_TOKEN, se exige la cabecera X-RANDI-Token.
 ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
 RANDI_TOKEN = os.environ.get("RANDI_TOKEN", "")
 
+# Trabajos de instalacion en background (progreso consultable por el frontend).
+INSTALL_JOBS: dict[str, dict] = {}
 server_instance = None
 
 def find_port(start=8080, end=8099):
@@ -83,7 +96,7 @@ def _json_response(handler, code, obj):
 
 class ProxyHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(WEB_DIR), **kwargs)
+        super().__init__(*args, directory=str(SERVE_DIR), **kwargs)
 
     # --- Seguridad -----------------------------------------------------
     def _host_ok(self):
@@ -115,8 +128,8 @@ class ProxyHandler(SimpleHTTPRequestHandler):
 
     def _serve_index_with_token(self):
         try:
-            html_src = (WEB_DIR / "index.html").read_text(encoding="utf-8")
-        except OSError:
+            html_src = (SERVE_DIR / "index.html").read_text(encoding="utf-8")
+        except (OSError, FileNotFoundError):
             super().do_GET()
             return
         tag = f'<meta name="randi-token" content="{html.escape(RANDI_TOKEN)}">'
@@ -306,7 +319,9 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             _json_response(self, 501, {"error": "modulo de hardware no disponible"})
             return
         hw = randi_hardware.detect_hardware()
-        _json_response(self, 200, randi_hardware.to_dict(hw))
+        body = randi_hardware.to_dict(hw)
+        body["profile"] = randi_hardware.hardware_profile(hw)
+        _json_response(self, 200, body)
 
     def handle_api_models(self):
         if not _HAS_COMPAT:
@@ -321,6 +336,11 @@ class ProxyHandler(SimpleHTTPRequestHandler):
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         provider = (qs.get("provider") or [None])[0]
         use_case = (qs.get("useCase") or [None])[0]
+        category = (qs.get("category") or [None])[0]
+        if qs.get("media") and (qs["media"][0].lower() in ("1", "true")):
+            models = models + data.get("media", [])
+        if category:
+            models = [m for m in models if m.get("category") == category]
         if provider:
             models = [m for m in models if m.get("provider") == provider]
         if use_case:
@@ -436,6 +456,141 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             })
         _json_response(self, 200, {"hardware": randi_hardware.to_dict(hw), "recommendations": out})
 
+    def handle_api_requirements(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulo de compat no disponible"})
+            return
+        body = self._read_json_body()
+        if body is None:
+            _json_response(self, 400, {"error": "body JSON invalido"})
+            return
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        model = next((m for m in (data.get("ollama", []) + data.get("media", []))
+                      if m.get("id") == body.get("modelId") or m.get("ollamaId") == body.get("modelId")), None)
+        if not model:
+            _json_response(self, 404, {"error": "modelo no encontrado"})
+            return
+        req = randi_compat.required_hardware(model)
+        _json_response(self, 200, {"modelId": model.get("ollamaId") or model["id"],
+                                    "name": model.get("name"), "installer": model.get("installer", "ollama"),
+                                    **req})
+
+    def handle_api_setup(self):
+        """Onboarding: analiza el hardware y devuelve recomendaciones por categoria."""
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulos RANDI no disponibles"})
+            return
+        hw = randi_hardware.detect_hardware()
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        models = data.get("ollama", [])
+        profile = randi_hardware.hardware_profile(hw)
+        categories = {"llm": [], "image": [], "video": []}
+        for m in models:
+            categories.setdefault(m.get("category", "llm"), []).append(m["id"])
+        for m in data.get("media", []):
+            categories.setdefault(m.get("category", "image"), []).append(m["id"])
+        out = {}
+        for use_case in ("chat", "code", "reasoning", "vision"):
+            recs = randi_recommend.rank_models(models, hw, use_case=use_case, limit=4)
+            out[use_case] = [{
+                "modelId": r["model"].get("ollamaId") or r["model"]["id"],
+                "name": r["model"].get("name"),
+                "params": r["model"].get("paramsBillions"),
+                "grade": r["evaluation"].grade,
+                "status": r["evaluation"].status,
+                "quantization": r["evaluation"].quant,
+                "tokensPerSecond": r["evaluation"].toks_per_sec,
+            } for r in recs]
+        _json_response(self, 200, {
+            "hardware": {**randi_hardware.to_dict(hw), "profile": profile},
+            "categories": categories,
+            "recommendations": out,
+            "installed": self._installed_models(),
+        })
+
+    def _installed_models(self):
+        try:
+            with urllib.request.urlopen(f"{OLLAMA_HOST}/api/tags", timeout=3) as r:
+                data = json.loads(r.read())
+            return [m["name"] for m in data.get("models", [])]
+        except Exception:
+            return []
+
+    def handle_api_install(self):
+        if not _HAS_COMPAT:
+            _json_response(self, 501, {"error": "modulos RANDI no disponibles"})
+            return
+        body = self._read_json_body()
+        if body is None:
+            _json_response(self, 400, {"error": "body JSON invalido"})
+            return
+        model_id = body.get("modelId")
+        if not model_id:
+            _json_response(self, 400, {"error": "modelId requerido"})
+            return
+        try:
+            data = randi_recommend.load_catalog()
+        except Exception:
+            _json_response(self, 500, {"error": "no se pudo cargar models.json"})
+            return
+        model = next((m for m in (data.get("ollama", []) + data.get("media", []))
+                      if m.get("id") == model_id or m.get("ollamaId") == model_id), None)
+        if not model:
+            _json_response(self, 404, {"error": f"modelo no encontrado: {model_id}"})
+            return
+        installer = model.get("installer", "ollama")
+        if installer != "ollama":
+            _json_response(self, 400, {
+                "error": f"Este modelo usa '{installer}'. No se instala via Ollama.",
+                "installer": installer, "guide": model.get("url", ""),
+            })
+            return
+        if not randi_install or not randi_install.server_running():
+            _json_response(self, 502, {"error": "Ollama no responde. Ejecuta: randi serve"})
+            return
+        job_id = f"{int(time.time() * 1000)}"
+        target = model.get("ollamaId") or model["id"]
+        INSTALL_JOBS[job_id] = {"status": "running", "phase": "starting", "modelId": model_id,
+                                 "target": target, "detail": "", "done": False}
+        threading.Thread(target=self._install_worker, args=(job_id, target, model),
+                         daemon=True).start()
+        _json_response(self, 200, {"jobId": job_id, "modelId": model_id, "target": target})
+
+    def handle_api_install_status(self):
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        job_id = (qs.get("id") or [""])[0]
+        job = INSTALL_JOBS.get(job_id)
+        if not job:
+            _json_response(self, 404, {"error": "job no encontrado"})
+            return
+        _json_response(self, 200, job)
+
+    def _install_worker(self, job_id, target, model):
+        try:
+            INSTALL_JOBS[job_id].update(phase="pulling", detail=f"Descargando {target} (puede tardar)...")
+            rc = subprocess.call(["ollama", "pull", target])
+            if rc != 0:
+                INSTALL_JOBS[job_id].update(status="error", phase="pulling",
+                                             detail=f"Fallo la descarga de {target}.",
+                                             done=True)
+                return
+            INSTALL_JOBS[job_id].update(phase="configuring", detail="Configurando modelo por defecto...")
+            randi_install.configure_model(model)
+            INSTALL_JOBS[job_id].update(status="done", phase="done",
+                                         detail=f"{target} instalado y configurado. Usa 'randi chat'.",
+                                         done=True)
+        except Exception as e:  # pragma: no cover
+            INSTALL_JOBS[job_id].update(status="error", phase="error",
+                                         detail=str(e), done=True)
+
     def do_GET(self):
         api = self.path.startswith("/api/")
         if not self._gate(api):
@@ -447,7 +602,11 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             _json_response(self, 200, {"status": "ok", "ollama": self._proxy_health()})
         elif self.path == "/api/hardware":
             self.handle_api_hardware()
-        elif self.path == "/api/models":
+        elif self.path == "/api/setup":
+            self.handle_api_setup()
+        elif self.path.startswith("/api/install/status"):
+            self.handle_api_install_status()
+        elif self.path.split("?", 1)[0] == "/api/models":
             self.handle_api_models()
         elif self.path.startswith("/api/models/"):
             model_id = urllib.parse.unquote(self.path[len("/api/models/"):])
@@ -482,6 +641,10 @@ class ProxyHandler(SimpleHTTPRequestHandler):
             self.handle_api_compatibility()
         elif self.path == "/api/recommend":
             self.handle_api_recommend()
+        elif self.path == "/api/requirements":
+            self.handle_api_requirements()
+        elif self.path == "/api/install":
+            self.handle_api_install()
         elif self.path.startswith("/api/"):
             self._proxy_request("POST")
         else:

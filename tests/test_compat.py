@@ -112,3 +112,40 @@ def test_tier_list_contains_grades():
     assert isinstance(tiers, dict)
     total = sum(len(v) for v in tiers.values())
     assert total == len(recommend_mod.get_models(catalog))
+
+
+def test_required_hardware_for_too_heavy_model():
+    from compat import required_hardware
+    req = required_hardware({"paramsBillions": 70, "architecture": "dense"})
+    assert req["vramRequiredGb"] > 10
+    assert req["gpuVramRecommendedGb"] >= req["vramRequiredGb"]
+    assert req["gpuClass"]
+    # El modelo 70B no cabe en una 3060 de 12GB -> la clase debe ser mayor
+    assert req["gpuVramRecommendedGb"] > 12 or "4090" in req["gpuClass"]
+
+
+def test_notes_explain_insufficient():
+    from compat import notes_for, evaluate_model_best, HardwareInfo
+    model = {"id": "deepseek-r1:671b", "paramsBillions": 671, "architecture": "moe", "name": "DeepSeek R1", "activeParams": "37B active"}
+    hw = HardwareInfo(platform="linux", ram_gb=8, is_mobile=True)
+    ev = evaluate_model_best(model, hw)
+    assert ev.status == "cannot-run"
+    notes = notes_for(model, ev, hw)
+    assert any("necesitas" in n for n in notes)
+
+
+def test_status_to_canirun_mapping():
+    from compat import status_to_canirun
+    assert status_to_canirun("can-run") == "comfortable"
+    assert status_to_canirun("cannot-run") == "insufficient"
+
+
+def test_hardware_profile_and_device_class():
+    from hardware import hardware_profile, device_class, detect_hardware
+    hw = detect_hardware()
+    prof = hardware_profile(hw)
+    assert "class" in prof and "comfortableVramGb" in prof and "summary" in prof
+    mobile = HardwareInfo(platform="termux", ram_gb=8, is_mobile=True)
+    assert device_class(mobile) == "mobile"
+    workstation = HardwareInfo(platform="linux", gpu_vram_gb=80, gpu_memory_bw=2039)
+    assert device_class(workstation) == "workstation"

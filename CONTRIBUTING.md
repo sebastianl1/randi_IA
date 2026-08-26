@@ -18,17 +18,18 @@ Gracias por querer contribuir. Todo el proyecto es 100% local y open source (MIT
    ```bash
    bash -n bin/randi install-ollama.sh bin/ollama-chat
    python3 -m py_compile web/server.py bin/lib/*.py
-   for f in web/js/*.js docs/lang/*.js; do node --check "$f"; done
    python3 -c "import json; json.load(open('web/models.json'))"
    python3 -m pytest tests/ -q
+   npm --prefix web ci --no-audit --no-fund && node web/node_modules/astro/astro.js build --root web
+   npm --prefix site ci --no-audit --no-fund && node site/node_modules/astro/astro.js build --root site
    ```
 4. Envia el PR describiendo que hace y como probarlo.
 
 ## Tests
 
-- Los tests viven en `tests/` y cubren catalogo, seguridad del servidor web e i18n.
-- Si tocas `web/server.py` (proxy/TTS/STT/imagegen) o `web/models.json`,
-  ejecuta `python3 -m pytest tests/ -q` antes de enviar el PR.
+- Los tests viven en `tests/` y cubren catalogo, motor de compat, seguridad del servidor web, endpoints de onboarding/install e i18n.
+- Si tocas `web/server.py`, `bin/lib/*` o `web/models.json`, ejecuta
+  `python3 -m pytest tests/ -q` antes de enviar el PR.
 
 ## Convenciones
 

@@ -1,52 +1,65 @@
 # Arquitectura de RANDI
 
-RANDI es un asistente de IA local que orquesta Ollama desde tres superficies: una
-CLI en bash, un chat TUI en Python (Rich) y una SPA web con doble backend
-(Ollama + WebGPU/Transformers.js). No requiere red: todo corre en el dispositivo.
+RANDI es un asistente de IA local multiplataforma (Termux/Android, Linux, macOS, Windows
+WSL2 y Git Bash) que orquesta Ollama desde tres superficies: una CLI en bash, un chat TUI
+en Python (Rich) y una SPA web (bridge Ollama + WebGPU). No requiere red: todo corre en
+el dispositivo.
 
 ## Vista de componentes
 
 ```mermaid
 graph TD
     subgraph CLI
-        R[bin/randi] --> CH[bin/ollama-chat]
-        R --> P[bin/lib/pull.py]
+        R[bin/randi] --> CH[bin/ollama-chat (TUI Rich)]
+        R --> ST[bin/lib/setup-wizard: randi setup]
+        R --> IN[bin/lib/install.py: randi install]
         R --> C[bin/lib/catalog.py]
+        R --> CM[bin/lib/compat.py]
+        R --> HW[bin/lib/hardware.py]
+        R --> RC[bin/lib/recommend.py]
     end
-    subgraph TUI
-        OC[bin/lib/ollama_chat.py] --> CATL[lib/models.json]
-        OC -->|HTTP /api/chat| OL[Ollama]
-    end
-    subgraph Web
+    IN -->|ollama pull| OL[Ollama]
+    IN -->|auto-config| CFG[~/.config/randi/config.json]
+    OC[ollama_chat.py] -->|HTTP /api/chat| OL
+    subgraph Web (randi web)
         SRV[web/server.py] -->|proxy /api/*| OL
-        SRV --> TTS[TTS espeak/piper]
-        SRV --> STT[STT whisper.cpp]
-        SRV --> IMG[Imagegen A1111]
-        SRV -->|static| APP[web/index.html]
-        APP --> OCJS[js/ollama-client.js]
-        APP --> WG[js/webgpu-client.js]
-        WG -->|Transformers.js + WebGPU/CPU| HF[Hugging Face CDN]
-        APP --> CAT[js/catalog.js] --> MJ[web/models.json]
+        SRV --> STJ[jobs install background]
+        SRV -->|static| DIST[web/dist (Astro+Tailwind)]
+        DIST --> WG[src/lib/webgpu.ts + Transformers.js]
+        WG -->|WebGPU/ONNX| HF[Hugging Face CDN]
+        DIST -->|fetch /api/*| SRV
+        DIST --> CAT[src/lib/catalog.ts] --> MJ[web/models.json]
     end
-    subgraph Datos
-        MJ[web/models.json] -.-> CATL
-        MJ -.->|randi update| CATL
+    subgraph Landing (site/)
+        LND[site/dist (Astro)] --> SP[public/llms.txt, sitemap, JSON-LD]
     end
-    CATL -.-> OC
+    MJ[web/models.json] --> C
+    MJ --> IN
+    MJ --> CAT
 ```
 
 ## Modelo de datos
 
-- `web/models.json` es la **unica fuente de verdad** del catalogo de modelos
-  (25+ LLMs Ollama, 13 WebGPU, tools de vision/TTS/STT/imagegen). No se duplican
-  listas en otro lugar.
-- Consumidores: `bin/lib/catalog.py` (TUI/menues), `web/js/catalog.js` (web),
-  `bin/lib/pull.py` (descargas). `randi update` copia el catalogo a
-  `~/.local/share/randi/lib/models.json`.
+- `web/models.json` es la **unica fuente de verdad** del catalogo (esquema v2):
+  - `ollama`: 60 LLMs instalables por Ollama (chat/code/reasoning/vision/embed/moe) con
+    `ollamaId`, `installer`, `tools`, `thinking`, MoE con `activeParams`.
+  - `media`: 12 modelos de generacion (imagen/video) con `installer: comfyui` y `url`.
+  - `webgpu`: 13 modelos Transformers.js (backend del navegador).
+  - `tools`: vision/TTS/STT/imagegen/video.
+- Consumidores: `bin/lib/*.py` (CLI/TUI), `web/src/lib/catalog.ts` (SPA, import en build)
+  y el API (`server.py`). No se duplica el catalogo en otro archivo.
 
 ## Flujos principales
 
-### `randi chat`
+### Onboarding e instalacion (2.0)
+```
+randi setup          -> detect_hardware() -> hardware_profile() -> rank por categoria
+                     -> muestra compatibles vs no-compatibles (con el hardware requerido)
+randi install <m>    -> pull de Ollama -> configure_model() en ~/.config/randi/config.json
+Web (boton Instalar) -> POST /api/install -> job en background -> GET /api/install/status
+```
+
+### `randi chat` (TUI)
 ```
 bin/randi  ->  python3 ollama_chat.py -m <modelo>
   -> POST /api/chat (stream NDJSON) -> Ollama
@@ -56,56 +69,51 @@ bin/randi  ->  python3 ollama_chat.py -m <modelo>
 ### `randi web`
 ```
 bin/randi web  ->  python3 web/server.py (127.0.0.1:8080-8099)
-  -> sirve SPA + proxy /api/* a OLLAMA_HOST
-  -> TTS/STT/imagegen resuelven herramientas locales si existen
+  -> sirve web/dist + proxy /api/* a OLLAMA_HOST
   -> el navegador elige backend: Ollama (proxy) o WebGPU (Transformers.js en GPU)
 ```
 
 ## Decisiones de arquitectura (ADR)
 
-### ADR-001: SPA vanilla JS con ES modules (sin framework)
+### ADR-001: SPA vanilla JS con ES modules (sin framework) — SUPERADO por ADR-004
 
-- **Contexto**: el frontend debe correr offline en dispositivos de 4-8GB sin
-  build step, servirse desde `SimpleHTTPRequestHandler` y cachearse con un
-  service worker.
-- **Decision**: mantener **vanilla JS + ES modules**, sin bundler ni framework.
-  Solo dependencias CDN: `marked` (markdown) y Transformers.js (import dinamico).
-- **Alternativas descartadas**: React/Next.js (exige build, peso innecesario para
-  una SPA local); lit/svelte (nuevo toolchain, overkill).
-- **Trade-offs**: el DOM es fuente de verdad de los mensajes; se usa `innerHTML`
-  para render dinamico (ver `sanitizeHtml` en `chat-ui.js`). Requiere disciplina
-  en la sanitizacion de salida del LLM.
-- **Consecuencias**: `app.js` (895 l), `chat-ui.js` (630 l) y `ollama_chat.py`
-  (848 l) superan el umbral de mantenibilidad. Refactor propuesto: extraer de
-  `chat-ui.js` el render de mensajes (markdown + sanitizacion) a un modulo
-  `render.js`, y de `app.js` los modales/sesiones a modulos dedicados.
+- **Contexto**: el frontend v1 era vanilla para correr sin build step offline.
+- **Decision (v1.4)**: vanilla JS + ES modules; solo `marked` y Transformers.js por CDN.
+- **Estado**: superado en v2.0 por el ADR-004 (Astro). El refactor propuesto en la deuda
+  (extraer render/modales) dejo de aplicar al reestructurarse la SPA completa.
 
 ### ADR-002: servidor web enlazado a localhost con origen validado
 
-- **Contexto**: `server.py` es un proxy inverso hacia Ollama. Antes enlazaba en
-  `0.0.0.0` con CORS `*`, lo que permitia a cualquier pagina web usar el proxy
-  como tunel (CSRF/SSRF) y a equipos de la LAN acceder sin autenticacion.
-- **Decision**: enlazar solo en `127.0.0.1`, validar `Host` (anti DNS rebinding),
-  validar `Origin` en peticiones de estado, eliminar CORS `*`, y soportar un
-  token opcional `RANDI_TOKEN` via cabecera `X-RANDI-Token` (inyectado en la SPA
-  como `<meta name="randi-token">`).
-- **Trade-offs**: se pierde el acceso remoto por LAN (no documentado como feature).
+- **Contexto/Decision**: `server.py` enlaza solo en `127.0.0.1`, valida `Host` (anti DNS
+  rebinding) y `Origin` (CSRF), soporta token opcional `RANDI_TOKEN` vía `X-RANDI-Token`
+  inyectado como `<meta name="randi-token">` en la SPA.
+- **Trade-off**: sin acceso remoto por LAN (no documentado como feature).
 
 ### ADR-003: catalogo centralizado en JSON
 
-- **Contexto**: la lista de modelos aparecia duplicada en bash, TUI y web.
-- **Decision**: un solo `models.json` consumido por `catalog.py`, `pull.py`,
-  `catalog.js`. Esta regla la fija el repo y el CI valida IDs unicos y campos
-  obligatorios.
+- Un solo `web/models.json` consumido por `catalog.py`, `pull.py`, `install.py`,
+  `recommend.py` y `web/src/lib/catalog.ts`. El CI valida IDs unicos y campos obligatorios.
+
+### ADR-004: frontend como build estatico Astro 5 + Tailwind 4
+
+- **Contexto**: la SPA v1 exigia un mantenimiento manual del DOM y la landing duplicaba
+  el catalogo; el proyecto ahora quiere onboarding web, tier/compare y multiplataforma.
+- **Decision**: migrar la SPA (`web/`) y la landing (`site/`) a **Astro 5 + Tailwind 4**
+  con salida puramente estatica (`web/dist`, `site/dist`). `server.py` sirve `web/dist`
+  cuando existe (fallback a `web/` para dev); GitHub Pages sube `site/dist`.
+  No hay framework de UI en runtime: los scripts de pagina usan TypeScript vanilla
+  agrupado por Vite (sin framework), conservando el espiritu de ADR-001.
+- **Trade-offs**: build step (Node + npm) en CI para web y site; el catalogo se importa
+  en el bundle para funcionar sin servidor, pero en linea se usa el API como autoridad.
+- **Consecuencias**: la SPA sigue siendo cacheable (service worker runtime) y servible
+  offline desde el dispositivo.
 
 ## Deuda tecnica conocida
 
-Detectada en la revision de arquitectura:
-
-| Archivo | Lineas | Problema |
-|---------|--------|----------|
-| `web/js/app.js` | 895 | Orquestador demasiado grande |
-| `web/js/chat-ui.js` | 630 | Render + comandos + TTS/STT mezclados |
-| `bin/lib/ollama_chat.py` | 848 | `ChatSession` ~677 l: mezcla chat, sesiones, voz, vision |
+| Archivo | Lineas aprox. | Problema |
+|---------|---------------|----------|
+| `bin/lib/ollama_chat.py` | 846 | `ChatSession` (~677 l) mezcla chat, sesiones, voz, vision |
+| `web/src/scripts/chat.ts` | ~330 | Orquesta backend, slash, TTS/STT: candidato a split |
+| `web/server.py` | ~690 | Proxy + motor compat + jobs: candidato a router separado |
 
 Backlog priorizado en `docs/ROADMAP.md` / `CHANGELOG.md`.

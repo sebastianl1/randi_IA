@@ -1,0 +1,29 @@
+---
+import Layout from '../layouts/Layout.astro';
+const grades = ['S', 'A', 'B', 'C', 'D', 'F', '?'];
+---
+<Layout title="RANDI — Tier list de tu hardware">
+  <div class="flex items-end justify-between gap-3 flex-wrap">
+    <div>
+      <p class="mono text-xs tracking-widest uppercase text-muted mb-1">Tier list</p>
+      <h1 class="text-3xl font-black tracking-tight">Los mejores modelos para <span class="grad-text">tu hardware</span></h1>
+    </div>
+    <button id="exportBtn" class="btn">Copiar como texto</button>
+  </div>
+  <p class="mt-2 text-muted text-sm" id="state">Analizando tu equipo…</p>
+
+  <div class="mt-6 space-y-6">
+    {grades.map((g) => (
+      <section id={`tier-${g}`} class={g === '?' ? 'hidden' : ''}>
+        <h2 class="flex items-center gap-2 font-bold text-lg"><span class="grade" style={`--grade-color:${g === 'S' ? '#22c55e' : g === 'A' ? '#4ade80' : g === 'B' ? '#a3e635' : g === 'C' ? '#f59e0b' : g === 'D' ? '#f97316' : '#ef4444'}`}>{g}</span>
+          <span class="text-muted text-sm">—</span></h2>
+        <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" data-tbody={g}></div>
+      </section>
+    ))}
+  </div>
+</Layout>
+
+<script>
+  import { mount } from '../scripts/tier';
+  mount();
+</script>

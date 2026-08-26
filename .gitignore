@@ -8,3 +8,11 @@ __pycache__/
 
 .opencode/
 *.log
+
+# Build web (Astro) — se genera en CI o localmente con `npm run build` en web/
+web/node_modules/
+web/dist/
+web/.astro/
+site/node_modules/
+site/dist/
+site/.astro/

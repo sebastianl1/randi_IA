@@ -1,0 +1,11 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Landing from '../../components/Landing.astro';
+const t = {
+  title: 'RANDI — Local AI for your device',
+  desc: '100% local AI assistant for Termux, Linux, macOS and Windows. Detects your hardware, recommends and runs text, image and video models with no cloud.',
+};
+---
+<Layout lang="en" title={t.title} description={t.desc}>
+  <Landing lang="en" />
+</Layout>

@@ -1,0 +1,33 @@
+# RANDI
+
+> Asistente de IA 100% local y multiplataforma (Termux/Android, Linux, macOS, Windows/WSL2).
+> Detecta tu hardware y ejecuta modelos de texto, imagen y video sin internet ni nube.
+
+- Web (landing): https://sebastianl1.github.io/randi_IA/
+- Repositorio: https://github.com/sebastianl1/randi_IA
+- Licencia: MIT
+- Plataformas: Android (Termux), Linux, macOS, Windows (WSL2 / Git Bash)
+
+## Pregunta rapida: puedes ejecutar IA local en tu equipo?
+
+Si. RANDI analiza CPU, RAM, GPU, VRAM y bandwidth, y recomienda modelos compatibles
+(60+ LLMs de texto, modelos de imagen y video). Los que no caben en tu hardware te
+dicen exactamente qué GPU/RAM necesitas (grados S-F, 7 cuantizaciones Q2_K-F16).
+
+## Instalacion por plataforma
+
+Clonar y ejecutar `bash install-ollama.sh`, luego `randi setup` para el onboarding
+por hardware y `randi install <modelo>` para descargar/configurar automaticamente.
+
+- Android/Termux: `pkg install git -y && git clone https://github.com/sebastianl1/randi_IA.git && cd randi_IA && bash install-ollama.sh`
+- Linux/macOS/WSL2/Git Bash: `git clone https://github.com/sebastianl1/randi_IA.git && cd randi_IA && bash install-ollama.sh`
+
+## Modelos destacados
+
+- Bajo recursos (Telefonos/8GB): qwen3:0.6b, qwen2.5-coder:0.5b, gemma3:1b, llama3.2:1b
+- 8GB (punto dulce): qwen2.5-coder:3b, qwen3:4b, gemma3:4b
+- 16-24GB: qwen3:14b, deepseek-r1:14b, gpt-oss:20b (MoE 3.6B activos)
+- 64GB+: llama3.3:70b, gpt-oss:120b, qwen3:235b-a22b
+- Imagen: FLUX.2 Klein 4B/9B, Z-Image Turbo, Qwen Image 2512 (via ComfyUI)
+- Video: Wan 2.2 TI2V 5B, HunyuanVideo 1.5, LTX 2.3 (via ComfyUI)
+- WebGPU (navegador): Qwen2.5 Coder 0.5B/1.5B/3B, Llama 3.2 1B

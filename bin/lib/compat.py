@@ -2,8 +2,8 @@
 
 Porte a Python del motor de canirun.ai (midudev/canirun.ai). Es el "skill
 global" de compatibilidad: lo usan la CLI (Rich), el servidor web (/api/*) y
-la deteccion nativa de hardware. La web ademas tiene un mirror en JS
-(web/js/compat.js) que debe mantener los mismos umbrales.
+la deteccion nativa de hardware. La web ademas tiene un espejo en TS
+(web/src/lib/compat.ts) que debe mantener los mismos umbrales.
 """
 
 from __future__ import annotations
@@ -308,3 +308,93 @@ def evaluate_model_best(model: dict, hw: HardwareInfo) -> ModelEvaluation:
     """Evaluacion con la mejor cuantizacion (o la menor si nada corre)."""
     return best_quant_for_hardware(model, hw) or evaluate_quant(
         model, make_quants(float(model.get("paramsBillions", 0) or 0))[-1], hw)
+
+
+# ── Hardware requerido ("no corre aqui, necesitas...") ────────────────────
+
+_GPU_CLASSES = [
+    (1, "GTX 1050 Ti / GTX 1650"),
+    (2, "GTX 1060 / RTX 2060"),
+    (4, "RTX 2060 Super / GTX 1080"),
+    (6, "RTX 3060"),
+    (8, "RTX 4060 / RTX 3060 Ti"),
+    (10, "RTX 4070"),
+    (12, "RTX 4070 Ti / RX 7800 XT"),
+    (16, "RTX 4080 / RTX 4070 Ti Super / RX 7900 XT"),
+    (24, "RTX 4090 / A100"),
+    (40, "A100 40GB / L40"),
+    (80, "H100 / A100 80GB"),
+    (141, "H200 / B200"),
+]
+
+
+def gpu_class_for_vram(vram_required: float) -> str:
+    """Clase de GPU que cubre comodamente la VRAM requerida."""
+    for threshold, label in _GPU_CLASSES:
+        if vram_required <= threshold:
+            return label
+    return "H100 / B200 (datacenter)"
+
+
+def required_hardware(model: dict, quant_name: str | None = None) -> dict:
+    """Hardware minimo para correr el modelo comodo (estilo canirun).
+
+    Devuelve la VRAM, RAM de sistema y clase de GPU necesarias, utiles para el
+    mensaje 'tu hardware no lo corre; necesitas...'.
+    """
+    params = float(model.get("paramsBillions", 0) or 0)
+    quants = make_quants(params)
+    quant = next((q for q in quants if q["name"] == quant_name), None) or quants[2]  # Q4_K_M
+    vram = quant["vramGB"]
+    gpu_vram_required = round(vram / 0.85, 1)          # correr comodo <= 85% VRAM
+    ram_required = round(max(vram * 1.5, 2.0), 1)       # RAM de sistema utilizable
+    min_ram_total = round(ram_required / 0.7, 1)        # RAM total necesaria
+    return {
+        "quantization": quant["name"],
+        "vramRequiredGb": round(vram, 1),
+        "gpuVramRecommendedGb": gpu_vram_required,
+        "gpuClass": gpu_class_for_vram(gpu_vram_required),
+        "ramRequiredGb": ram_required,
+        "systemRamTotalGb": min_ram_total,
+        "bandwidthRecommendedGbps": round(max(vram * 40, 50), 0),
+        "diskRequiredGb": round(max(params * 0.55, 0.5), 1),
+    }
+
+
+def status_to_canirun(status: ModelStatus) -> str:
+    """Mapea el status RANDI al vocabulario canirun.ai."""
+    return {
+        "can-run": "comfortable",
+        "tight": "tight",
+        "can-run-slow": "cpu-offload",
+        "cannot-run": "insufficient",
+        "unknown": "unknown",
+    }.get(status, "unknown")
+
+
+def notes_for(model: dict, ev: ModelEvaluation, hw: HardwareInfo) -> list[str]:
+    """Notas humanas explicando la evaluacion (paridad canirun)."""
+    notes = [f"Modelo {model.get('name')} ({model.get('paramsBillions')}B, q{ev.quant or 'auto'})"]
+    status = status_to_canirun(ev.status)
+    if ev.status == "cannot-run":
+        req = required_hardware(model, ev.quant)
+        notes.append(
+            f"Tu hardware no alcanza: necesitas GPU con {req['gpuVramRecommendedGb']}GB "
+            f"de VRAM ({req['gpuClass']}) y {req['systemRamTotalGb']}GB de RAM."
+        )
+    elif ev.status == "can-run-slow":
+        if hw.gpu_vram_gb:
+            notes.append(
+                f"El modelo excede tu VRAM ({hw.gpu_vram_gb}GB): se descarga parte a RAM "
+                f"de sistema y la velocidad sera baja."
+            )
+        else:
+            notes.append("Solo correra en CPU: sin GPU dedicada la velocidad es muy baja.")
+    elif ev.status == "tight":
+        notes.append("Ajustado: corre pero sin margen para otras apps.")
+    else:
+        if ev.toks_per_sec:
+            notes.append(f"Velocidad estimada ~{ev.toks_per_sec} tok/s.")
+        else:
+            notes.append("El modelo deberia caber comodo en tu memoria.")
+    return notes

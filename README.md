@@ -100,6 +100,10 @@ randi list
 # Descargar modelos
 randi pull
 
+# Onboarding: analiza tu hardware y recomienda modelos
+randi setup
+randi install qwen3:8b   # Descarga + configura automaticamente
+
 # Ver catalogo recomendado
 randi models
 
@@ -122,12 +126,17 @@ randi img "un perro astronauta"
 | `randi models` | Catalogo de modelos recomendados |
 | `randi img "prompt"` | Genera una imagen (A1111/GPU local) |
 | `randi status` | Estado del sistema |
+| `randi setup` | Onboarding: analiza tu hardware y recomienda modelos |
+| `randi install <modelo>` | Descarga y configura un modelo automáticamente |
+| `randi requirements <modelo>` | Hardware mínimo que necesita un modelo |
 | `randi config` | Ver configuracion |
 | `randi update` | Actualizar RANDI desde GitHub o local |
 
 ## Modelos recomendados
 
-El catalogo completo (26+ modelos) se centraliza en `models.json` y se consulta con `randi models` o `randi pull`. Algunos destacados:
+El catalogo completo (**85 modelos, v2**) se centraliza en `models.json` y se consulta con
+`randi models`, `randi models media`, `randi setup` o la web. Clasificados por tipo:
+**texto/codigo/razonamiento/vision**, **imagen** y **video**. Algunos destacados:
 
 ### Bajo consumo (< 2GB RAM) — 4-6GB RAM
 | Modelo | Tamano | Uso |
@@ -215,23 +224,23 @@ Modelos disponibles en OpenCode:
 
 ## Interfaz web
 
-Ejecuta `randi web` para abrir la interfaz web local con dos backends:
+Ejecuta `randi web` para abrir la interfaz web local (Astro + Tailwind) rediseñada con dos backends:
 
 - **Ollama** — modelos grandes via el servidor local.
-- **WebGPU** — modelos pequenos (<2B) corriendo en la GPU del navegador con Transformers.js.
+- **WebGPU** — modelos pequenos (<4B) corriendo en la GPU del navegador con Transformers.js.
 
-La UI es **adaptativa por plataforma**: en celulares usa un panel inferior (bottom sheet), y en escritorio (>=1024px) un **drawer lateral derecho** con hover states y tipografia mayor.
+Pantallas:
+- **Home/onboarding**: analiza el hardware y muestra recomendaciones por categoria, los
+  modelos instalables y los que necesitan más hardware (con el requisito exacto).
+- **Modelos (browse)**: filtros (caso de uso, proveedor, tools, razonamiento, MoE, "solo
+  lo que corre"), busqueda y atajos (`/`, `j`/`k`), y 3 modos de vista.
+- **Detalle**: tabla de cuantizaciones por tu hardware + boton "Instalar" (progreso real).
+- **Tier list** S–F exportable y **Compare** entre dos modelos.
+- **Chat/Playground**: streaming, vision (📎), TTS (🔊), STT (🎤), sesiones, modo eco y programador.
 
-Caracteristicas:
-- Los modelos se descargan una sola vez y se cachean en el navegador.
-- Descarga robusta: reintenta con cuantizaciones q4/q8/fp16/fp32 y cae a CPU si WebGPU falla.
-- Conversacion multi-turno con historial y system prompt en ambos backends.
-- Barra de contexto dinamica segun el modelo y estadisticas de tokens.
-- **Vision**: adjunta una imagen (boton 📎) con modelos vision via Ollama.
-- **Texto a voz**: boton 🔊 en cada respuesta (espeak-ng/piper).
-- **Voz a texto**: boton 🎤 graba y transcribe (requiere whisper.cpp manual).
-- **Generacion de imagenes**: boton 🎨 genera con A1111/ComfyUI local (GPU).
-- **Modo eco** y **modo programador**: toggles en la configuracion.
+La instalacion de un modelo desde la web usa `POST /api/install` con jobs en background y
+progreso consultable (`/api/install/status`); al terminar queda configurado como modelo
+por defecto.
 
 ## Otros tipos de modelos
 
@@ -268,14 +277,17 @@ randi/
 │   └── lib/
 │       ├── ollama_chat.py  # Chat TUI en Python
 │       ├── catalog.py      # Lector del catalogo models.json
+│       ├── compat.py       # Motor de compatibilidad (skills globales)
+│       ├── hardware.py     # Deteccion de hardware + perfil
+│       ├── recommend.py    # Ranking, tier y best picks
+│       ├── install.py      # randi setup / install / requirements
 │       └── pull.py         # Menu de descarga de modelos
-├── web/
-│   ├── server.py          # Servidor web (proxy + TTS/STT/imagen-gen)
-│   ├── index.html
-│   ├── css/style.css
-│   ├── js/                # app, chat-ui, catalog, webgpu, ollama-client
-│   └── models.json        # Catalogo central de modelos
-└── docs/                  # Landing page (GitHub Pages) con i18n
+├── web/                    # SPA `randi web` (Astro 5 + Tailwind 4)
+│   ├── server.py          # Servidor web (proxy + motor compat + jobs de install)
+│   ├── models.json        # Catalogo central v2 (85 modelos)
+│   └── src/               # Paginas y scripts de la SPA
+├── site/                   # Landing GitHub Pages (Astro, ES/EN) + guias por SO
+└── docs/                   # Documentacion: ARCHITECTURE, ROADMAP, landing legacy
 ```
 
 ## Solucion de problemas

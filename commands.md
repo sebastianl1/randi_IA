@@ -9,11 +9,14 @@ randi chat -m <modelo>   # Chat con modelo especifico
 randi run <modelo>       # Ejecutar modelo directamente
 randi serve              # Iniciar servidor Ollama
 randi stop               # Detener servidor
+randi setup              # Onboarding: analiza tu hardware y recomienda modelos
+randi install <modelo>   # Descarga + configura automaticamente
+randi requirements <m>   # Hardware minimo que necesita un modelo
 randi pull               # Menu para descargar modelos (desde models.json)
 randi pull <modelo>      # Descargar modelo especifico
 randi list               # Listar modelos instalados
 randi ps                 # Ver modelos en RAM
-randi models             # Catalogo recomendado (26+ modelos)
+randi models             # Catalogo recomendado (85 modelos, v2)
 randi status             # Ver estado del sistema
 randi config             # Ver configuracion
 randi update             # Actualizar RANDI (GitHub o local)

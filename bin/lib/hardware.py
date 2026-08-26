@@ -6,7 +6,7 @@ Detecta CPU, RAM, GPU, VRAM y bandwidth por plataforma:
   - GPU via nvidia-smi / rocm-smi / system_profiler / wmic / lspci / getprop
   - base de datos de GPUs (misma curaduria que canirun.ai) como ultimo recurso
 
-La web ademas hace deteccion en el navegador (web/js/hardware.js); este modulo
+La web ademas hace deteccion en el navegador (web/src/lib/hardware.ts); este modulo
 es la version nativa y alimenta la CLI y /api/hardware.
 """
 
@@ -422,6 +422,57 @@ def hardware_from_dict(data: dict) -> HardwareInfo:
         "platform", "cpu_name", "cpu_cores", "cpu_threads", "cpu_benchmark",
         "ram_gb", "system_ram_gb", "gpu_name", "gpu_vram_gb", "gpu_memory_bw",
         "gpu_cores", "is_apple_silicon", "is_mobile", "device_name")})
+
+
+# ── Perfil y clasificacion del dispositivo ────────────────────────────────
+
+def device_class(hw: HardwareInfo) -> str:
+    """Clasifica el dispositivo: mobile | apple-silicon | igpu | dedicated | workstation."""
+    if hw.is_apple_silicon:
+        return "apple-silicon"
+    if hw.is_mobile:
+        return "mobile"
+    vram = hw.gpu_vram_gb or 0
+    bw = hw.gpu_memory_bw or 0
+    if vram <= 0 and bw <= 0:
+        return "igpu"
+    if vram >= 40 or bw >= 1500:
+        return "workstation"
+    return "dedicated"
+
+
+def hardware_profile(hw: HardwareInfo) -> dict:
+    """Resumen completo de la maquina para el onboarding (CLI + web)."""
+    usable = hw.usable_ram()
+    cap = hw.gpu_vram_gb or usable or hw.ram_gb
+    ceiling = round(cap * 0.85, 1) if cap else None
+    return {
+        "class": device_class(hw),
+        "platform": hw.platform,
+        "cpu": {"name": hw.cpu_name, "cores": hw.cpu_cores, "threads": hw.cpu_threads},
+        "ramGb": hw.ram_gb,
+        "usableRamGb": round(usable, 1) if usable else None,
+        "gpu": {"name": hw.gpu_name, "vramGb": hw.gpu_vram_gb, "bandwidthGbps": hw.gpu_memory_bw},
+        "comfortableVramGb": ceiling,
+        "isMobile": hw.is_mobile,
+        "isAppleSilicon": hw.is_apple_silicon,
+        "summary": _summarize(hw),
+    }
+
+
+def _summarize(hw: HardwareInfo) -> str:
+    cls = device_class(hw)
+    gpu = hw.gpu_name or "CPU integrada"
+    ram = f"{hw.ram_gb}GB" if hw.ram_gb else "RAM desconocida"
+    if cls == "mobile":
+        return f"Movil {gpu} con {ram}"
+    if cls == "apple-silicon":
+        return f"Apple Silicon {gpu} con memoria unificada de {ram}"
+    if cls == "workstation":
+        return f"Estacion de trabajo {gpu} con {hw.gpu_vram_gb}GB de VRAM"
+    if hw.gpu_vram_gb:
+        return f"{gpu} con {hw.gpu_vram_gb}GB VRAM y {ram}"
+    return f"Sin GPU dedicada ({gpu}) con {ram}"
 
 
 if __name__ == "__main__":

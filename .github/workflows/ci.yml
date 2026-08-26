@@ -35,9 +35,13 @@ jobs:
           python3 -m py_compile web/server.py bin/lib/*.py
           ruff check web/server.py bin/lib/*.py
 
-      - name: JS - sintaxis
+      - name: JS/TS - build web y landing (Astro + Tailwind)
         run: |
-          for f in web/js/*.js web/js/views/*.js docs/lang/*.js; do node --check "$f"; done
+          npm --prefix web ci --no-audit --no-fund
+          node web/node_modules/astro/astro.js build --root web
+          npm --prefix site ci --no-audit --no-fund
+          node site/node_modules/astro/astro.js build --root site
+          for f in docs/lang/*.js; do node --check "$f"; done
 
       - name: models.json valido y sin duplicados
         run: |
@@ -81,6 +85,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Instalar Node (para build de web)
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Build web (el servidor sirve web/dist)
+        run: |
+          npm --prefix web ci --no-audit --no-fund
+          node web/node_modules/astro/astro.js build --root web
 
       - name: Ejecutar tests (pytest)
         run: |
