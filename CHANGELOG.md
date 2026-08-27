@@ -2,6 +2,18 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.8] - 2026-08-27
+
+### Changed
+
+- **TUI relanzado visualmente (sistema de diseño opencode/dsh)**: paleta near-black
+  (`#0a0a0a`), paneles/bordes `#101010/#262626`, acentos `#5b7cfa/#9457eb`, colores de
+  estado (●/○, eco/code/tts). Header de 3 lineas con marca ◆ RANDI + grado S–F (coloreado)
+  y quant del modelo, sesión, tokens y temperatura; burbuja de usuario con borde accent;
+  assistant con Markdown y guía izquierda; paneles para bienvenida/ayuda/recomendaciones;
+  input > con foco accent y **hint** de atajos; autocompletar y ListView/buttons con
+  highlight. CSS cohesivo por pantalla (palette, sidebar, views, settings/sessions/help).
+
 ## [2.0.7] - 2026-08-27
 
 ### Fixed

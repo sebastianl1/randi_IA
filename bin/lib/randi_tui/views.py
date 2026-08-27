@@ -31,6 +31,15 @@ def _plot(labels, values, title: str):
 class _BaseScreen(Screen):
     BINDINGS = [("escape", "go_back", "Volver")]
     TITLE: str = ""
+    CSS = """
+    #h { padding: 1 2; text-style: bold; color: #fafafa;
+         background: #101010; border-bottom: solid #262626; }
+    .hw { padding: 1 2; }
+    Button { margin: 1 2 0 2; }
+    ListView { background: #0a0a0a; }
+    ListItem { padding: 0 1; }
+    ListItem:focus { background: #1b1b22; }
+    """
 
     def compose_v(self) -> list:
         raise NotImplementedError

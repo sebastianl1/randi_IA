@@ -23,29 +23,55 @@ from . import session as rsession
 from .editor import EditorInput
 from .slash import COMMANDS, completions
 
-RANDI_VERSION = "2.0.7"
+RANDI_VERSION = "2.0.8"
 
 
 APP_CSS = """
-Screen { background: #0b0b0f; }
+Screen { background: #0a0a0a; }
+
+/* ── Header / status ─────────────────────────────────────────────── */
 #status {
-  dock: top; height: 1; padding: 0 1; color: #9aa0ac;
-  background: #14141b; border-bottom: solid #2a2a35;
+  dock: top; height: 3; padding: 0 2; color: #9c9c9c;
+  background: #101010; border-bottom: solid #262626;
+  text-style: bold;
 }
-#status .b { color: #6c8cff; }
-#chat { height: 1fr; padding: 0 1; }
+#status .brand { color: #5b7cfa; }
+#status .accent { color: #9457eb; }
+#status .ok { color: #22c55e; }
+#status .bad { color: #ef4444; }
+#status .dim { color: #56565f; }
+
+/* ── Chat ───────────────────────────────────────────────────────── */
+#chat { height: 1fr; padding: 1 2; scrollbar-color: #3a3a3a; scrollbar-background: #101010; }
+#chat Markdown {
+  border-left: solid #262626; padding-left: 1; margin-top: 0; color: #e6e6ea;
+}
+.msg-meta { color: #56565f; text-style: bold; margin: 1 0 0 0; }
 .msg-user {
-  color: #ececf1; background: #1a1a22; margin: 0 0 1 0; padding: 0 1;
-  border-left: solid #6c8cff;
+  background: #16161d; border-left: solid #5b7cfa;
+  color: #ececf1; padding: 0 1; margin: 0 0 1 1;
 }
-.msg-meta { color: #56565f; text-style: bold; }
-Markdown { background: transparent; }
-#input-row { dock: bottom; height: auto; padding: 0 1 0 0; }
-#input { border: round #2a2a35; background: #14141b; color: #ececf1; }
-#input:focus { border: round #6c8cff; }
-#suggestions { dock: bottom; height: 6; border: solid #2a2a35; background: #14141b; }
-#suggestions ListView { height: 100%; }
-#info-panel { padding: 1 2; background: #14141b; border: solid #2a2a35; }
+.msg-panel {
+  padding: 1 2; background: #101010; border: tall #262626; color: #d6d6da;
+}
+
+/* ── Autocompletar ───────────────────────────────────────────────── */
+#suggestions {
+  dock: bottom; height: 7; background: #101010;
+  border: tall #262626; border-bottom: none;
+}
+#suggestions ListView { background: #101010; }
+#suggestions ListItem { padding: 0 1; }
+#suggestions ListView:focus-within ListItem:focus { background: #1b1b22; }
+
+/* ── Input ───────────────────────────────────────────────────────── */
+#input-row { dock: bottom; height: 3; padding: 1 2; }
+#input-row Label { color: #5b7cfa; text-style: bold; }
+#input { background: #14141b; border: round #262626; color: #fafafa; padding: 0 1; }
+#input:focus { border: round #5b7cfa; }
+#hint { dock: bottom; height: 1; color: #56565f; padding: 0 2; text-align: right; }
+
+#welcome { dock: top; height: auto; background: #101010; border: tall #262626; padding: 1 2; }
 """
 
 
@@ -93,6 +119,7 @@ class RandiApp(App):
         with Horizontal(id="input-row"):
             yield Label(" > ", classes="b")
             yield EditorInput(id="input", placeholder="Escribe un mensaje, / para comandos (Ctrl+K: paleta)")
+        yield Static("Ctrl+K paleta · Tab panel · Ctrl+Y copiar · Ctrl+N nuevo · Ctrl+D salir", id="hint")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -114,7 +141,9 @@ class RandiApp(App):
             self.messages = rsession.load_session(last) or []
             self.load_messages_to_chat()
         if not self.messages:
-            self.notice("Bienvenido a RANDI. Escribe /help para los comandos.")
+            self.chat().mount(Static("\n  Bienvenido a RANDI — IA local multiplataforma\n"
+                                     "  Escribe un mensaje, usa / comando o Ctrl+K para la paleta.\n",
+                                     classes="msg-panel"))
         self.input().focus()
         self.refresh_status()
         cfg = rsession.load_config()
@@ -141,8 +170,10 @@ class RandiApp(App):
         self.chat().mount(Static(text, classes="msg-meta"))
 
     def refresh_status(self) -> None:
-        parts = [f"[b]RANDI[/b] v{RANDI_VERSION}", f"modelo: [b]{self.model or '—'}[/b]"]
+        seg = []
+        seg.append("[#5b7cfa]◆ RANDI[/#5b7cfa]")
         if self.model:
+            seg.append(f"[b]{self.model}[/b]")
             try:
                 import catalog as _cat
                 import compat as _compat
@@ -153,23 +184,25 @@ class RandiApp(App):
                           if (x.get("ollamaId") or x["id"]) == self.model), None)
                 if m:
                     ev = _compat.evaluate_model_best(m, hw)
-                    parts.append(f"grado [b]{ev.grade}[/b] q{ev.quant}")
+                    gcolor = {"S": "#22c55e", "A": "#4ade80", "B": "#a3e635", "C": "#f59e0b",
+                              "D": "#f97316", "F": "#ef4444"}.get(ev.grade, "#56565f")
+                    seg.append(f"[{gcolor}]{ev.grade}[/{gcolor}] [dim]q{ev.quant}[/dim]")
             except Exception:
                 pass
-        parts.append(f"server: {'[green]●[/green]' if self.server else '[red]○[/red]'}")
+        seg.append(f"{'[#22c55e]●[/#22c55e]' if self.server else '[#ef4444]○[/#ef4444]'}")
         if self.tokens:
-            parts.append(f"tok {self.tokens}")
+            seg.append(f"[dim]tok {self.tokens}[/dim]")
         sess = rsession.load_config().get("last_session", "")
         if sess:
-            parts.append(f"ses:{sess}")
+            seg.append(f"[#9457eb]↺ {sess}[/#9457eb]")
         if self.eco:
-            parts.append("eco")
+            seg.append("[#f59e0b]eco[/#f59e0b]")
         if self.code_mode:
-            parts.append("code")
+            seg.append("[#f59e0b]code[/#f59e0b]")
         if self.tts:
-            parts.append("tts")
-        parts.append(f"temp={self.temp}")
-        self.status().update("  " + "  ·  ".join(parts))
+            seg.append("[#f59e0b]tts[/#f59e0b]")
+        seg.append(f"[dim]t{self.temp}[/dim]")
+        self.status().update("  " + "  ·  ".join(seg))
 
     def update_status(self, text: str) -> None:
         self.status().update(f"  {text}")
@@ -457,8 +490,7 @@ class RandiApp(App):
         for name, (desc, _h) in COMMANDS.items():
             lines.append(f"  {name:<12} {desc}")
         lines.append("\nAtajos: / o Ctrl+K paleta · Tab panel · Ctrl+C cancelar · Ctrl+D salir")
-        panel = Static("\n".join(lines))
-        panel.styles.padding = (1, 2)
+        panel = Static("\n".join(lines), classes="msg-panel")
         self.chat().mount(panel)
         self.chat().scroll_end(animate=False)
 
@@ -505,7 +537,7 @@ class RandiApp(App):
             for r in recs:
                 m, ev = r["model"], r["evaluation"]
                 lines.append(f"  [{ev.grade}] {m['id']:<24} q{ev.quant or '-'} {ev.status or ''}")
-            self.chat().mount(Static("\n".join(lines)))
+            self.chat().mount(Static("\n".join(lines), classes="msg-panel"))
             self.chat().scroll_end(animate=False)
         except Exception as e:
             self.notice(f"Error: {e}")

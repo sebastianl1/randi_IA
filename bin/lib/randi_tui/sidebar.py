@@ -12,6 +12,17 @@ class SidebarScreen(Screen):
     """Panel lateral con tabs (look dsh)."""
 
     BINDINGS = [("escape", "close", "Cerrar")]
+    CSS = """
+    .hint { color: #56565f; padding: 0 1; }
+    .hw { padding: 1 2; }
+    Tabs { height: 3; background: #101010; }
+    TabbedContent { border: tall #262626; }
+    TabPane { padding: 1; }
+    Button { margin: 1 2 0 2; }
+    ListView { background: #0a0a0a; }
+    ListItem { padding: 0 1; }
+    ListItem:focus { background: #1b1b22; }
+    """
 
     def compose(self) -> ComposeResult:
         with TabbedContent(initial="models"):

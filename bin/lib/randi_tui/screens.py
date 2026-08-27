@@ -17,6 +17,17 @@ def _hon(desc_: str) -> str:
 
 class _Back(Screen):
     BINDINGS = [("escape", "close", "Volver")]
+    CSS = """
+    #h { padding: 1 2; text-style: bold; color: #fafafa;
+         background: #101010; border-bottom: solid #262626; }
+    .hw, #info { padding: 1 2; }
+    ListView { background: #0a0a0a; }
+    ListItem { padding: 0 1; }
+    ListItem:focus { background: #1b1b22; }
+    Input { border: round #262626; background: #14141b; color: #fafafa; height: 3; padding: 0 1; }
+    Input:focus { border: round #5b7cfa; }
+    Button { margin: 1 2 0 2; }
+    """
 
     def go_back(self) -> None:
         self.dismiss()
