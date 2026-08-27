@@ -214,7 +214,7 @@ install_deps() {
             if python3 -c "import requests, rich, textual, httpx" >/dev/null 2>&1; then
                 ok "Librerias Python (requests, rich, textual, httpx) ya instaladas"
             else
-                run_step -s "Instalando librerias Python" 300 pip install requests rich textual httpx -q || true
+                run_step -s "Instalando librerias Python" 300 pip install requests rich textual httpx textual-plotext -q || true
             fi
             ;;
         macos)

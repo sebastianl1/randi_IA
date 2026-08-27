@@ -33,21 +33,30 @@ def test_session_roundtrip(tmp_path, monkeypatch):
 def test_tui_mounts_and_commands(tmp_path, monkeypatch):
     from randi_tui.app import RandiApp
 
+    # aislar config/sesiones del home real
+    monkeypatch.setattr(tsession, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(tsession, "SESSIONS_DIR", tmp_path)
+
     async def scenario():
         app = RandiApp(initial_model="qwen3:8b")
         async with app.run_test(size=(100, 30)) as pilot:
             await pilot.pause(0.2)
-            app.input().focus()  # asegurar foco
+            # primer arranque -> pantalla de onboarding apilada
+            assert len(app.screen_stack) >= 2
+            while len(app.screen_stack) > 1:
+                await pilot.press("escape")
+                await pilot.pause(0.1)
+            app.input().focus()
             await pilot.press("/help")
             await pilot.press("enter")
             await pilot.pause(0.3)
-            # paleta (accion directa: el binding se valida en terminal real)
+            # paleta: se apila una pantalla mas
+            before = len(app.screen_stack)
             app.action_palette()
             await pilot.pause(0.3)
-            assert len(app.screen_stack) == 2  # paleta apilada
+            assert len(app.screen_stack) == before + 1
             await pilot.press("escape")
             await pilot.pause(0.2)
-            # comando de sesion
             await pilot.press("/clear")
             await pilot.press("enter")
             await pilot.pause(0.2)

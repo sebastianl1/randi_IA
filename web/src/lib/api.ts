@@ -8,11 +8,17 @@ const TOKEN = (() => {
   return m ? m.getAttribute('content') || '' : '';
 })();
 
-async function request(path: string, options: RequestInit = {}): Promise<Response> {
+// Timeouts para no dejar la UI "colgada" si el servidor local tarda o falla.
+const TIMEOUT_GET = 8000;
+const TIMEOUT_POST = 20000;
+
+async function request(path: string, options: RequestInit = {}, timeoutMs?: number): Promise<Response> {
   const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
   if (TOKEN) headers['X-RANDI-Token'] = TOKEN;
   if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
-  return fetch(path, { ...options, headers });
+  const ms = timeoutMs ?? (options.method === 'POST' ? TIMEOUT_POST : TIMEOUT_GET);
+  const signal = options.signal ?? AbortSignal.timeout(ms);
+  return fetch(path, { ...options, headers, signal });
 }
 
 export async function apiGet<T = any>(path: string): Promise<T> {

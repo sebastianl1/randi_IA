@@ -6,6 +6,28 @@ from textual.screen import Screen
 from textual.widgets import Button, Input, ListItem, ListView, Static
 
 
+def _plot(labels, values, title: str):
+    """Barras con textual-plotext (fallback a ASCII si falta)."""
+    try:
+        from textual_plotext import PlotextPlot
+
+        p = PlotextPlot()
+        p.plt.theme("clear")
+        p.plt.plotsize(60, 14)
+        p.plt.bar(labels, values)
+        p.plt.title(title)
+        p.refresh()
+        return p
+    except Exception:
+        width = max(1, (max([max(values), 1]) // 2))
+        lines = [title, ""]
+        for label, v in zip(labels, values):
+            bar = "█" * (v if v <= width else width)
+            lines.append(f"  {label:<4} {bar} {v}")
+        from textual.widgets import Static
+        return Static("\n".join(lines))
+
+
 class _BaseScreen(Screen):
     BINDINGS = [("escape", "go_back", "Volver")]
     TITLE: str = ""
@@ -31,13 +53,18 @@ class ModelsScreen(_BaseScreen):
     TITLE = "Catalogo de modelos (todos los casos)"
 
     def compose_v(self) -> list:
+        return [ListView(id="models-lv")]
+
+    def on_mount(self) -> None:
+        self.app.run_worker(self._load())
+
+    async def _load(self) -> None:
         import catalog as _cat
+        import compat as _compat
+        import hardware as _hw
 
-        lv = ListView()
+        lv = self.query_one("#models-lv", ListView)
         try:
-            import compat as _compat
-            import hardware as _hw
-
             hw = _hw.detect_hardware(cache=True)
             rows = []
             for m in _cat.get_models():
@@ -48,7 +75,6 @@ class ModelsScreen(_BaseScreen):
                 lv.append(ListItem(Static(f"[{grade}] {mid:<24} {quant:<6} {size}")))
         except Exception as e:
             lv.append(ListItem(Static(f"error: {e}")))
-        return [lv]
 
 
 class TierScreen(_BaseScreen):
@@ -60,6 +86,7 @@ class TierScreen(_BaseScreen):
         import recommend as _rec
 
         st = Static("")
+        grades, vals = [], []
         try:
             hw = _hw.detect_hardware(cache=True)
             tiers = _rec.tier_list(_cat.get_models(), hw)
@@ -68,13 +95,18 @@ class TierScreen(_BaseScreen):
                 items = tiers.get(grade, [])
                 if not items:
                     continue
-                lines.append(f"[{grade}]")
-                for it in items[:8]:
+                grades.append(grade)
+                vals.append(len(items))
+                lines.append(f"[{grade}] ({len(items)})")
+                for it in items[:6]:
                     lines.append(f"   {it['model']['id']}")
             st.update("\n".join(lines) or "Sin datos")
         except Exception as e:
             st.update(f"error: {e}")
-        return [st]
+        widgets = [st]
+        if grades:
+            widgets.append(_plot(grades, vals, "Modelos por grado"))
+        return widgets
 
 
 class CompareScreen(_BaseScreen):
@@ -123,13 +155,21 @@ class HardwareScreen(_BaseScreen):
         import recommend as _rec
 
         st = Static("")
+        widgets = [st]
         try:
             hw = _hw.detect_hardware(cache=True)
             prof = _hw.hardware_profile(hw)
             lines = [f"Clase: {prof['class']}", prof["summary"],
                      f"RAM {hw.ram_gb}GB · CPU {hw.cpu_cores} nucleos · {prof['platform']}"]
+            usable = prof.get("usableRamGb") or 0
+            if hw.ram_gb:
+                widgets.append(_plot(["RAM total", "RAM util"], [hw.ram_gb, usable],
+                                     "Memoria del sistema (GB)"))
             if not hw.is_apple_silicon and hw.gpu_vram_gb:
                 lines.append(f"GPU {hw.gpu_name} · VRAM {hw.gpu_vram_gb}GB · BW {hw.gpu_memory_bw} GB/s")
+                widgets.append(_plot(["VRAM", "Comodo (85%)"],
+                                     [hw.gpu_vram_gb, round(hw.gpu_vram_gb * 0.85, 1)],
+                                     "GPU (GB)"))
             lines.append("")
             lines.append("Mejores picks:")
             for r in _rec.rank_models(_rec.get_models(), hw, limit=6)[:6]:
@@ -137,4 +177,4 @@ class HardwareScreen(_BaseScreen):
             st.update("\n".join(lines))
         except Exception as e:
             st.update(f"error: {e}")
-        return [st]
+        return widgets

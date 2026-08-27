@@ -2,7 +2,7 @@
 import * as api from '../lib/api.js';
 import * as c from '../lib/compat.js';
 import { hardwareProfile, detectHardware } from '../lib/hardware.js';
-import { findModel } from '../lib/catalog.js';
+import { findModel, llmModels, mediaModels } from '../lib/catalog.js';
 import { el, gradeBadge, spinner, fmtCtx } from '../lib/ui.js';
 import type { CatalogModel, Hw } from '../lib/api.js';
 
@@ -98,30 +98,34 @@ export function mount() {
 
   async function run() {
     if (state) state.replaceChildren(scanState());
-    // Paso 1: deteccion en el navegador (instantanea) y render inmediato.
-    let client: Hw = {};
-    try { client = (await detectHardware()) as Hw; } catch { /* sin navegador */ }
-    hw = client;
-    renderHw(profileOf(client));
-    // Paso 2: enriquecer con el servidor local (cached, rapido).
     try {
-      const srv = await api.getHardware();
-      hw = { ...client, ...srv };
-      renderHw(profileOf(hw));
-    } catch { /* sin servidor: queda la deteccion del navegador */ }
-    renderBasic();
-
-    await renderPicks();
-    await renderLists();
+      // Paso 1: deteccion en el navegador (instantanea) y render inmediato.
+      let client: Hw = {};
+      try { client = (await detectHardware()) as Hw; } catch { /* sin navegador */ }
+      hw = client;
+      renderHw(profileOf(client));
+      // Paso 2: enriquecer con el servidor local (timeout, nunca bloquea).
+      try {
+        const srv = await api.getHardware();
+        hw = { ...client, ...srv };
+        renderHw(profileOf(hw));
+      } catch { /* sin servidor: queda la deteccion del navegador */ }
+      renderBasic();
+      await renderPicks();
+      await renderLists();
+    } catch (e) {
+      console.warn('home err', e);
+    } finally {
+      if (state) state.textContent = '';
+    }
 
     let models: CatalogModel[] = [];
-    try { models = await api.getModels({ media: true }); } catch { /* offline: catalogo estatico */ }
+    try { models = await api.getModels({ media: true }); } catch { /* offline */ }
 
     if (btn) {
       btn.textContent = '↻ Re-analizar';
       btn.addEventListener('click', run);
     }
-    if (state) state.textContent = '';
   }
 
   function profileOf(h: Hw) { return (h as any).profile || hardwareProfile(h); }
@@ -165,23 +169,36 @@ export function mount() {
     if (!picks) return;
     picks.innerHTML = '';
     picks.appendChild(el('h2', { class: 'section-title text-xl font-bold mb-4', text: 'Recomendados para tu equipo' }));
-    let recs: any;
+    let recs: any = null;
     try { recs = await api.getSetup(); } catch { /* offline */ }
     const cases = [['chat', 'Chat'], ['code', 'Codificacion'], ['reasoning', 'Razonamiento'], ['vision', 'Vision']] as const;
-    if (recs) {
-      for (const [key, label] of cases) {
-        const list = recs.recommendations?.[key] || [];
-        if (!list.length) continue;
-        const grid = el('div', { class: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-2' });
-        for (const r of list) {
+    const picksOk = recs?.recommendations && Object.keys(recs.recommendations).length > 0;
+    for (const [key, label] of cases) {
+      const grid = el('div', { class: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-2' });
+      let rendered = 0;
+      if (picksOk) {
+        for (const r of (recs.recommendations[key] || []).slice(0, 4)) {
           const m = { id: r.modelId, name: r.name, paramsBillions: r.params } as CatalogModel;
           grid.appendChild(modelRow(m, { grade: r.grade, status: r.status, quant: r.quantization, toksPerSec: r.tokensPerSecond, score: 0, memPct: null } as c.Eval, { install: true }));
+          rendered++;
         }
-        picks.appendChild(el('div', { class: 'mt-5' }, [
-          el('h3', { class: 'font-semibold text-muted', text: label }),
-          grid,
-        ]));
       }
+      if (!rendered && hw) {
+        // Fallback local sobre el catalogo estatico (sin servidor).
+        const cands = llmModels
+          .filter((m) => (m.useCase || []).includes(key) || m.type === key)
+          .map((m) => ({ m, ev: c.evaluateModel(m, hw) }))
+          .filter((x) => x.ev.status !== 'cannot-run')
+          .sort((a, b) => b.ev.score - a.ev.score)
+          .slice(0, 4);
+        cands.forEach(({ m, ev }) => { grid.appendChild(modelRow(m, ev, { install: true })); rendered++; });
+      }
+      if (rendered) {
+        picks.appendChild(el('div', { class: 'mt-5' }, [el('h3', { class: 'font-semibold text-muted', text: label }), grid]));
+      }
+    }
+    if (!picks.childElementCount) {
+      picks.appendChild(el('p', { class: 'text-muted text-sm', text: 'No se pudieron cargar recomendaciones (el servidor local no responde).' }));
     }
   }
 
@@ -189,6 +206,7 @@ export function mount() {
     if (!hw) return;
     const all: CatalogModel[] = [];
     try { all.push(...(await api.getModels({ media: true }))); } catch { /* offline */ }
+    if (!all.length) all.push(...llmModels, ...mediaModels);  // fallback estatico
     if (!all.length) return;
     const evals = all.map((m) => ({ m, ev: c.evaluateModel(m, hw) }));
     const ok = evals.filter((x) => ['can-run', 'tight', 'can-run-slow'].includes(x.ev.status));

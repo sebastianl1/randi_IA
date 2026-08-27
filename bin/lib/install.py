@@ -160,11 +160,12 @@ def _ensure_pip_libs():
     py = shutil.which("python3") or shutil.which("python")
     if not py:
         return
-    if subprocess.run([py, "-c", "import requests, rich, textual, httpx"],
+    if subprocess.run([py, "-c", "import requests, rich, textual, httpx, textual_plotext"],
                       capture_output=True).returncode == 0:
         return
-    info("Instalando librerias Python (requests, rich, textual, httpx)...")
-    subprocess.call([py, "-m", "pip", "install", "--quiet", "requests", "rich", "textual", "httpx"])
+    info("Instalando librerias Python (requests, rich, textual, httpx, textual-plotext)...")
+    subprocess.call([py, "-m", "pip", "install", "--quiet",
+                     "requests", "rich", "textual", "httpx", "textual-plotext"])
 
 
 def ensure_native() -> int:

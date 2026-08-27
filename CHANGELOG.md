@@ -2,6 +2,41 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.7] - 2026-08-27
+
+### Fixed
+
+- **`randi web` dejo de quedarse "cargando"**: `api.ts` ahora envía `fetch` con **timeout**
+  (8s GET / 20s POST) para que la UI nunca se cuelgue si el servidor local tarda;
+  `sw.js` usa **network-first** para el SW y las navegaciones (y sube la cache a
+  `randi-web-v2.0.6`), eliminando el bundle viejo cacheado que mostraba solo el inicio.
+- **Home web robusta**: el hardware se pinta siempre primero (client-first), el spinner
+  siempre se limpia (try/finally) y los modelos "a descargar" salen con **fallback al
+  catalogo estatico** aunque el servidor falle o este offline.
+- **CLI: el mensaje del agente ya se ve COMPLETO**. El streaming mantiene el borrador
+  acumulado (`draft`) y lo refresca por lotes (8 fps): ya no se pierde texto (antes solo
+  se renderizaba el ultimo fragmento).
+
+### Added
+
+- **CLI v3 (mejora enorme del TUI)**:
+  - Onboarding/Setup al primer arranque (detecta hardware, clase, mejores picks e
+    instala con `/install`).
+  - Pantallas: **Sesiones** (abrir/borrar/renombrar/guardar), **Configuracion** (tema,
+    temperatura, eco/code), **Ayuda** overlay.
+  - Editor con **historial** (Up/Down), atajos: Ctrl+K paleta, Tab panel, **Ctrl+Y
+    copiar respuesta**, **Ctrl+N nueva conversacion** (autoguardada), **Ctrl+E editar
+    ultimo mensaje**, Ctrl+C cancelar, Ctrl+D salir.
+  - **Status bar enriquecida**: grado S–F + quant del modelo, tokens, sesion, eco/code,
+    temp, server ●/○.
+  - **Graficos de barras** (textual-plotext) en Hardware (RAM/VRAM) y Tier (conteo por
+    grado), con fallback ASCII.
+  - Paleta ampliada (onboarding, sesiones, configuracion, ayuda).
+
+### Changed
+
+- Dependencia nueva `textual-plotext` instalada por el instalador, `randi ensure` y CI.
+
 ## [2.0.6] - 2026-08-26
 
 ### Added

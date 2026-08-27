@@ -20,9 +20,10 @@ from textual.widgets import Footer, Input, Label, ListItem, ListView, Markdown, 
 
 from . import chat as rchat
 from . import session as rsession
+from .editor import EditorInput
 from .slash import COMMANDS, completions
 
-RANDI_VERSION = "2.0.6"
+RANDI_VERSION = "2.0.7"
 
 
 APP_CSS = """
@@ -57,6 +58,9 @@ class RandiApp(App):
     BINDINGS = [
         Binding("ctrl+k", "palette", "Comandos"),
         Binding("tab", "sidebar", "Panel"),
+        Binding("ctrl+y", "copy_last", "Copiar"),
+        Binding("ctrl+n", "new_chat", "Nuevo"),
+        Binding("ctrl+e", "edit_last", "Editar"),
         Binding("ctrl+d", "quit", "Salir"),
         Binding("escape", "close", "Cerrar"),
     ]
@@ -72,6 +76,8 @@ class RandiApp(App):
     server: bool = reactive(False)
     busy: bool = False
     worker: asyncio.Task | None = None
+    _flush_timer: object | None = None
+    _draft: str = ""
 
     def __init__(self, initial_model: str = ""):
         super().__init__()
@@ -86,7 +92,7 @@ class RandiApp(App):
         yield ListView(id="suggestions", classes="hidden")
         with Horizontal(id="input-row"):
             yield Label(" > ", classes="b")
-            yield Input(id="input", placeholder="Escribe un mensaje, / para comandos (Ctrl+K: paleta)")
+            yield EditorInput(id="input", placeholder="Escribe un mensaje, / para comandos (Ctrl+K: paleta)")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -111,10 +117,13 @@ class RandiApp(App):
             self.notice("Bienvenido a RANDI. Escribe /help para los comandos.")
         self.input().focus()
         self.refresh_status()
+        cfg = rsession.load_config()
+        if not cfg.get("onboarded"):
+            self.open_view("setup")
 
     # ── UI helpers ───────────────────────────────────────────────────────
-    def input(self) -> Input:
-        return self.query_one("#input", Input)
+    def input(self) -> EditorInput:
+        return self.query_one("#input", EditorInput)
 
     def chat(self) -> VerticalScroll:
         return self.query_one("#chat", VerticalScroll)
@@ -133,7 +142,26 @@ class RandiApp(App):
 
     def refresh_status(self) -> None:
         parts = [f"[b]RANDI[/b] v{RANDI_VERSION}", f"modelo: [b]{self.model or '—'}[/b]"]
+        if self.model:
+            try:
+                import catalog as _cat
+                import compat as _compat
+                import hardware as _hw
+
+                hw = _hw.detect_hardware(cache=True)
+                m = next((x for x in _cat.get_models()
+                          if (x.get("ollamaId") or x["id"]) == self.model), None)
+                if m:
+                    ev = _compat.evaluate_model_best(m, hw)
+                    parts.append(f"grado [b]{ev.grade}[/b] q{ev.quant}")
+            except Exception:
+                pass
         parts.append(f"server: {'[green]●[/green]' if self.server else '[red]○[/red]'}")
+        if self.tokens:
+            parts.append(f"tok {self.tokens}")
+        sess = rsession.load_config().get("last_session", "")
+        if sess:
+            parts.append(f"ses:{sess}")
         if self.eco:
             parts.append("eco")
         if self.code_mode:
@@ -219,6 +247,7 @@ class RandiApp(App):
         self.suggestions().add_class("hidden")
         if not text:
             return
+        self.input().remember(text)
         if text.startswith("/"):
             self.run_command(text)
             return
@@ -248,40 +277,46 @@ class RandiApp(App):
         self.add_msg("user", text)
         self.busy = True
         self.refresh_status()
-        md = self.add_msg("assistant", "…")
+        md = self.add_msg("assistant", "")
+        self._draft = ""
+        if self._flush_timer is not None:
+            self._flush_timer.stop()
+        self._flush_timer = self.set_interval(0.08, lambda: self._flush_md(md))
         self.worker = asyncio.ensure_future(self._stream(md))
 
+    def _flush_md(self, md: Markdown | None) -> None:
+        if md is not None and self._draft:
+            md.update(self._draft)
+            self.chat().scroll_end(animate=False)
+
     async def _stream(self, md: Markdown | None) -> None:
-        buffer = ""
         acc = ""
         try:
             messages = list(self.messages[-12:])
-            options = {
-                "temperature": self.temp,
-                "num_predict": 512 if self.eco else 2048,
-            }
+            options = {"temperature": self.temp, "num_predict": 512 if self.eco else 2048}
             async for token in rchat.stream_chat(
                 self.model, messages, system=self._system_text(), options=options
             ):
-                buffer += token
                 acc += token
-                if md is not None and len(buffer) >= 24:
-                    md.update(buffer)
-                    buffer = ""
-                    self.chat().scroll_end(animate=False)
-            if md is not None:
-                if buffer:
-                    md.update(buffer)
-                self.chat().scroll_end(animate=False)
+                self._draft = acc
+            self._draft = acc
+            self._flush_md(md)
             self.messages.append({"role": "assistant", "content": acc})
             self.tokens = len(acc.split())
             self.notice(f"  · {self.tokens} tokens")
         except asyncio.CancelledError:
+            self._draft = acc or "[interrumpido]"
+            self._flush_md(md)
             self.messages.append({"role": "assistant", "content": acc or "[interrumpido]"})
             self.notice("  · respuesta interrumpida")
         except Exception as e:
+            self._draft = f"⚠ {e}"
+            self._flush_md(md)
             self.notice(f"  · error: {e}")
         finally:
+            if self._flush_timer is not None:
+                self._flush_timer.stop()
+                self._flush_timer = None
             self.busy = False
             self.refresh_status()
 
@@ -481,11 +516,54 @@ class RandiApp(App):
         self.push_screen(HardwareScreen())
 
     def open_view(self, name: str) -> None:
-        from .views import CompareScreen, ModelsScreen, TierScreen
+        from .screens import HelpScreen, SessionsScreen, SettingsScreen, SetupScreen
+        from .views import CompareScreen, HardwareScreen, ModelsScreen, TierScreen
 
-        screen = {"models": ModelsScreen, "tier": TierScreen, "compare": CompareScreen}.get(name)
+        screen = {"models": ModelsScreen, "tier": TierScreen, "compare": CompareScreen,
+                  "hardware": HardwareScreen, "setup": SetupScreen,
+                  "sessions": SessionsScreen, "settings": SettingsScreen,
+                  "help": HelpScreen}.get(name)
         if screen:
             self.push_screen(screen())
+
+    def mark_onboarded(self) -> None:
+        cfg = rsession.load_config()
+        cfg["onboarded"] = True
+        rsession.save_config(cfg)
+
+    # ── Atajos extras ─────────────────────────────────────────────────────
+    def action_copy_last(self) -> None:
+        last = next((m["content"] for m in reversed(self.messages)
+                     if m.get("role") == "assistant" and isinstance(m.get("content"), str)), "")
+        if not last:
+            self.notice("No hay respuesta para copiar")
+            return
+        try:
+            self.copy_to_clipboard(last)
+            self.notice("Respuesta copiada al portapapeles")
+        except Exception:
+            self.notice("No se pudo copiar (portapapeles no disponible)")
+
+    def action_new_chat(self) -> None:
+        if self.messages and not self.busy:
+            self.save_session(f"sesion-{time.strftime('%Y%m%d-%H%M%S')}")
+        self.messages = []
+        self.chat().remove_children()
+        self.tokens = 0
+        self.notice("Nueva conversacion (anterior guardada)")
+        self.refresh_status()
+
+    def action_edit_last(self) -> None:
+        last = next((m["content"] for m in reversed(self.messages)
+                     if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
+        if not last:
+            self.notice("No hay mensaje para editar")
+            return
+        self.input().value = last
+        self.input().focus()
+
+    def action_help_overlay(self) -> None:
+        self.open_view("help")
 
     # ── Palette ──────────────────────────────────────────────────────────
     def build_palette(self) -> list[tuple[str, str]]:
@@ -497,6 +575,10 @@ class RandiApp(App):
         items.append(("Abrir comparador de modelos", "@view compare"))
         items.append(("Ver perfil de hardware", "@view hardware"))
         items.append(("Recomendar modelos (chat code vision)", "@recommend"))
+        items.append(("Onboarding / instalar recomendado", "@view setup"))
+        items.append(("Sesiones (abrir/borrar/renombrar)", "@view sessions"))
+        items.append(("Configuracion (tema, temperatura, modos)", "@view settings"))
+        items.append(("Ayuda", "@view help"))
         return items
 
     def run_palette_action(self, tag: str) -> None:

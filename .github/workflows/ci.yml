@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck
-          pip install ruff requests rich textual httpx
+          pip install ruff requests rich textual httpx textual-plotext
 
       - name: Bash - sintaxis y shellcheck
         run: |
@@ -79,5 +79,5 @@ jobs:
 
       - name: Ejecutar tests (pytest)
         run: |
-          pip install pytest textual httpx requests rich
+          pip install pytest textual httpx requests rich textual-plotext
           python3 -m pytest tests/ -q
