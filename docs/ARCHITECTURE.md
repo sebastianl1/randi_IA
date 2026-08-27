@@ -20,7 +20,7 @@ graph TD
     end
     IN -->|ollama pull| OL[Ollama]
     IN -->|auto-config| CFG[~/.config/randi/config.json]
-    OC[ollama_chat.py] -->|HTTP /api/chat| OL
+    OC[bin/lib/randi_tui (Textual)] -->|HTTP /api/chat| OL
     subgraph Web (randi web)
         SRV[web/server.py] -->|proxy /api/*| OL
         SRV --> STJ[jobs install background]
@@ -59,11 +59,13 @@ randi install <m>    -> pull de Ollama -> configure_model() en ~/.config/randi/c
 Web (boton Instalar) -> POST /api/install -> job en background -> GET /api/install/status
 ```
 
-### `randi chat` (TUI)
+### `randi` / `randi chat` (UI interactiva)
 ```
-bin/randi  ->  python3 ollama_chat.py -m <modelo>
+randi (sin args) | randi chat [m]
+  -> bin/lib/randi_tui (Textual): header, chat Markdown+stream, input `/`,
+     command palette (Ctrl+K), sidebar (modelos/sesiones/hardware), vistas.
   -> POST /api/chat (stream NDJSON) -> Ollama
-  -> render Rich (Live + Markdown) -> sesiones en ~/.config/randi/sessions
+  -> sesiones JSON en ~/.config/randi/sessions
 ```
 
 ### `randi web`
@@ -112,7 +114,7 @@ bin/randi web  ->  python3 web/server.py (127.0.0.1:8080-8099)
 
 | Archivo | Lineas aprox. | Problema |
 |---------|---------------|----------|
-| `bin/lib/ollama_chat.py` | 846 | `ChatSession` (~677 l) mezcla chat, sesiones, voz, vision |
+| `bin/lib/randi_tui/app.py` | ~430 | Orquesta chat+paleta+sidebar+vistas: candidato a separar servicios |
 | `web/src/scripts/chat.ts` | ~330 | Orquesta backend, slash, TTS/STT: candidato a split |
 | `web/server.py` | ~690 | Proxy + motor compat + jobs: candidato a router separado |
 

@@ -194,18 +194,24 @@ Si quieres codificar desde un telefono de 8GB, la configuracion recomendada es:
 
 > **Nota:** el autocompletado tipo Copilot en un editor movil no es realista localmente; lo que funciona es el agente (chat/refactor) via OpenCode o la web.
 
-## Chat TUI
+## Interfaz interactiva (CLI / TUI)
 
-El chat interactivo incluye:
+`randi` (sin argumentos) o `randi chat [modelo]` abren la **UI interactiva** (Texto,
+estilo opencode). `randi help` / `randi --help` y los subcomandos con argumentos siguen
+en la terminal de texto.
 
-- **Streaming** de tokens en tiempo real
-- **Comandos slash**: `/model`, `/system`, `/image`, `/eco`, `/code`, `/general`, `/tts`, `/clear`, `/save`, `/load`, `/temp`, `/info`, `/help`, `/exit`
-- **Historial** de conversacion por sesion
-- **Autocompletado** con Tab
-- **Colores** para diferenciar roles
-- **Sesiones guardables**: guarda y carga conversaciones
-- **Vision**: `/image <ruta>` adjunta una imagen (modelos vision)
-- **Texto a voz**: `/tts` habla las respuestas (requiere espeak-ng/piper)
+- **Header/status**: modelo activo, servidor (●/○), sesion, badges eco/code/temp.
+- **Chat** con streaming y **Markdown**; input `>` con autocompletar.
+- **Command palette**: `/` o `Ctrl+K` (busca comandos y acciones).
+- **Sidebar** (`Tab`): Modelos (catalogo con grados S–F), Sesiones, Hardware.
+- **Vistas navegables**: catalogo, tier list, comparador y perfil de hardware (comandos
+  `/catalog`, `/tier`, `/compare`, `/hardware` o desde la paleta).
+- **Comandos slash**: `/model`, `/system`, `/image`, `/eco`, `/code`, `/general`, `/tts`,
+  `/clear`, `/save`, `/load`, `/temp`, `/info`, `/help`, `/exit` + `/install`, `/recommend`,
+  `/session`, `/theme`.
+- **Atajos**: `/` o Ctrl+K paleta · Tab sidebar · Ctrl+C cancela la respuesta · Ctrl+D sale.
+- **Sesiones guardables** en `~/.config/randi/sessions` · **Vision** `/image <ruta>` ·
+  **Texto a voz** `/tts` (espeak-ng/piper).
 
 ## Integracion con OpenCode
 
@@ -280,8 +286,8 @@ randi/
 │   ├── randi              # Comando principal
 │   ├── ollama-chat         # Wrapper para chat TUI
 │   └── lib/
-│       ├── ollama_chat.py  # Chat TUI en Python
-│       ├── catalog.py      # Lector del catalogo models.json
+│       ├── randi_tui/      # UI interactiva (Textual): chat, paleta, sidebar
+│       ├── catalogo.py      # Lector del catalogo models.json
 │       ├── compat.py       # Motor de compatibilidad (skills globales)
 │       ├── hardware.py     # Deteccion de hardware + perfil
 │       ├── recommend.py    # Ranking, tier y best picks

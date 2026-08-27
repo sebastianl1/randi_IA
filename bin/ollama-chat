@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# RANDI Chat - Wrapper directo para el chat TUI
+# RANDI Chat - Wrapper directo para la UI interactiva (Textual).
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
-
-CHAT_SCRIPT=""
-for candidate in \
-    "$RANDI_DIR/lib/ollama_chat.py" \
-    "$(cd "$(dirname "$0")" && pwd)/lib/ollama_chat.py" \
-    "$PWD/lib/ollama_chat.py"; do
-    if [ -f "$candidate" ]; then
-        CHAT_SCRIPT="$candidate"
+LIB_DIR=""
+for base in \
+    "$(cd "$(dirname "$0")" && pwd)/lib" \
+    "$PWD/lib" \
+    "$RANDI_DIR/lib" \
+    "$HOME/.local/share/randi/lib"; do
+    if [ -f "$base/catalog.py" ] && [ -d "$base/randi_tui" ]; then
+        LIB_DIR="$base"
         break
     fi
 done
 
-if [ -z "$CHAT_SCRIPT" ]; then
-    echo "Error: No se encuentra ollama_chat.py"
+if [ -z "$LIB_DIR" ]; then
+    echo "Error: No se encuentra la interfaz randi_tui"
     echo "Asegurate de haber ejecutado install-ollama.sh"
     exit 1
 fi
@@ -27,4 +27,4 @@ if ! curl -sf "${OLLAMA_HOST:-http://localhost:11434}/api/tags" > /dev/null 2>&1
     sleep 3
 fi
 
-python3 "$CHAT_SCRIPT" "$@"
+PYTHONPATH="$LIB_DIR" python3 -m randi_tui.app "$@"

@@ -8,7 +8,7 @@ fi
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="2.0.5"
+RANDI_VERSION="2.0.6"
 RANDI_AUTHOR="Sebastian Laguna"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
@@ -50,25 +50,6 @@ dim()   { echo -e "${D}$1${R}"; }
 title() { echo -e "\n${BLU}${B}── $1 ──${R}\n"; }
 hr()    { echo -e "${D}────────────────────────────────────────${R}"; }
 
-find_chat_script() {
-    local script
-    script="$RANDI_DIR/lib/ollama_chat.py"
-    if [ -f "$script" ]; then
-        echo "$script"
-        return 0
-    fi
-    script="$(cd "$(dirname "$0")" && pwd)/lib/ollama_chat.py"
-    if [ -f "$script" ]; then
-        echo "$script"
-        return 0
-    fi
-    script="$PWD/lib/ollama_chat.py"
-    if [ -f "$script" ]; then
-        echo "$script"
-        return 0
-    fi
-    return 1
-}
 
 find_py_script() {
     local name="$1" script
@@ -226,13 +207,19 @@ check_ram() {
     return 0
 }
 
+cmd_tui() {
+    local lib_dir
+    lib_dir=$(dirname "$(find_py_lib catalog.py 2>/dev/null)" 2>/dev/null)
+    if [ -z "$lib_dir" ] || [ ! -d "$lib_dir/randi_tui" ]; then
+        err "No se encuentra la interfaz randi_tui (reinstala RANDI)"
+        return 1
+    fi
+    PYTHONPATH="$lib_dir" python3 -m randi_tui.app "$@"
+}
+
 cmd_chat() {
     local model="${1:-}"
-    local chat_script
-    chat_script=$(find_chat_script) || {
-        err "No se encuentra ollama_chat.py"
-        exit 1
-    }
+    [ "$model" = "-m" ] && model="$2"
 
     # Determinar el modelo a usar para la verificacion de RAM
     local check_model="$model"
@@ -246,11 +233,7 @@ cmd_chat() {
     if ! server_running; then
         cmd_serve || return 1
     fi
-    if [ -n "$model" ]; then
-        python3 "$chat_script" -m "$model"
-    else
-        python3 "$chat_script"
-    fi
+    cmd_tui "$@"
 }
 
 cmd_run() {
@@ -514,15 +497,10 @@ _do_update() {
     cp "$src/bin/ollama-chat" "$HOME/bin/ollama-chat" 2>/dev/null || true
     chmod +x "$HOME/bin/ollama-chat" 2>/dev/null || true
 
-    # Copiar libreria Python
+    # Copiar libreria Python (incluye el paquete randi_tui)
     mkdir -p "$RANDI_DIR/lib"
-    cp "$src/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
-    chmod +x "$RANDI_DIR/lib/ollama_chat.py" 2>/dev/null || true
-    cp "$src/bin/lib/catalog.py" "$RANDI_DIR/lib/catalog.py" 2>/dev/null || true
-    cp "$src/bin/lib/pull.py" "$RANDI_DIR/lib/pull.py" 2>/dev/null || true
-    for lib in compat.py hardware.py install.py recommend.py; do
-        cp "$src/bin/lib/$lib" "$RANDI_DIR/lib/$lib" 2>/dev/null || true
-    done
+    cp -r "$src/bin/lib/." "$RANDI_DIR/lib/" 2>/dev/null || true
+    rm -rf "$RANDI_DIR/lib/__pycache__" 2>/dev/null || true
 
     # Copiar interfaz web
     if [ -d "$src/web" ]; then
@@ -682,81 +660,6 @@ cmd_doctor() {
     fi
 }
 
-show_menu() {
-    while true; do
-        clear
-        echo ""
-        echo -e "${BLU}${B}  ┌─────────────────────────────────────────┐${R}"
-        echo -e "${BLU}${B}  │${R}  ${CYN}RANDI${R} — ${GRN}Local AI Terminal${R}           ${BLU}${B}│${R}"
-        echo -e "${BLU}${B}  │${R}  Asistente IA multiplataforma          ${BLU}${B}│${R}"
-        echo -e "${BLU}${B}  │${R}  por ${D}Sebastian Laguna${R}                  ${BLU}${B}│${R}"
-        echo -e "${BLU}${B}  └─────────────────────────────────────────┘${R}"
-        echo ""
-
-        if server_running; then
-            local loaded
-            loaded=$(curl -sf "$OLLAMA_HOST/api/ps" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo "0")
-            echo -e "  ${GRN}●${R} Servidor activo    ${D}|${R}  ${GRN}Modelos cargados:${R} $loaded"
-        else
-            echo -e "  ${RED}●${R} Servidor detenido"
-        fi
-        echo ""
-        echo -e "  ${B}1${R})  ${GRN}Chat TUI${R}       ${D}Interfaz interactiva${R}"
-        echo -e "  ${B}2${R})  ${CYN}Run modelo${R}     ${D}Ejecuta modelo directo${R}"
-        echo -e "  ${B}3${R})  ${YLW}Descargar${R}      ${D}Descargar modelo(s)${R}"
-        echo -e "  ${B}4${R})  ${D}Listar${R}          ${D}Modelos instalados${R}"
-        echo -e "  ${B}5${R})  ${D}Estado${R}          ${D}Servidor y recursos${R}"
-        echo -e "  ${B}6${R})  ${CYN}Servidor${R}       ${D}Iniciar/Detener${R}"
-        echo -e "  ${B}7${R})  ${CYN}Web UI${R}         ${D}Interfaz web local${R}"
-        echo -e "  ${B}8${R})  ${D}Catalogo${R}        ${D}Modelos recomendados${R}"
-        echo -e "  ${B}9${R})  ${D}Configuracion${R}   ${D}Ver configuracion${R}"
-        echo -e "  ${B}10${R}) ${YLW}Actualizar${R}     ${D}Update desde GitHub o local${R}"
-        echo -e "  ${B}11${R}) ${RED}Desinstalar${R}   ${D}Eliminar RANDI por completo${R}"
-        echo -e "  ${B}12${R}) ${CYN}Imagen${R}        ${D}Generar imagen (A1111, GPU)${R}"
-        echo -e "  ${B}13${R}) ${D}Doctor${R}         ${D}Diagnostico del sistema${R}"
-        echo -e "  ${B}14${R}) ${CYN}Setup${R}         ${D}Onboarding: mejores modelos para tu equipo${R}"
-        echo -e "  ${B}15${R}) ${CYN}Instalar${R}      ${D}Descargar y configurar un modelo${R}"
-        echo -e "  ${B}0${R})  ${RED}Salir${R}"
-        echo ""
-        echo -ne "  ${BLU}${B}❯${R} "
-        read -r opt
-        case "$opt" in
-            1) cmd_chat ;;
-            2) cmd_run ;;
-            3) cmd_pull ;;
-            4) cmd_list ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            5) cmd_status ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            6)
-                if server_running; then
-                    cmd_stop
-                else
-                    cmd_serve
-                fi
-                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            7) cmd_web ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            8) cmd_models ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            9) cmd_config ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            10) cmd_update ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            11) cmd_uninstall ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            12)
-                echo ""
-                echo -n "  Descripcion de la imagen: "
-                read -r img_prompt
-                cmd_img "$img_prompt"
-                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            13) cmd_doctor ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            14) cmd_setup ; echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            15)
-                echo ""
-                echo -n "  Modelo a instalar: "
-                read -r install_model_name
-                cmd_install "$install_model_name"
-                echo ""; dim "Presiona Enter para continuar..."; read -r ;;
-            0) echo -e "${GRN}Hasta luego!${R}"; exit 0 ;;
-            *) err "Opcion invalida"; sleep 1 ;;
-        esac
-    done
-}
 
 find_py_lib() {
     local name="$1"
@@ -947,7 +850,7 @@ case "${1:-}" in
         if [ -n "${1:-}" ]; then
             cmd_run "$*"
         else
-            show_menu
+            cmd_tui
         fi
         ;;
 esac

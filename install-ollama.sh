@@ -211,10 +211,10 @@ install_deps() {
             if [ ! -x /usr/bin/env ]; then
                 run_step -s "Instalando termux-exec (shebangs)" 120 pkg install -y termux-exec || true
             fi
-            if python3 -c "import requests, rich" >/dev/null 2>&1; then
-                ok "Librerias Python (requests, rich) ya instaladas"
+            if python3 -c "import requests, rich, textual, httpx" >/dev/null 2>&1; then
+                ok "Librerias Python (requests, rich, textual, httpx) ya instaladas"
             else
-                run_step -s "Instalando librerias Python (requests, rich)" 300 pip install requests rich -q || true
+                run_step -s "Instalando librerias Python" 300 pip install requests rich textual httpx -q || true
             fi
             ;;
         macos)
@@ -387,26 +387,11 @@ install_scripts() {
         err "Falta bin/randi en el repositorio"; return 2>/dev/null || exit 1
     fi
 
-    if [ -f "$REPO_DIR/bin/lib/ollama_chat.py" ]; then
-        cp "$REPO_DIR/bin/lib/ollama_chat.py" "$RANDI_DIR/lib/ollama_chat.py"
-        chmod +x "$RANDI_DIR/lib/ollama_chat.py"
+    # Libreria Python completa (motor + paquete randi_tui)
+    if [ -d "$REPO_DIR/bin/lib" ]; then
+        cp -r "$REPO_DIR/bin/lib/." "$RANDI_DIR/lib/" || true
+        rm -rf "$RANDI_DIR/lib/__pycache__" 2>/dev/null || true
     fi
-
-    if [ -f "$REPO_DIR/bin/lib/catalog.py" ]; then
-        cp "$REPO_DIR/bin/lib/catalog.py" "$RANDI_DIR/lib/catalog.py"
-    fi
-
-    if [ -f "$REPO_DIR/bin/lib/pull.py" ]; then
-        cp "$REPO_DIR/bin/lib/pull.py" "$RANDI_DIR/lib/pull.py"
-        chmod +x "$RANDI_DIR/lib/pull.py"
-    fi
-
-    # Resto de la libreria (motor compat, hardware, install/setup, recommend)
-    for lib in compat.py hardware.py install.py recommend.py; do
-        if [ -f "$REPO_DIR/bin/lib/$lib" ]; then
-            cp "$REPO_DIR/bin/lib/$lib" "$RANDI_DIR/lib/$lib" || true
-        fi
-    done
 
     if [ -d "$REPO_DIR/web" ]; then
         cp -r "$REPO_DIR/web/." "$RANDI_DIR/web/"

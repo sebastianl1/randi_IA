@@ -1,6 +1,6 @@
 {
   "name": "randi-ai",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "RANDI — IA local multiplataforma (Termux·Android, Linux, macOS y Windows nativo). Detecta tu hardware, recomienda y ejecuta modelos de texto, imagen y video, e instalación npm o npx en Windows (sin WSL).",
   "license": "MIT",
   "type": "module",
@@ -26,6 +26,7 @@
     "bin/ollama-chat",
     "bin/s-ollama",
     "bin/lib/*.py",
+    "bin/lib/randi_tui/*.py",
     "web/server.py",
     "web/models.json",
     "web/dist",

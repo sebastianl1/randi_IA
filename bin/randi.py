@@ -33,7 +33,7 @@ except Exception:  # pragma: no cover
     HAVE_LIB = False
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-RANDI_VERSION = "2.0.5"
+RANDI_VERSION = "2.0.6"
 RANDI_REPO = "https://github.com/sebastianl1/randi_IA.git"
 
 B = "\033[1m"; D = "\033[2m"; GRN = "\033[0;32m"; YLW = "\033[1;33m"
@@ -131,23 +131,25 @@ def cmd_stop():
     return 0
 
 
-def cmd_chat(model: str = ""):
-    chat_lib = find_lib("ollama_chat.py")
-    if not chat_lib:
-        err("No se encuentra ollama_chat.py (reinstala RANDI)")
-        return 1
-    cfg = {}
+def _run_tui(args: list) -> int:
     try:
-        cfg = json.loads((Path.home() / ".config" / "randi" / "config.json").read_text(encoding="utf-8"))
-    except Exception:
-        pass
-    model = model or cfg.get("model", "")
-    if not server_running() and cmd_serve() != 0:
+        import randi_tui  # noqa: F401
+    except ImportError:
+        err("Falta la interfaz randi_tui. Ejecuta: randi ensure  (pip install textual httpx)")
         return 1
-    args = [python_exe(), str(chat_lib)]
-    if model:
-        args += ["-m", model]
-    return subprocess.call(args)
+    from randi_tui.app import RandiApp
+
+    model = ""
+    if args and args[0] in ("chat",):
+        args = args[1:]
+    if args and not args[0].startswith("-"):
+        model = args[0]
+    if "-m" in args:
+        i = args.index("-m")
+        if i + 1 < len(args):
+            model = args[i + 1]
+    RandiApp(initial_model=model).run()
+    return 0
 
 
 def cmd_run(model: str = ""):
@@ -447,12 +449,12 @@ Uso: randi <comando> [opciones]
 
 def main(argv: list) -> int:
     if not argv:
-        return usage()
+        return _run_tui([])
     cmd, rest = argv[0], argv[1:]
     table = {
         "serve": lambda: cmd_serve(),
         "stop": lambda: cmd_stop(),
-        "chat": lambda: cmd_chat(rest[0] if rest else ""),
+        "chat": lambda: _run_tui(rest),
         "run": lambda: cmd_run(rest[0] if rest else ""),
         "list": lambda: cmd_list(),
         "ps": lambda: cmd_ps(),

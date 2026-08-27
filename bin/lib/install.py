@@ -156,12 +156,24 @@ def requirements_for(model: dict) -> dict:
     }
 
 
+def _ensure_pip_libs():
+    py = shutil.which("python3") or shutil.which("python")
+    if not py:
+        return
+    if subprocess.run([py, "-c", "import requests, rich, textual, httpx"],
+                      capture_output=True).returncode == 0:
+        return
+    info("Instalando librerias Python (requests, rich, textual, httpx)...")
+    subprocess.call([py, "-m", "pip", "install", "--quiet", "requests", "rich", "textual", "httpx"])
+
+
 def ensure_native() -> int:
     """Instala/verifica las dependencias nativas (multiplataforma).
 
     Windows nativo: usa winget (Python y Ollama como servicio). No requiere
     bash ni Git for Windows. En el resto se indica el gestor de paquetes.
     """
+    _ensure_pip_libs()
     missing = []
     if shutil.which("python3") is None and shutil.which("python") is None:
         missing.append("python3")

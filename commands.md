@@ -7,7 +7,7 @@
 ## Comandos principales
 
 ```bash
-randi                    # Menu interactivo
+randi                    # Interfaz interactiva (Textual)
 randi chat               # Chat TUI
 randi chat -m <modelo>   # Chat con modelo especifico
 randi run <modelo>       # Ejecutar modelo directamente
@@ -31,7 +31,7 @@ randi img "prompt"       # Generar imagen (requiere A1111/GPU local)
 randi help               # Mostrar ayuda
 ```
 
-## Chat TUI - Comandos slash
+## Interfaz interactiva - Comandos slash (/)
 
 | Comando | Descripcion |
 |---------|-------------|

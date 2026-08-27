@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck
-          pip install ruff
+          pip install ruff requests rich textual httpx
 
       - name: Bash - sintaxis y shellcheck
         run: |
@@ -32,8 +32,8 @@ jobs:
 
       - name: Python - compilacion y lint
         run: |
-          python3 -m py_compile web/server.py bin/lib/*.py
-          ruff check web/server.py bin/lib/*.py
+          python3 -m py_compile web/server.py bin/lib/*.py bin/lib/randi_tui/*.py
+          ruff check web/server.py bin/lib/*.py bin/lib/randi_tui/*.py
 
       - name: JS/TS - build web y landing (Astro + Tailwind)
         run: |
@@ -79,5 +79,5 @@ jobs:
 
       - name: Ejecutar tests (pytest)
         run: |
-          pip install pytest
+          pip install pytest textual httpx requests rich
           python3 -m pytest tests/ -q

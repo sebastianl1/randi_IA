@@ -2,6 +2,33 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.6] - 2026-08-26
+
+### Added
+
+- **Nueva interfaz interactiva del CLI (TUI, Textual)** estilo opencode/Claude-Code y
+  look de DeepSeek Harness. `randi` (sin argumentos) y `randi chat [modelo]` abren la
+  UI; la ayuda y los subcomandos con argumentos (`randi help`, `randi --help`,
+  `install`, `setup`, `doctor`, ...) siguen en texto de terminal.
+  - Estructura: header/status (modelo · servidor ●/○ · sesión · eco/code/temp),
+    chat con **Markdown** y streaming por lotes, input `>` con autocompletar de
+    comandos `/`, **command palette** (`/` o Ctrl+K), **sidebar** (Tab) con tabs
+    Modelos (catálogo con grados S–F) / Sesiones / Hardware, y vistas navegables
+    (catálogo, tier list, comparador, perfil de hardware).
+  - Comandos `/`: los 16 existentes + `/install`, `/recommend`, `/hardware`,
+    `/catalog`, `/tier`, `/compare`, `/session`, `/theme`.
+  - Atajos: `/` o Ctrl+K paleta · Tab sidebar · Ctrl+C cancela/generando · Ctrl+D sale.
+  - Reutiliza el motor Python (catalog/compat/hardware/recommend/install) y el formato
+    de sesiones JSON de siempre.
+- **Nueva dependencia**: `textual` (+`httpx`). Instalada automáticamente por el
+  instalador y por `randi ensure` (pip). Empaquetada en npm como parte de `bin/lib/randi_tui`.
+
+### Changed
+
+- Se elimina el TUI viejo de Rich (`bin/lib/ollama_chat.py`) y el menú ASCII de bash;
+  `randi` abre la UI interactiva. `bin/ollama-chat` ahora lanza `randi_tui`.
+- `randi update`/instalador copian toda `bin/lib` (incluye `randi_tui`).
+
 ## [2.0.5] - 2026-08-26
 
 ### Added
