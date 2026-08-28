@@ -4,6 +4,7 @@ from __future__ import annotations
 from textual.widgets import Static
 
 from . import i18n
+from .theme import ACCENT, MUTED
 
 
 def _bar(pct: int, width: int = 14) -> str:
@@ -53,23 +54,23 @@ class ContextPanel(Static):
     def refresh_render(self) -> None:
         t = i18n.T.get(self._lang, i18n.T["es"])
         lines = []
-        lines.append(f"[bold #9457eb]{t['contact']}[/bold #9457eb]")
+        lines.append(f"[bold {ACCENT}]{t['contact']}[/bold {ACCENT}]")
         lines.append("")
-        lines.append(f"[bold #9c9c9c]{t['context_model']}[/bold #9c9c9c]")
+        lines.append(f"[bold {MUTED}]{t['context_model']}[/bold {MUTED}]")
         lines.append(f"  {self._model or '—'}  [b]{self._grade}[/b] {self._quant}")
         if self._ctx:
             lines.append(f"  ctx {self._ctx} · RAM {self._ram or '—'}")
         if self._session:
             lines.append(f"  [dim]{t['context_session']}: {self._session}[/dim]")
         lines.append("")
-        lines.append(f"[bold #9c9c9c]{t['context_context']}[/bold #9c9c9c]")
+        lines.append(f"[bold {MUTED}]{t['context_context']}[/bold {MUTED}]")
         pct = getattr(self, "_ctx_pct", 0) or 0
         lines.append(f"  {_bar(pct)} {self._tokens} tok")
         lines.append("")
-        lines.append(f"[bold #9c9c9c]{t['context_ram']}[/bold #9c9c9c]")
+        lines.append(f"[bold {MUTED}]{t['context_ram']}[/bold {MUTED}]")
         lines.append(f"  {_bar(pct)}")
         lines.append("")
-        lines.append(f"[bold #9c9c9c]{t['context_activity']}[/bold #9c9c9c]")
+        lines.append(f"[bold {MUTED}]{t['context_activity']}[/bold {MUTED}]")
         if not self._activity:
             lines.append("  [dim]—[/dim]")
         for kind, text in reversed(self._activity[-6:]):
@@ -82,7 +83,7 @@ class ContextPanel(Static):
         if kind == "err":
             return f"  [red]✗[/red] {text}"
         if kind == "run":
-            return f"  [#5b7cfa]···[/#5b7cfa] {text}"
+            return f"  [#e5484d]···[/#e5484d] {text}"
         return f"  {text}"
 
     def clean_activity(self) -> None:

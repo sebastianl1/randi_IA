@@ -16,7 +16,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.reactive import reactive
-from textual.widgets import Footer, Markdown, Static
+from textual.widgets import Footer, Label, ListItem, ListView, Markdown, Static
 
 from . import chat as rchat
 from . import session as rsession
@@ -24,34 +24,11 @@ from .composer import Composer
 from .context_panel import ContextPanel
 from .i18n import lang_code, slash_desc, tr
 from .slash import COMMANDS, completions
+from .theme import ACCENT, ACCENT_DIM, BAD, BRAND, GOOD, WARN, grade_color, tui_css
 
-RANDI_VERSION = "2.0.9"
+RANDI_VERSION = "2.1.0"
 
-APP_CSS = """
-Screen { background: #0a0a0a; }
-
-/* Header */
-#status { dock: top; height: 2; padding: 0 2; color: #9c9c9c;
-          background: #101010; border-bottom: solid #262626; text-style: bold; }
-
-/* Cuerpo: chat + contexto */
-#body { height: 1fr; }
-#chat { width: 1fr; padding: 1 2; scrollbar-color: #3a3a3a; scrollbar-background: #101010; }
-#chat Markdown { border-left: solid #262626; padding-left: 1; color: #e6e6ea; }
-.msg-user { background: #16161d; border-left: solid #5b7cfa;
-            color: #ececf1; padding: 0 1; margin: 0 0 1 1; }
-.msg-meta { color: #56565f; text-style: bold; margin: 1 0 0 0; }
-.msg-panel { padding: 1 2; background: #101010; border: tall #262626; color: #d6d6da; }
-
-/* Panel contexto (derecha) */
-#context { width: 40; background: #0d0d10; border-left: solid #262626; padding: 1 1; height: 1fr; }
-
-/* Composer separado */
-#composer-box { dock: bottom; height: 7; border: round #262626; background: #101010;
-                margin: 0 2 1 2; padding: 1; }
-Composer { height: 5; background: #14141b; border: none; color: #fafafa; }
-#hint { dock: bottom; height: 1; color: #56565f; padding: 0 2; text-align: right; }
-"""
+APP_CSS = tui_css()
 
 
 class RandiApp(App):
@@ -88,6 +65,7 @@ class RandiApp(App):
         super().__init__()
         self.initial_model = initial_model
         self.palette_items: list[tuple[str, str]] = []
+        self._sugg: list[str] = []
 
     def tr(self, key: str, default: str = "") -> str:
         return tr(self.lang, key, default)
@@ -98,6 +76,7 @@ class RandiApp(App):
         with Horizontal(id="body"):
             yield VerticalScroll(id="chat")
             yield ContextPanel()
+        yield ListView(id="suggestions")
         with Vertical(id="composer-box"):
             yield Composer(id="input",
                            placeholder=self.tr("input_placeholder", "Escribe un mensaje..."))
@@ -105,6 +84,7 @@ class RandiApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.query_one("#suggestions", ListView).styles.display = "none"
         cfg = rsession.load_config()
         self.lang = lang_code(cfg.get("lang", "es"))
         self.model = self.initial_model or cfg.get("model", "")
@@ -189,7 +169,7 @@ class RandiApp(App):
 
     def refresh_status(self) -> None:
         seg = []
-        seg.append("[#5b7cfa]◆ RANDI[/#5b7cfa]")
+        seg.append(f"[{ACCENT}]{BRAND} RANDI[/{ACCENT}]")
         if self.model:
             seg.append(f"[b]{self.model}[/b]")
             try:
@@ -202,24 +182,23 @@ class RandiApp(App):
                           if (x.get("ollamaId") or x["id"]) == self.model), None)
                 if m:
                     ev = _compat.evaluate_model_best(m, hw)
-                    gcolor = {"S": "#22c55e", "A": "#4ade80", "B": "#a3e635", "C": "#f59e0b",
-                              "D": "#f97316", "F": "#ef4444"}.get(ev.grade, "#56565f")
-                    seg.append(f"[{gcolor}]{ev.grade}[/{gcolor}] [dim]q{ev.quant}[/dim]")
+                    seg.append(f"[{grade_color(ev.grade)}]{ev.grade}[/{grade_color(ev.grade)}] "
+                               f"[dim]q{ev.quant}[/dim]")
                     self.context().set_model(self.model, ev.grade,
                                              f"q{ev.quant}", m.get("ctx", ""),
                                              f"~{m.get('ram', '')}GB")
             except Exception:
                 self.context().set_model(self.model, "", "", "", "")
-        seg.append(f"{'[#22c55e]●[/#22c55e]' if self.server else '[#ef4444]○[/#ef4444]'}")
+        seg.append(f"{f'[{GOOD}]●[/{GOOD}]' if self.server else f'[{BAD}]○[/{BAD}]'}")
         if self.tokens:
             seg.append(f"[dim]t{self.tokens}[/dim]")
         sess = rsession.load_config().get("last_session", "")
         if sess:
-            seg.append(f"[#9457eb]↺ {sess}[/#9457eb]")
+            seg.append(f"[{ACCENT_DIM}]↺ {sess}[/{ACCENT_DIM}]")
         if self.eco:
-            seg.append("[#f59e0b]eco[/#f59e0b]")
+            seg.append(f"[{WARN}]eco[/{WARN}]")
         if self.code_mode:
-            seg.append("[#f59e0b]code[/#f59e0b]")
+            seg.append(f"[{WARN}]code[/{WARN}]")
         seg.append(f"[dim]{self.tr('lang', 'ES')}[/dim]")
         self.status().update("  " + "  ·  ".join(seg))
 
@@ -242,10 +221,63 @@ class RandiApp(App):
         except Exception:
             return
         if val.startswith("/"):
-            comps = completions(val.split(None, 1)[0])
-            self.hint().update("  " + "  ·  ".join(comps[:8]) if comps else "")
+            if val.endswith(" "):
+                self.hide_suggestions()
+                return
+            self.set_suggestions(completions(val.split(None, 1)[0]))
         else:
-            self.hint().update(self.tr("hint"))
+            self.hide_suggestions()
+
+    # ── Sugerencias de comandos / ──────────────────────────────────────
+    def set_suggestions(self, items: list[str]) -> None:
+        lv = self.query_one("#suggestions", ListView)
+        self._sugg = items
+        lv.clear()
+        if not items:
+            lv.styles.display = "none"
+            return
+        for i, it in enumerate(items[:8]):
+            lv.append(ListItem(Label(f"  {it}"), id=f"s-{i}"))
+        lv.styles.display = "block"
+
+    def hide_suggestions(self) -> None:
+        self._sugg = []
+        try:
+            lv = self.query_one("#suggestions", ListView)
+            lv.clear()
+            lv.styles.display = "none"
+        except Exception:
+            pass
+
+    def suggestions_visible(self) -> bool:
+        return bool(self._sugg)
+
+    def move_suggestion(self, delta: int) -> bool:
+        lv = self.query_one("#suggestions", ListView)
+        kids = list(lv.children)
+        if not kids:
+            return False
+        cur = lv.index if lv.index is not None else -1
+        lv.index = max(0, min(len(kids) - 1, cur + delta))
+        return True
+
+    def maybe_complete(self) -> bool:
+        lv = self.query_one("#suggestions", ListView)
+        kids = list(lv.children)
+        if not kids or not self._sugg:
+            return False
+        target = lv.highlighted_child if lv.highlighted_child in kids else kids[0]
+        if not target.id or not target.id.startswith("s-"):
+            return False
+        try:
+            idx = int(target.id.split("-", 1)[1])
+            text = self._sugg[idx]
+        except (ValueError, IndexError):
+            return False
+        self.hide_suggestions()
+        self.input().load_text(text + " ") if hasattr(self.input(), "load_text") else setattr(self.input(), "text", text)
+        self.input().focus()
+        return True
 
     def run_command(self, text: str) -> None:
         parts = text.split(None, 1)

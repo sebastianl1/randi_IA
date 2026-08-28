@@ -30,6 +30,66 @@ def test_session_roundtrip(tmp_path, monkeypatch):
     assert any(n == "prueba" for n, _ in items)
 
 
+def _app_with(tmp_path, monkeypatch):
+    from randi_tui import session as ts
+    monkeypatch.setattr(ts, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(ts, "SESSIONS_DIR", tmp_path)
+
+
+def test_models_picker_two_step_no_crash(tmp_path, monkeypatch):
+    from randi_tui.app import RandiApp
+
+    _app_with(tmp_path, monkeypatch)
+
+    async def scenario():
+        app = RandiApp()
+        async with app.run_test(size=(110, 30)) as pilot:
+            await pilot.pause(0.4)
+            while len(app.screen_stack) > 1:
+                await pilot.press("escape")
+                await pilot.pause(0.1)
+            app.open_models_picker()
+            await pilot.pause(0.5)
+            await pilot.press("down")
+            await pilot.pause(0.2)
+            await pilot.press("enter")   # no instalado -> aviso, sin crash
+            await pilot.pause(0.3)
+            assert len(app.screen_stack) >= 2
+            await pilot.press("escape")
+            await pilot.pause(0.2)
+        return app
+
+    app = asyncio.run(scenario())
+    assert isinstance(app, RandiApp)
+
+
+def test_slash_suggestions_complete(tmp_path, monkeypatch):
+    from randi_tui.app import RandiApp
+    from randi_tui.slash import completions
+
+    _app_with(tmp_path, monkeypatch)
+
+    async def scenario():
+        app = RandiApp()
+        async with app.run_test(size=(110, 30)) as pilot:
+            await pilot.pause(0.4)
+            while len(app.screen_stack) > 1:
+                await pilot.press("escape")
+                await pilot.pause(0.1)
+            app.set_suggestions(completions("/mod"))
+            await pilot.pause(0.2)
+            assert app.suggestions_visible()
+            assert app.maybe_complete()
+            await pilot.pause(0.2)
+            assert app.input().text.startswith("/model")
+            assert not app.suggestions_visible()
+            result = app.input().text
+        return result
+
+    result = asyncio.run(scenario())
+    assert result.startswith("/model")
+
+
 def test_tui_mounts_and_commands(tmp_path, monkeypatch):
     from randi_tui.app import RandiApp
 

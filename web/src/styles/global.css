@@ -12,8 +12,8 @@
   --color-line: #2a2a35;
   --color-ink: #ececf1;
   --color-muted: #9aa0ac;
-  --color-accent: #6c8cff;
-  --color-accent-2: #a78bfa;
+  --color-accent: #e5484d;
+  --color-accent-2: #c25450;
   --color-good: #22c55e;
   --color-warn: #f59e0b;
   --color-bad: #ef4444;
@@ -33,7 +33,7 @@ html.light {
   --color-line: #e2e2ea;
   --color-ink: #16161d;
   --color-muted: #67676f;
-  --color-accent: #4f63e0;
+  --color-accent: #d63b45;
   --color-accent-2: #8b5cf6;
   --color-good: #16a34a;
   --color-warn: #d97706;

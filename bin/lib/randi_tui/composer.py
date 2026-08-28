@@ -16,10 +16,18 @@ class Composer(TextArea):
     ]
 
     async def _on_key(self, event):
-        k = event.key or ""
-        modifiers = k.split("+")
-        if "enter" in modifiers and not any(m in modifiers for m in ("ctrl", "alt")):
+        keys = (event.key or "").split("+")
+        if "enter" in keys and not any(m in keys for m in ("ctrl", "alt")):
+            if self.app.suggestions_visible() and self.app.maybe_complete():
+                event.stop()
+                event.prevent_default()
+                return
             self.action_send()
+            event.stop()
+            event.prevent_default()
+            return
+        if len(keys) == 1 and keys[0] in ("up", "down") and self.app.suggestions_visible():
+            self.app.move_suggestion(-1 if keys[0] == "up" else 1)
             event.stop()
             event.prevent_default()
             return

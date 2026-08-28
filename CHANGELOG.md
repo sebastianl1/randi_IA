@@ -2,6 +2,19 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.0] - 2026-08-28
+
+### Added
+
+- **Identidad visual RANDI**: acento **rojo** (#e5484d) y marca griega **Ρ (Rho)** en web y CLI.
+- **TUI reestructurada (CLI)**:
+  - Paleta unificada por tokens (theme.py): fondos/lineas/acento, grados S–F solo en contexto y picker.
+  - **Composer full-width** de borde a borde (igual hasta la linea separadora del panel contexto), multilínea, siempre visible.
+  - **Sugerencias `/` restauradas**: al escribir `/` se listan los comandos; **flechas mueven y Enter completa** (no envía).
+  - **Fix `/models`**: instalación en **dos pasos** (selección → aviso → pulsa `i` para instalar), sin crashes ni cierre del CLI. Tests de regresión con pilot.
+- **Landing (`site/`) rediseñada** (base DeepSeek Harness): marca Ρ + acento rojo, **quick-start** npm/npx, sección **Todo queda trazado** (contexto/actividad/tokens), modos por hardware. ES/EN.
+- **`randi web` como workspace**: **rail izquierdo de sesiones**, **chat central** con botón copiar, **panel derecho Contexto/Actividad** (modelo·grado·quant·ctx·tokens con barra, actividad, atajos), barra superior con backend/modelo/eco/code. Tokens rojo en la app.
+
 ## [2.0.9] - 2026-08-28
 
 ### Added

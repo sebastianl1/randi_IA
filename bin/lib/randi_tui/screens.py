@@ -27,7 +27,7 @@ class _Back(Screen):
     ListItem { padding: 0 1; }
     ListItem:focus { background: #1b1b22; }
     Input { border: round #262626; background: #14141b; color: #fafafa; height: 3; padding: 0 1; }
-    Input:focus { border: round #5b7cfa; }
+    Input:focus { border: round #e5484d; }
     Button { margin: 1 2 0 2; }
     """
 
@@ -91,10 +91,13 @@ class SetupScreen(_Back):
 class ModelPickerScreen(_Back):
     """Lista de modelos seleccionable (flechas + Enter), con filtro."""
 
+    BINDINGS = [("escape", "close", "Volver"), ("i", "install_pending", "Instalar")]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._all: list = []
         self._rows: list = []
+        self._pending: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Static("", id="h")
@@ -129,9 +132,9 @@ class ModelPickerScreen(_Back):
             lv.append(ListItem(Label(f"error: {e}")))
             return
         self._rows = self._all
-        self._render()
+        self._render_rows()
 
-    def _render(self) -> None:
+    def _render_rows(self) -> None:
         try:
             lv = self.query_one("#mp-list", ListView)
         except Exception:
@@ -149,7 +152,7 @@ class ModelPickerScreen(_Back):
             self._rows = self._all
         else:
             self._rows = [r for r in self._all if q in r[0].lower() or q in r[3].lower()]
-        self._render()
+        self._render_rows()
 
     async def on_list_view_selected(self, event: ListView.Selected) -> None:
         item = event.item
@@ -157,14 +160,23 @@ class ModelPickerScreen(_Back):
             return
         try:
             i = int(item.id.split("-", 1)[1])
-            mid, _size, _quant, _grade, inst = self._rows[i]
+            mid, size, quant, grade, inst = self._rows[i]
         except (ValueError, IndexError):
             return
-        self.dismiss()
-        if not inst:
-            self.app.install_model_cmd(mid)
-            self.app.notice(f"{self.app.tr('installing')} {mid}...")
-        self.app.set_model(mid)
+        if inst:
+            self.dismiss()
+            self.app.set_model(mid)
+            return
+        # dos pasos: pedir confirmacion de instalacion (evita pulls accidentales/crash)
+        self._pending = mid
+        self.notify(f"{mid} [{grade}] {size} · {quant} — {self.app.tr('no_installed_hint')}")
+
+    def action_install_pending(self) -> None:
+        if self._pending:
+            name = self._pending
+            self._pending = None
+            self.dismiss()
+            self.app.install_model_cmd(name)
 
 
 class SessionsScreen(_Back):

@@ -33,7 +33,7 @@ except Exception:  # pragma: no cover
     HAVE_LIB = False
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-RANDI_VERSION = "2.0.9"
+RANDI_VERSION = "2.1.0"
 RANDI_REPO = "https://github.com/sebastianl1/randi_IA.git"
 
 B = "\033[1m"; D = "\033[2m"; GRN = "\033[0;32m"; YLW = "\033[1;33m"

@@ -12,7 +12,9 @@ export interface OSGuide {
 
 export interface Landing {
   nav: { models: string; install: string; github: string };
-  hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string[] };
+  hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
+  quick: string;
+  traza: { t: string; d: string; items: string[] };
   stats: Array<{ v: string; l: string }>;
   what: { title: string; sub: string; cards: Array<{ t: string; d: string; tag: string }> };
   how: { title: string; sub: string; steps: Array<{ t: string; d: string }> };
@@ -148,13 +150,15 @@ export const content: Record<'es' | 'en', Landing> = {
   es: {
     nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub' },
     hero: {
-      badge: 'IA local multiplataforma · Termux, Linux, macOS y Windows nativo',
+      badge: 'Ρ RANDI · IA local multiplataforma · Termux · Linux · macOS · Windows nativo',
       title: ['IA local para tu', 'equipo real'],
       sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. En Windows se instala nativo (npm), sin WSL.',
       cta1: 'Instalar ahora',
       cta2: 'Ver la instalación',
       stats: '85 modelos · 5 plataformas · 100% privado',
     },
+    quick: 'npm install -g randi-ai   ·   npx randi-ai setup',
+    traza: { t: 'Todo queda trazado', d: 'Cada sesión registra contexto, actividad y tokens: resume, busca o reabre lo que ya hiciste.', items: ['Contexto en tiempo real y barra de RAM', 'Actividad y fases (server, descargas, sesiones)', 'Tokens por respuesta', 'Sesiones guardadas en tu dispositivo'] },
     stats: [
       { v: '85+', l: 'modelos curados' },
       { v: '5', l: 'plataformas' },
@@ -211,13 +215,15 @@ export const content: Record<'es' | 'en', Landing> = {
   en: {
     nav: { models: 'Models', install: 'Installation', github: 'GitHub' },
     hero: {
-      badge: '100% local cross-platform AI · Termux, Linux, macOS and native Windows',
+      badge: 'Ρ RANDI · 100% local cross-platform AI · Termux, Linux, macOS, native Windows',
       title: ['Local AI for your', 'actual device'],
       sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. On Windows it installs natively (npm), no WSL.',
       cta1: 'Install now',
       cta2: 'See installation',
       stats: '85 models · 5 platforms · 100% private',
     },
+    quick: 'npm install -g randi-ai   ·   npx randi-ai setup',
+    traza: { t: 'Everything is traceable', d: 'Every session logs context, activity and tokens: resume, search or reopen what you already did.', items: ['Real-time context and RAM bar', 'Activity and phases (server, pulls, sessions)', 'Tokens per answer', 'Sessions saved on your device'] },
     stats: [
       { v: '85+', l: 'curated models' },
       { v: '5', l: 'platforms' },

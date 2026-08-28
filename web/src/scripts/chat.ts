@@ -37,6 +37,42 @@ export function mount() {
     conn.classList.toggle('sd-can-run', ok);
     conn.title = text || (ok ? 'Ollama conectado' : 'Ollama no disponible');
     conn.textContent = ok ? '●' : '○';
+    const t = document.getElementById('connTxt');
+    if (t) t.textContent = ok ? 'server activo' : 'server apagado';
+    act(ok ? 'Servidor Ollama activo' : 'Servidor Ollama no disponible');
+  }
+
+  function act(text: string) {
+    const ul = document.getElementById('ctxActs');
+    if (!ul) return;
+    const li = document.createElement('li');
+    li.textContent = '· ' + text;
+    ul.prepend(li);
+    while (ul.children.length > 6) ul.lastElementChild?.remove();
+  }
+
+  function setTokensCtx(n: number) {
+    const tok = document.getElementById('ctxTok');
+    const fill = document.getElementById('ctxFill');
+    if (tok) tok.textContent = `${n} tokens`;
+    if (fill) { const pct = Math.min(100, Math.round((n / 4000) * 100)); fill.style.width = pct + '%'; }
+  }
+
+  function setModelCtx(name: string) {
+    const m = document.getElementById('ctxModel');
+    const meta = document.getElementById('ctxMeta');
+    if (m) m.textContent = name || '—';
+    if (meta) {
+      import('../lib/catalog.js').then(async (cat) => {
+        const mod = cat.findModel(name);
+        if (!mod) { meta.textContent = '—'; return; }
+        const { evaluateModel } = await import('../lib/compat.js');
+        const { fastHardware } = await import('../lib/api.js');
+        const hw = await fastHardware();
+        const ev = evaluateModel(mod, hw);
+        meta.textContent = `${ev.grade} · ${ev.quant} · ctx ${mod.ctx || '—'} · ${mod.size || ''}`;
+      }).catch(() => {});
+    }
   }
 
   async function setupOllama() {
@@ -45,6 +81,7 @@ export function mount() {
       modelSel.innerHTML = '';
       tags.models.forEach((m) => modelSel.appendChild(new Option(m.name, m.name)));
       model = modelSel.options[0]?.value || '';
+      setModelCtx(model);
       connDot(true, `Ollama · ${tags.models.length} modelos`);
       stat.textContent = 'Conectado a Ollama.';
     } catch {
@@ -169,6 +206,7 @@ export function mount() {
         if (!acc) throw new Error('Sin respuesta del modelo');
       } else {
         const wgModel = wgSel.value || wgSel.options[0]?.value;
+        setModelCtx('WebGPU · ' + wgModel);
         await wg.generateStream(wgModel, history as any, {
           maxTokens: eco ? 256 : 512,
           temperature: temp,
@@ -178,6 +216,7 @@ export function mount() {
       }
       messages.push({ role: 'assistant', content: acc });
       stream = true;
+      setTokensCtx(acc.split(/\s+/).filter(Boolean).length);
       stat.textContent = `${Math.round(acc.split(/\s+/).filter(Boolean).length / (eco ? 256 : 512) * 100)} tok aprox · ${messages.length} mensajes`;
     } catch (e: any) {
       aiBubble.textContent = 'Error: ' + e.message;
@@ -266,24 +305,39 @@ export function mount() {
   });
   stopBtn.addEventListener('click', () => abort?.abort());
   backendSel.addEventListener('change', applyBackend);
-  modelSel.addEventListener('change', () => { model = modelSel.value; });
+  modelSel.addEventListener('change', () => { model = modelSel.value; setModelCtx(model); });
 
-  // sesiones
-  const sessions: string[] = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
-  const sp = document.getElementById('sessionPanel')!;
-  document.getElementById('sessionsBtn')!.addEventListener('click', () => {
-    sp.classList.toggle('hidden');
-    sp.innerHTML = '';
+  // sesiones (rail izquierdo)
+  function renderRail() {
+    const list = document.getElementById('railList');
+    if (!list) return;
+    list.innerHTML = '';
+    const sessions: string[] = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
+    if (!sessions.length) {
+      const p = document.createElement('p');
+      p.className = 'text-xs text-muted';
+      p.textContent = 'Sin sesiones guardadas';
+      list.appendChild(p);
+    }
     sessions.forEach((id) => {
-      sp.appendChild(u.el('button', { class: 'btn btn-ghost text-xs justify-start w-full', text: id, onclick: () => loadSession(id) }));
+      const b = document.createElement('button');
+      b.className = 'w-full text-left px-2 py-1.5 rounded-lg hover:bg-bg-soft text-xs truncate';
+      b.textContent = id;
+      b.onclick = () => loadSession(id);
+      list.appendChild(b);
     });
-  });
+    const n = document.getElementById('railNew');
+    if (n) n.onclick = () => { messages = []; msgs.innerHTML = ''; setTokens(0); renderRail(); };
+  }
 
   function saveSession(name: string): boolean {
     const key = `session:${name}`;
     localStorage.setItem(key, JSON.stringify(messages));
+    const sessions: string[] = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
     if (!sessions.includes(name)) { sessions.push(name); localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); }
+    act(`Sesión guardada: ${name}`);
     stat.textContent = `Sesión guardada: ${name}`;
+    renderRail();
     return true;
   }
   function loadSession(name: string) {
@@ -292,8 +346,10 @@ export function mount() {
     messages = JSON.parse(raw);
     msgs.innerHTML = '';
     messages.forEach((m) => addMsg(m.role, m.content));
+    act(`Sesión cargada: ${name}`);
   }
 
+  renderRail();
   backendSel.value = backend;
   applyBackend();
 }

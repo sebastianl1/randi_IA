@@ -4,7 +4,7 @@ T = {
     "es": {
         "lang": "ES",
         "hi": "es",
-        "welcome": "\n  Bienvenido a RANDI — IA local multiplataforma\n  Escribe un mensaje, usa / comando o Ctrl+K para la paleta.\n",
+        "welcome": "\n  Ρ Bienvenido/a a RANDI — IA local multiplataforma\n  Escribe un mensaje, usa / comando o Ctrl+K para la paleta.\n",
         "input_placeholder": "Escribe un mensaje, / para comandos (Ctrl+K: paleta)",
         "hint": "Enter envía · Ctrl+J salto · Ctrl+K paleta · Ctrl+Y copiar · Ctrl+N nuevo · Ctrl+D salir",
         "contact": "CONTEXTO / HISTORIAL",
@@ -15,6 +15,7 @@ T = {
         "context_ram": "RAM",
         "context_shortcuts": "Atajos",
         "no_models": "Sin modelos instalados (usa /install <modelo>)",
+        "no_installed_hint": "no instalado · pulsa [i] para instalar",
         "choose_model_prompt": "Selecciona un modelo: ↑↓ mover · Enter usar/instalar · / filtrar",
         "installed": "instalado",
         "not_installed": "no instalado",
@@ -63,7 +64,7 @@ T = {
     "en": {
         "lang": "EN",
         "hi": "en",
-        "welcome": "\n  Welcome to RANDI — cross-platform local AI\n  Type a message, use / command or Ctrl+K for the palette.\n",
+        "welcome": "\n  Ρ Welcome to RANDI — cross-platform local AI\n  Type a message, use / command or Ctrl+K for the palette.\n",
         "input_placeholder": "Type a message, / for commands (Ctrl+K: palette)",
         "hint": "Enter send · Ctrl+J newline · Ctrl+K palette · Ctrl+Y copy · Ctrl+N new · Ctrl+D quit",
         "contact": "CONTEXT / ACTIVITY",
@@ -74,6 +75,7 @@ T = {
         "context_ram": "RAM",
         "context_shortcuts": "Shortcuts",
         "no_models": "No installed models (use /install <model>)",
+        "no_installed_hint": "not installed · press [i] to install",
         "choose_model_prompt": "Select a model: ↑↓ move · Enter use/install · / filter",
         "installed": "installed",
         "not_installed": "not installed",

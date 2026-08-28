@@ -12,7 +12,7 @@ class PaletteScreen(Screen):
     BINDINGS = [("escape", "close", "Cerrar")]
     CSS = """
     #pinput { border: round #262626; background: #101010; color: #fafafa; height: 3; padding: 0 1; }
-    #pinput:focus { border: round #5b7cfa; }
+    #pinput:focus { border: round #e5484d; }
     #plist { background: #0a0a0a; }
     #plist ListItem { padding: 0 1; }
     #plist ListItem:focus { background: #1b1b22; color: #fafafa; }
