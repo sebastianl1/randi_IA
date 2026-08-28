@@ -1,0 +1,9 @@
+{
+  "endpoint": "",
+  "models": [
+    { "id": "qwen2.5-7b", "label": "Qwen 2.5 7B", "provider": "workers-ai", "note": "Rápido y muy bueno en español" },
+    { "id": "llama-3.1-8b", "label": "Llama 3.1 8B", "provider": "workers-ai", "note": "Generalista y equilibrado" },
+    { "id": "deepseek-r1-14b", "label": "DeepSeek R1 · 14B", "provider": "workers-ai", "note": "Razonamiento paso a paso" },
+    { "id": "mistral-7b", "label": "Mistral 7B", "provider": "workers-ai", "note": "Directo y veloz" }
+  ]
+}

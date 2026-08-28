@@ -1,0 +1,11 @@
+name = "randi-chat"
+main = "src/index.ts"
+compatibility_date = "2024-11-06"
+
+[vars]
+FREE_DAILY_LIMIT = "40"
+
+# Workers AI (plan gratuito). El binding "AI" se crea desde el dashboard
+# (Workers AI -> Manage -> Bindings) o con el panel de la izquierda.
+[ai]
+binding = "AI"

@@ -1,0 +1,7 @@
+# ⚠️ Claves opcionales. Sin estas, RANDI Chat funciona igual con
+# Cloudflare Workers AI (gratis, sin API key de terceros).
+# Cópialo a `.dev.vars` para desarrollo (wrangler dev).
+
+# OPENROUTER_API_KEY=sk-or-v1-...
+# HF_API_KEY=hf_...
+# HF_BASE=https://api-inference.huggingface.co

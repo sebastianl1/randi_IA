@@ -1,0 +1,109 @@
+---
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const es = lang === 'es';
+const L = {
+  eyebrow: es ? 'chatea ahora' : 'chat now',
+  t: es ? 'Probá modelos de IA online, sin instalar nada' : 'Try AI models online — nothing to install',
+  d: es ? 'Modelos livianos y de libre uso que corren en la nube. Tu conversación se guarda solo en tu navegador, no en servidores.' :
+         'Light, free-to-use models running in the cloud. Your conversation is stored only in your browser, not on servers.',
+  select: es ? 'Elige tu modelo' : 'Pick a model',
+  send: es ? 'Enviar' : 'Send',
+  placeholder: es ? 'Escribí tu mensaje… (p. ej. «explicame qué es un LLM»)' : 'Type your message… (e.g. "explain what an LLM is")',
+  ctx: es ? 'Contexto local' : 'Local context',
+  ctxD: es ? 'Cada conversación se guarda en tu dispositivo y podés exportarla como JSON.' : 'Every conversation stays on your device and you can export it as JSON.',
+  freeD: es ? 'Límite diario gratuito, sin cuenta y sin pagar.' : 'Free daily limit, no account, no payment.',
+  privD: es ? 'Cero cookies y cero rastreo: no guardamos nada tuyo.' : 'Zero cookies, zero tracking: we store nothing about you.',
+  pro: es ? 'Pro — sin límites' : 'Pro — no limits',
+  proD: es ? 'Más mensajes y modelos más potentes. Próximamente.' : 'More messages and more powerful models. Coming soon.',
+  sponsor: es ? 'Patrocina RANDI' : 'Sponsor RANDI',
+  sponsorD: es ? 'Ayudá al desarrollo open source de RANDI.' : 'Support RANDI open source development.',
+  stop: es ? 'Detener' : 'Stop',
+  exportB: es ? 'Exportar' : 'Export',
+  clearB: es ? 'Borrar' : 'Clear',
+};
+---
+<section id="chatea" class="mx-auto max-w-6xl px-4 py-16 scroll-mt-20">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.eyebrow}</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{L.t}</h2>
+  <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{L.d}</p>
+
+  <div id="chat-online" class="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <!-- Columna: selector + CTAs -->
+    <div class="card p-6 flex flex-col gap-4">
+      <div>
+        <p class="font-semibold mb-2">{L.select}</p>
+        <select data-cd-model class="cd-select"></select>
+      </div>
+      <ul class="space-y-2.5 text-sm text-muted flex-1">
+        <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.ctxD}</li>
+        <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.freeD}</li>
+        <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.privD}</li>
+      </ul>
+      <div class="grid gap-2.5">
+        <a data-cd-pro href="#chatea" class="btn btn-primary justify-center">{L.pro}</a>
+        <a href="https://github.com/sponsors/sebastianl1" target="_blank" rel="noreferrer" class="btn btn-dark justify-center">{L.sponsor}</a>
+      </div>
+      <p class="text-xs text-muted leading-relaxed">{L.proD}</p>
+    </div>
+
+    <!-- Columna: chat -->
+    <div class="card p-5 flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
+        <div class="flex gap-2">
+          <button data-cd-export class="btn btn-dark text-xs !px-3 !py-1.5">{L.exportB}</button>
+          <button data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
+        </div>
+      </div>
+      <div data-cd-msgs class="cd-msgs"></div>
+      <textarea data-cd-input class="cd-input" rows="2" placeholder={L.placeholder}></textarea>
+      <div class="flex items-center justify-between gap-2">
+        <span class="mono text-[10px] text-muted" data-cd-status>…</span>
+        <div class="flex gap-2">
+          <button data-cd-stop class="btn btn-dark text-xs !px-3 !py-1.5" hidden>{L.stop}</button>
+          <button data-cd-send class="btn btn-primary text-xs !px-4 !py-1.5">{L.send} →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cd-select {
+    width: 100%;
+    appearance: none;
+    background: var(--color-bg-soft);
+    color: var(--color-ink);
+    border: 1px solid var(--color-line);
+    border-radius: .5rem;
+    padding: .625rem .75rem;
+    font: inherit; font-size: .875rem;
+  }
+  .cd-select:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+  .cd-check { color: var(--color-accent); font-weight: 800; }
+  .cd-msgs {
+    flex: 1; min-height: 16rem; max-height: 24rem; overflow-y: auto;
+    display: flex; flex-direction: column; gap: .625rem; padding-right: .25rem;
+  }
+  .cd-bubble {
+    max-width: 86%; padding: .5rem .75rem; border-radius: .75rem;
+    font-size: .875rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+  }
+  .cd-bubble.user { align-self: flex-end; background: var(--color-accent); color: #1a0506; }
+  .cd-bubble.assistant { align-self: flex-start; background: var(--color-bg-soft); border: 1px solid var(--color-line); }
+  .cd-bubble.typing { align-self: flex-start; color: var(--color-muted); border-style: dashed; opacity: .8; animation: cd-pulse 1s ease-in-out infinite; }
+  .cd-note { font-size: .8rem; color: var(--color-warn); line-height: 1.5; }
+  @keyframes cd-pulse { 50% { opacity: .45; } }
+  .cd-input {
+    width: 100%; resize: none; background: var(--color-bg-soft); color: var(--color-ink);
+    border: 1px solid var(--color-line); border-radius: .5rem; padding: .625rem .75rem;
+    font: inherit; font-size: .875rem; line-height: 1.4;
+  }
+  .cd-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+</style>
+
+<script>
+  import { mountChat } from '../lib/demo-chat.js';
+  void mountChat();
+</script>
