@@ -103,7 +103,10 @@ body { overflow-y: auto; }
 p, a, span, li, h1, h2, h3, h4, dt, dd { overflow-wrap: break-word; }
 code.block { overflow-x: auto; }
 
-/* ── Glifo griego (Rho estilizada) ───────────────────────────────────── */
+/* Fondo galaxia en toda la página (fixed, detrás de todo) */
+.bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; display: block; }
+
+/* Glifo griego (Rho estilizada) */
 .greek-glyph {
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: .55rem; line-height: 1;
@@ -114,7 +117,6 @@ code.block { overflow-x: auto; }
 
 /* ── Hero: fondo con galaxia + glifo ─────────────────────────────────── */
 #heroBg { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-#heroBg #particles { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #rhoBg {
   position: absolute; left: 50%; top: 50%; width: min(30vw, 20rem); height: min(30vw, 20rem);
   display: flex; align-items: center; justify-content: center;
@@ -129,12 +131,12 @@ code.block { overflow-x: auto; }
   pointer-events: none;
 }
 
-/* ── Panel de detección (translúcido, 2 columnas, mini partículas) ───── */
-#dPanel { position: relative; overflow: hidden; }
-#dPanel .mini-particles { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .4; pointer-events: none; }
-#dPanel .dt-row { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-line); padding: .4rem 0; font-size: .82rem; }
+/* ── Panel de detección (translúcido, 2 columnas, letra fina) ───────── */
+#dPanel { padding: 1.25rem 1.5rem; }
+#dPanel .dt-row { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-line); padding: .35rem 0; font-size: .72rem; }
 #dPanel .dt-row dt { color: var(--color-muted); }
-#dPanel .dt-row dd { font-family: var(--font-mono); font-weight: 600; }
+#dPanel .dt-row dd { font-family: var(--font-mono); font-weight: 600; font-size: .72rem; }
+#dPanel .eyebrow { font-size: 10px; }
 
 /* ── Nav translúcido + menú móvil ────────────────────────────────────── */
 #mobileMenu { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
