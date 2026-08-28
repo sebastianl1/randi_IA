@@ -94,3 +94,44 @@ kbd { border: 1px solid #333; border-bottom-width: 2px; border-radius: 6px; padd
   filter: drop-shadow(0 0 24px color-mix(in srgb, var(--color-accent) 45%, transparent));
   transition: transform .12s ease-out;
 }
+/* ── Sin scroll horizontal / responsive base ─────────────────────────── */
+html, body { overflow-x: clip; max-width: 100vw; }
+body { overflow-y: auto; }
+*, *::before, *::after { min-width: 0; }
+p, a, span, li, h1, h2, h3, h4, dt, dd { overflow-wrap: break-word; }
+code.block { overflow-x: auto; }
+
+/* ── Glifo griego (Rho estilizada) ───────────────────────────────────── */
+.greek-glyph {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: .55rem; line-height: 1;
+  font-family: "Noto Serif Greek", "EB Garamond", "Times New Roman", serif;
+  font-weight: 700; color: var(--color-accent);
+}
+.greek-glyph.nav { width: 1.75rem; height: 1.75rem; border: 1px solid var(--color-line); font-size: 1.05rem; }
+
+/* ── Hero: fondo con galaxia + glifo ─────────────────────────────────── */
+#heroBg { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+#heroBg #particles { position: absolute; inset: 0; width: 100%; height: 100%; }
+#rhoBg {
+  position: absolute; left: 6%; top: 28%;
+  font-family: "Noto Serif Greek", "EB Garamond", serif; font-weight: 800;
+  font-size: min(46vw, 34rem); line-height: 1; user-select: none;
+  color: transparent;
+  background: radial-gradient(closest-side, rgba(229,72,77,.18), transparent 78%);
+  -webkit-background-clip: text; background-clip: text;
+  opacity: .55; filter: drop-shadow(0 0 70px rgba(229,72,77,.30));
+  transform: translate(0, 0); transition: transform .1s ease-out, filter .1s ease-out;
+}
+
+/* ── Panel de detección (translúcido, 2 columnas, mini partículas) ───── */
+#dPanel { position: relative; overflow: hidden; }
+#dPanel .mini-particles { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .4; pointer-events: none; }
+#dPanel .dt-row { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-line); padding: .4rem 0; font-size: .82rem; }
+#dPanel .dt-row dt { color: var(--color-muted); }
+#dPanel .dt-row dd { font-family: var(--font-mono); font-weight: 600; }
+
+/* ── Nav translúcido + menú móvil ────────────────────────────────────── */
+#mobileMenu { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+#mobileMenu.open { max-height: 22rem; }
+#navGit { display: inline-flex; }

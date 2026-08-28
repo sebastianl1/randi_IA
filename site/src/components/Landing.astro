@@ -5,12 +5,14 @@ const { lang } = Astro.props;
 const t = content[lang];
 ---
 <!-- Hero -->
-<section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-10 text-center">
+<section class="hero-glow relative mx-auto max-w-6xl px-4 pt-16 pb-10 text-center">
+  <div id="heroBg" aria-hidden="true">
+    <canvas id="particles"></canvas>
+    <span id="rhoBg">Ρ</span>
+  </div>
   <span class="pill mx-auto" style="border-color:var(--color-accent);color:var(--color-accent)">{t.hero.badge}</span>
-  <h1 class="relative mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
-    <canvas id="particles" aria-hidden="true"></canvas>
-    {t.hero.title[0]}<br />
-    <span id="rho">Ρ</span> <span class="grad-text">{t.hero.title[1]}</span>
+  <h1 class="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+    {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
   </h1>
   <p class="mx-auto mt-6 max-w-2xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
   <div class="mt-8 mx-auto max-w-xl">
@@ -23,13 +25,14 @@ const t = content[lang];
   <p class="mt-6 text-xs text-muted mono">{t.hero.stats}</p>
 
   <!-- Detector de hardware en vivo (client-side) -->
-  <div id="dPanel" class="glass mx-auto mt-12 max-w-3xl p-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+  <div id="dPanel" class="glass mx-auto mt-12 max-w-4xl p-5">
+    <canvas id="dParticles" class="mini-particles" aria-hidden="true"></canvas>
+    <div class="relative flex flex-wrap items-center justify-between gap-3">
       <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● {lang === 'es' ? 'detección' : 'detection'}</span>
       <span class="mono text-xs text-muted" id="dMeta">navegador · 100% local</span>
       <button id="dBtn" class="btn btn-dark text-xs !px-3 !py-1">⌖ {lang === 'es' ? 'Detectar' : 'Detect'}</button>
     </div>
-    <div id="dOut" class="mt-4"></div>
+    <div id="dOut" class="relative mt-4 grid gap-6 md:grid-cols-2"></div>
   </div>
 </section>
 
@@ -179,14 +182,14 @@ const t = content[lang];
 
   // ── Detector de hardware (client-side) ───────────────────────────────
   const isEs = document.documentElement.lang.startsWith('es');
-  const D = {
+  const D: any = {
     title: isEs ? 'Sugerencias para tu equipo' : 'Suggestions for your device',
-    class: isEs ? 'Equipo' : 'Device class',
-    basic: isEs ? 'Básico / sin GPU' : 'Basic / no GPU',
-    igpu: isEs ? 'Gráficos integrados' : 'Integrated graphics',
-    gpu: isEs ? 'GPU dedicada' : 'Dedicated GPU',
-    pro: isEs ? 'GPU potente' : 'Powerful GPU',
-    mobile: isEs ? 'Móvil' : 'Mobile',
+    hw: isEs ? 'Tu hardware' : 'Your hardware',
+    mods: isEs ? 'Modelos sugeridos' : 'Suggested models',
+    class: isEs ? 'Clase de equipo' : 'Device class',
+    note: isEs ? 'Haz clic en un modelo para abrir su ficha con todo el detalle.' : 'Click a model to open its full card.',
+    ...(isEs ? { basic: 'Básico / sin GPU', igpu: 'Gráficos integrados', gpu: 'GPU dedicada', pro: 'GPU potente', mobile: 'Móvil' }
+            : { basic: 'Basic / no GPU', igpu: 'Integrated graphics', gpu: 'Dedicated GPU', pro: 'Powerful GPU', mobile: 'Mobile' }),
     vs: isEs ? 'detectado en' : 'detected in',
     more: isEs ? 'Se instala con npm en Windows nativo:  npm install -g randi-ai' : 'Native Windows install:  npm install -g randi-ai',
   };
@@ -247,22 +250,29 @@ const t = content[lang];
     chips.push([isEs ? 'Plataforma' : 'Platform', p]);
     const items = LITS[cls] || LITS.basic;
     out.innerHTML = `
-      <div class="flex flex-wrap gap-2">${chips.map(([k, v]) => `<div class="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs"><span class="k" style="font-family:var(--font-mono);font-size:10px;color:var(--color-muted);text-transform:uppercase">${k}</span> <span style="font-weight:600">${v}</span></div>`).join('')}</div>
-      <div class="hairline my-4"></div>
-      <p class="eyebrow mb-1">${D.title}</p>
-      <p class="mono text-xs text-muted mb-3">${D.class}: <span class="text-ink">${D[cls as keyof typeof D] || cls}</span></p>
-      <div class="space-y-2">
-        ${items.map(([id, quant, why], i) => `
-          <a href="${linkFor(id)}" target="_blank" rel="noreferrer" class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3 hover:border-accent/60 transition-colors">
-            <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b'][i] || '#56565f'}">${'SABD'[i] || '?'}</span>
-            <span class="flex flex-col min-w-0">
-              <span class="mono text-sm font-semibold">${id}</span>
-              <span class="mono text-xs text-muted">${why}</span>
-            </span>
-            <span class="ml-auto flex items-center gap-2 mono text-xs text-muted">${quant} <span class="text-accent">↗</span></span>
-          </a>`).join('')}
+      <div>
+        <p class="eyebrow mb-2">${D.hw}</p>
+        <dl class="mt-1">
+          ${chips.map(([k, v]) => `<div class="dt-row"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+        </dl>
+        <p class="mono text-xs text-muted mt-3">${D.class}: <span class="text-ink">${D[cls] || cls}</span></p>
+        <p class="text-xs text-muted mt-2">${D.note}</p>
       </div>
-      <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>`;
+      <div>
+        <p class="eyebrow mb-2">${D.mods}</p>
+        <div class="space-y-2">
+          ${items.map(([id, quant, why], i) => `
+            <a href="${linkFor(id)}" target="_blank" rel="noreferrer" class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-3 py-2.5 hover:border-accent/60 transition-colors">
+              <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b'][i] || '#56565f'}">${'SABD'[i] || '?'}</span>
+              <span class="flex flex-col min-w-0">
+                <span class="mono text-sm font-semibold">${id}</span>
+                <span class="mono text-xs text-muted">${why}</span>
+              </span>
+              <span class="ml-auto flex items-center gap-2 mono text-xs text-muted">${quant} <span class="text-accent">↗</span></span>
+            </a>`).join('')}
+        </div>
+        <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>
+      </div>`;
     btn.disabled = false;
     btn.textContent = isEs ? '↻ Detectar de nuevo' : '↻ Detect again';
   }
@@ -271,6 +281,8 @@ const t = content[lang];
 
   const pc = document.getElementById('particles');
   if (pc) initParticles(pc as HTMLCanvasElement);
-  const rho = document.getElementById('rho');
+  const dp = document.getElementById('dParticles');
+  if (dp) initParticles(dp as HTMLCanvasElement);
+  const rho = document.getElementById('rhoBg');
   if (rho) initRho(rho as HTMLElement);
 </script>
