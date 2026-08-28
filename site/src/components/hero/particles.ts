@@ -1,7 +1,43 @@
-// Fondo galaxia en toda la página (patrón del portfolio, con rojo RANDI).
-// Canvas fijo full-viewport detrás del contenido: estrellas + nebulosas.
+// Fondo de fondo: galaxias espirales + estrellas sueltas (rojo RANDI).
+// Canvas fijo full-viewport, detrás del contenido, con atracción suave al cursor.
 const RED = '229, 72, 77';
 const REDD = '122, 31, 35';
+
+interface Star { x: number; y: number; vy: number; sway: number; phase: number; size: number; op: number; color: string }
+interface ArmStar { dx: number; dy: number; size: number; op: number; color: string; phase: number }
+interface Galaxy { x: number; y: number; vx: number; vy: number; rot: number; rotSpeed: number; arms: ArmStar[][]; r: number }
+
+function makeGalaxy(cx: number, cy: number, r: number, armsCount = 2, per = 22): Galaxy {
+  const wind = 2.6;
+  const arms: ArmStar[][] = [];
+  for (let a = 0; a < armsCount; a++) {
+    const armBase = (a * Math.PI * 2) / armsCount;
+    const list: ArmStar[] = [];
+    for (let i = 0; i < per; i++) {
+      const t = 0.25 + i / per;
+      const radius = r * t;
+      const ang = armBase + t * wind + Math.sin(t * 9) * 0.22;
+      const jitter = r * 0.02;
+      list.push({
+        dx: Math.cos(ang) * radius + (Math.random() - 0.5) * jitter,
+        dy: Math.sin(ang) * radius + (Math.random() - 0.5) * jitter,
+        size: 0.7 + Math.random() * 2.0,
+        op: 0.28 + Math.random() * 0.45,
+        color: Math.random() > 0.5 ? RED : REDD,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+    arms.push(list);
+  }
+  return {
+    x: cx, y: cy, r,
+    vx: (Math.random() - 0.5) * 0.06,
+    vy: (Math.random() - 0.5) * 0.06,
+    rot: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 0.0036,
+    arms,
+  };
+}
 
 export function initGalaxy(canvas: HTMLCanvasElement): void {
   const ctx = canvas.getContext('2d');
@@ -11,30 +47,29 @@ export function initGalaxy(canvas: HTMLCanvasElement): void {
   let h = 0;
   let raf = 0;
   const time = { v: 0 };
-  let mx = -1e4; // fuera de pantalla
+  let mx = -1e4;
   let my = -1e4;
-  let stars: Array<{ x: number; y: number; vy: number; sway: number; phase: number; size: number; op: number; color: string }> = [];
-  let neb: Array<{ x: number; y: number; r: number; vx: number; vy: number; a: number; phase: number }> = [];
+  let stars: Star[] = [];
+  let galaxies: Galaxy[] = [];
+  const time0 = performance.now();
 
   function seed(): void {
-    const n = Math.min(72, Math.max(36, Math.floor(w / 24)));
+    const n = Math.min(150, Math.max(90, Math.floor(w / 12)));
     stars = Array.from({ length: n }, () => ({
       x: Math.random() * w, y: Math.random() * h,
-      vy: 0.12 + Math.random() * 0.2,
+      vy: 0.1 + Math.random() * 0.22,
       sway: (Math.random() - 0.5) * 0.4,
       phase: Math.random() * Math.PI * 2,
-      size: 0.8 + Math.random() * 1.6,
-      op: 0.22 + Math.random() * 0.5,
-      color: Math.random() > 0.55 ? RED : REDD,
+      size: 0.6 + Math.random() * 1.2,
+      op: 0.2 + Math.random() * 0.45,
+      color: Math.random() > 0.5 ? RED : REDD,
     }));
-    neb = Array.from({ length: 6 }, () => ({
-      x: Math.random() * w, y: Math.random() * h,
-      r: 60 + Math.random() * 90,
-      vx: (Math.random() - 0.5) * 0.12,
-      vy: (Math.random() - 0.5) * 0.12,
-      a: 0.04 + Math.random() * 0.05,
-      phase: Math.random() * Math.PI * 2,
-    }));
+    const R = Math.max(70, Math.min(w, h) * 0.2);
+    galaxies = [
+      makeGalaxy(w * 0.22, h * 0.65, R),
+      makeGalaxy(w * 0.82, h * 0.3, R * 0.8),
+      makeGalaxy(w * 0.58, h * 0.85, R * 0.7),
+    ];
   }
 
   function resize(): void {
@@ -49,32 +84,20 @@ export function initGalaxy(canvas: HTMLCanvasElement): void {
 
   const onMove = (e: PointerEvent) => { mx = e.clientX; my = e.clientY; };
   document.addEventListener('pointermove', onMove);
-
-  function nebula(x: number, y: number, r: number, color: string, a: number): void {
-    const g = ctx!.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(${color}, ${a})`);
-    g.addColorStop(1, `rgba(${color}, 0)`);
-    ctx!.fillStyle = g;
-    ctx!.fillRect(x - r, y - r, r * 2, r * 2);
-  }
+  void time0;
 
   function frame(): void {
     ctx!.clearRect(0, 0, w, h);
     if (!reduced) {
       time.v += 0.005;
-      for (const nb of neb) {
-        nb.x += nb.vx; nb.y += nb.vy;
-        if (nb.x < -nb.r) nb.x = w + nb.r;
-        if (nb.x > w + nb.r) nb.x = -nb.r;
-        if (nb.y < -nb.r) nb.y = h + nb.r;
-        if (nb.y > h + nb.r) nb.y = -nb.r;
+      for (const g of galaxies) {
+        g.x += g.vx; g.y += g.vy; g.rot += g.rotSpeed;
+        if (g.x < -g.r) g.x = w + g.r;
+        if (g.x > w + g.r) g.x = -g.r;
+        if (g.y < -g.r) g.y = h + g.r;
+        if (g.y > h + g.r) g.y = -g.r;
       }
-    }
-    for (const nb of neb) {
-      nebula(nb.x, nb.y, nb.r, RED, nb.a * (reduced ? 1 : 0.8 + 0.4 * Math.sin(time.v * 2 + nb.phase)));
-    }
-    for (const s of stars) {
-      if (!reduced) {
+      for (const s of stars) {
         s.y -= s.vy;
         s.x += Math.sin(time.v + s.phase) * s.sway;
         if (s.y < -8) { s.y = h + 8; s.x = Math.random() * w; }
@@ -85,6 +108,24 @@ export function initGalaxy(canvas: HTMLCanvasElement): void {
           s.y -= (dy / d) * f;
         }
       }
+    }
+    // Galaxias espirales (brazos de estrellas en varias formas/tamaños)
+    for (const g of galaxies) {
+      const cos = Math.cos(g.rot), sin = Math.sin(g.rot);
+      for (const arm of g.arms) {
+        for (const p of arm) {
+          const x = g.x + p.dx * cos - p.dy * sin;
+          const y = g.y + p.dx * sin + p.dy * cos;
+          ctx!.globalAlpha = p.op * (reduced ? 1 : 0.75 + 0.35 * Math.sin(time.v * 2 + p.phase));
+          ctx!.beginPath();
+          ctx!.arc(x, y, p.size, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgb(${p.color})`;
+          ctx!.fill();
+        }
+      }
+    }
+    // Estrellas sueltas
+    for (const s of stars) {
       ctx!.globalAlpha = s.op * (reduced ? 1 : 0.85 + 0.3 * Math.sin(time.v * 2 + s.phase));
       ctx!.beginPath();
       ctx!.arc(s.x, s.y, s.size, 0, Math.PI * 2);

@@ -23,8 +23,12 @@ body { background: var(--color-bg); color: var(--color-ink); font-family: var(--
 h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
 ::selection { background: color-mix(in srgb, var(--color-accent) 40%, transparent); }
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 6px; }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 8px; }
+/* Scrollbar fina y roja */
+  html { scrollbar-width: thin; scrollbar-color: rgba(229, 72, 77, .55) #101010; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #101010; }
+  ::-webkit-scrollbar-thumb { background: rgba(229, 72, 77, .55); border-radius: 6px; border: 1px solid rgba(229, 72, 77, .22); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(229, 72, 77, .85); }
 
 a { color: inherit; text-decoration: none; }
 code, .mono { font-family: var(--font-mono); }
