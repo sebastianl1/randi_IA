@@ -114,16 +114,19 @@ code.block { overflow-x: auto; }
 
 /* ── Hero: fondo con galaxia + glifo ─────────────────────────────────── */
 #heroBg { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-#heroBg #particles { position: absolute; inset: 0; width: 100%; height: 100%; }
+#heroBg #particles { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #rhoBg {
-  position: absolute; left: 4%; top: 30%;
+  position: absolute; left: 50%; top: 50%; width: min(30vw, 20rem); height: min(30vw, 20rem);
+  display: flex; align-items: center; justify-content: center;
   font-family: "Noto Serif Greek", "EB Garamond", serif; font-weight: 800;
-  font-size: min(38vw, 24rem); line-height: 1; user-select: none;
+  font-size: min(30vw, 22rem); line-height: 1; user-select: none;
+  transform: translate(-50%, -52%);
   color: transparent;
-  background: radial-gradient(closest-side, rgba(229,72,77,.16), transparent 78%);
+  background: radial-gradient(closest-side, rgba(229,72,77,.2), transparent 75%);
   -webkit-background-clip: text; background-clip: text;
-  opacity: .4; filter: drop-shadow(0 0 50px rgba(229,72,77,.26));
-  transform: translate(0, 0); transition: transform .1s ease-out, filter .1s ease-out;
+  opacity: .3; filter: drop-shadow(0 0 40px rgba(229,72,77,.18));
+  transition: transform .1s ease-out, filter .1s ease-out;
+  pointer-events: none;
 }
 
 /* ── Panel de detección (translúcido, 2 columnas, mini partículas) ───── */
