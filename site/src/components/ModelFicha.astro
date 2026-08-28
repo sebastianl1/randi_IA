@@ -1,0 +1,105 @@
+---
+import { requiredHardware } from '../lib/compat.js';
+import type { ModelEntry } from '../lib/models.js';
+interface Props { model: ModelEntry; lang: 'es' | 'en' }
+const { model, lang } = Astro.props;
+const es = lang === 'es';
+const L = {
+  back: es ? '← Volver' : '← Back',
+  eyebrow: es ? 'Ficha de modelo' : 'Model card',
+  specs: es ? 'Especificaciones' : 'Specifications',
+  capaz: es ? 'Capacidad y aplicaciones' : 'Capabilities & use cases',
+  requerido: es ? 'Hardware requerido y mejoras' : 'Required hardware & upgrades',
+  equipo: es ? 'Hardware de tu equipo' : 'Your device',
+  instalar: es ? 'Instalar' : 'Install',
+  comfy: es ? 'Generación con ComfyUI: descargá los pesos y cargá el workflow.' : 'ComfyUI generation: download the weights and load the workflow.',
+  analizando: es ? 'Analizando tu equipo…' : 'Analyzing your device…',
+  corre: es ? 'corre en tu equipo' : 'runs on your device',
+  no_corre: es ? 'no corre en tu equipo' : 'does not run on your device',
+};
+const req = requiredHardware(model.paramsBillions || 0);
+const spec: Array<[string, string]> = [
+  [es ? 'Parámetros' : 'Parameters', `${model.paramsBillions}B`],
+  [es ? 'Contexto' : 'Context', model.ctx ? `${model.ctx >= 1000 ? (model.ctx / 1000).toFixed(0) + 'K' : model.ctx}` : '—'],
+  es ? ['Herramientas', model.tools ? 'Sí' : 'No'] : ['Tools', model.tools ? 'Yes' : 'No'],
+  es ? ['Razonamiento', model.thinking ? 'Sí' : 'No'] : ['Reasoning', model.thinking ? 'Yes' : 'No'],
+  ['Licencia', model.license || '—'],
+  [es ? 'Tamaño' : 'Size', model.size || '—'],
+];
+const reqSpec: Array<[string, string]> = [
+  ['VRAM', `${req.vramGB} GB (${req.quant})`],
+  [es ? 'GPU recomendada' : 'Recommended GPU', req.gpuClass],
+  [es ? 'RAM total' : 'Total RAM', `${req.ramTotal} GB`],
+  [es ? 'Ancho de banda' : 'Bandwidth', `${req.bandwidth} GB/s`],
+  [es ? 'Disco' : 'Disk', `${req.diskGB} GB`],
+];
+const base = import.meta.env.BASE_URL;
+---
+<div class="mx-auto max-w-4xl px-4 py-10">
+  <a href={es ? base : `${base}en/`} class="text-sm text-muted hover:text-ink inline-flex items-center gap-1">{L.back}</a>
+
+  <p class="eyebrow mt-8">{L.eyebrow}</p>
+  <h1 class="mt-2 text-4xl font-black tracking-tight">{model.name}</h1>
+  <p class="mt-1 text-muted">{model.provider} · {model.family}</p>
+  <div class="mt-3 flex flex-wrap gap-2">
+    <span class="pill">#{model.paramsBillions}B</span>
+    <span class="pill">{model.architecture}</span>
+    {(model.useCase || []).map((uc) => <span class="pill">{uc}</span>)}
+    {model.thinking && <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">reasoning</span>}
+    {model.tools && <span class="pill">tools</span>}
+  </div>
+  {model.desc && <p class="mt-4 text-muted leading-relaxed max-w-2xl">{model.desc}</p>}
+
+  <div class="grid gap-4 md:grid-cols-2 mt-8">
+    <!-- Especificaciones -->
+    <section class="card p-5">
+      <h2 class="font-bold text-lg">{L.specs}</h2>
+      <dl class="mt-3 space-y-2 text-sm">
+        {spec.map(([k, v]) => (
+          <div class="flex justify-between gap-3 border-b border-line/40 py-1"><dt class="text-muted">{k}</dt><dd class="font-semibold text-right mono">{v}</dd></div>
+        ))}
+      </dl>
+      <h2 class="font-bold text-lg mt-5">{L.capaz}</h2>
+      <p class="mt-2 text-sm text-muted">{model.desc || model.category || model.type}</p>
+    </section>
+
+    <!-- Hardware requerido + equipo -->
+    <section class="card p-5">
+      <h2 class="font-bold text-lg">{L.requerido}</h2>
+      <dl class="mt-3 space-y-2 text-sm">
+        {reqSpec.map(([k, v]) => (
+          <div class="flex justify-between gap-3 border-b border-line/40 py-1"><dt class="text-muted">{k}</dt><dd class="font-semibold text-right">{v}</dd></div>
+        ))}
+      </dl>
+
+      <h2 class="font-bold text-lg mt-5">{L.equipo} <span class="mono text-xs text-muted">(detección en vivo)</span></h2>
+      <div id="ficha-badge" data-params={model.paramsBillions || 1} data-lang={lang} class="mt-2 text-sm text-muted">{L.analizando}</div>
+    </section>
+  </div>
+
+  <section class="card p-5 mt-4">
+    <h2 class="font-bold text-lg">{L.instalar}</h2>
+    {model.installer === 'ollama' ? (
+      <code class="block mt-3">{`randi install ${model.ollamaId || model.id}`}</code>
+    ) : (
+      <p class="mt-3 text-sm text-muted">{L.comfy}</p>
+    )}
+  </section>
+</div>
+
+<script>
+  import { detectHardware } from '../lib/detect.js';
+  import { gradeFor, gradeColor } from '../lib/compat.js';
+  const card = document.getElementById('ficha-badge') as HTMLElement;
+  const params = parseFloat(card?.dataset?.params || '1');
+  const isEs = card?.dataset?.lang === 'es';
+  detectHardware().then((hw) => {
+    const ev = gradeFor(hw, params);
+    const msg = ev.status === 'cannot-run'
+      ? (isEs ? `No corre en tu equipo (grado ${ev.grade}) — revisa «Hardware requerido»`
+              : `Does not run on your device (grade ${ev.grade}) — see "Required hardware"`)
+      : (isEs ? `Grado ${ev.grade} · ${ev.quant} · ≈${ev.toksPerSec} tok/s (corre cómodo)`
+              : `Grade ${ev.grade} · ${ev.quant} · ≈${ev.toksPerSec} tok/s`);
+    card.innerHTML = `<span class="grade" style="--grade-color:${gradeColor(ev.grade)}">${ev.grade}</span> <span>${msg}</span>`;
+  }).catch(() => { card.textContent = '—'; });
+</script>

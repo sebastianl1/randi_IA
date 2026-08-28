@@ -12,11 +12,12 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
   - **Composer full-width** de borde a borde (igual hasta la linea separadora del panel contexto), multilínea, siempre visible.
   - **Sugerencias `/` restauradas**: al escribir `/` se listan los comandos; **flechas mueven y Enter completa** (no envía).
   - **Fix `/models`**: instalación en **dos pasos** (selección → aviso → pulsa `i` para instalar), sin crashes ni cierre del CLI. Tests de regresión con pilot.
-- **Landing (`site/`) reestructurada** (base DeepSeek Harness, identidad rojo/Ρ): hero con
-  marca Ρ, quick-start npm/npx, **detector de hardware en vivo**, arquitectura
-  "Modelo + Harness", **modos** (Chat/Código/Eco/Imagen/Video/Embed), quick start por SO,
-  sección **"Todo queda trazado"** (contexto/actividad/tokens), features, FAQ y footer
-  multi-columna. ES/EN y SEO.
+- **Landing (`site/`) reestructurada** (base DeepSeek Harness, identidad rojo/Ρ):
+  - Hero con **partículas (constelación roja)** y **glifo Ρ interactivo** (sigue/brilla con el cursor).
+  - **Detección de hardware completa** (CPU/RAM/GPU/VRAM/bandwidth/clase/webgpu) en una sección compacta; **modelos sugeridos como vínculos a fichas**.
+  - **Fichas de modelo** ES+EN (`/model/<slug>` y `/en/model/<slug>`, 144 páginas): especificaciones, capacidad/aplicaciones, **hardware del equipo en vivo** (grado), **hardware requerido y mejoras** (VRAM/RAM/GPU/bandwidth), comando de instalación.
+  - **Tipografía nueva**: Space Grotesk (títulos) + Inter (texto) + JetBrains Mono (código), jerarquía respetada (eyebrows en mayúsculas, pesos).
+  - **Footer enriquecido** con los contactos reales (Portafolio · WhatsApp · Correo · LinkedIn · GitHub como icono SVG), glass translúcido rojo en toda la página.
 - **`randi web` como workspace**: **rail izquierdo de sesiones**, **chat central** con botón copiar, **panel derecho Contexto/Actividad** (modelo·grado·quant·ctx·tokens con barra, actividad, atajos), barra superior con backend/modelo/eco/code. Tokens rojo en la app.
 
 ## [2.0.9] - 2026-08-28

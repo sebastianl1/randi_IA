@@ -7,8 +7,10 @@ const t = content[lang];
 <!-- Hero -->
 <section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-10 text-center">
   <span class="pill mx-auto" style="border-color:var(--color-accent);color:var(--color-accent)">{t.hero.badge}</span>
-  <h1 class="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
-    {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
+  <h1 class="relative mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+    <canvas id="particles" aria-hidden="true"></canvas>
+    {t.hero.title[0]}<br />
+    <span id="rho">Ρ</span> <span class="grad-text">{t.hero.title[1]}</span>
   </h1>
   <p class="mx-auto mt-6 max-w-2xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
   <div class="mt-8 mx-auto max-w-xl">
@@ -21,13 +23,13 @@ const t = content[lang];
   <p class="mt-6 text-xs text-muted mono">{t.hero.stats}</p>
 
   <!-- Detector de hardware en vivo (client-side) -->
-  <div class="card mx-auto mt-12 max-w-3xl p-6 text-left">
+  <div id="dPanel" class="glass mx-auto mt-12 max-w-3xl p-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● {lang === 'es' ? 'detección' : 'detection'}</span>
       <span class="mono text-xs text-muted" id="dMeta">navegador · 100% local</span>
+      <button id="dBtn" class="btn btn-dark text-xs !px-3 !py-1">⌖ {lang === 'es' ? 'Detectar' : 'Detect'}</button>
     </div>
-    <button id="dBtn" class="btn btn-dark mt-5">⌖ {lang === 'es' ? 'Detectar mi equipo' : 'Detect my device'}</button>
-    <div id="dOut" class="mt-5"></div>
+    <div id="dOut" class="mt-4"></div>
   </div>
 </section>
 
@@ -158,6 +160,13 @@ const t = content[lang];
 </section>
 
 <script>
+  import { initParticles } from '../components/hero/particles';
+  import { initRho } from '../components/hero/rho';
+  const BASE = import.meta.env.BASE_URL || '/';
+  const slug = (id: string) => id.replace(/[:/\\]/g, '-');
+  const linkFor = (id: string) =>
+    `${BASE}${document.documentElement.lang === 'en' ? 'en/' : ''}model/${slug(id)}`;
+
   // ── Tabs de instalacion ──────────────────────────────────────────────
   const tabs = document.querySelectorAll<HTMLButtonElement>('[data-tab]');
   let active = tabs[0]?.dataset.tab;
@@ -238,20 +247,20 @@ const t = content[lang];
     chips.push([isEs ? 'Plataforma' : 'Platform', p]);
     const items = LITS[cls] || LITS.basic;
     out.innerHTML = `
-      <div class="flex flex-wrap gap-3">${chips.map(([k, v]) => `<div class="hw-chip"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
-      <div class="hairline my-5"></div>
-      <p class="mono text-[11px] uppercase tracking-widest text-muted mb-1">${D.title}</p>
+      <div class="flex flex-wrap gap-2">${chips.map(([k, v]) => `<div class="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs"><span class="k" style="font-family:var(--font-mono);font-size:10px;color:var(--color-muted);text-transform:uppercase">${k}</span> <span style="font-weight:600">${v}</span></div>`).join('')}</div>
+      <div class="hairline my-4"></div>
+      <p class="eyebrow mb-1">${D.title}</p>
       <p class="mono text-xs text-muted mb-3">${D.class}: <span class="text-ink">${D[cls as keyof typeof D] || cls}</span></p>
       <div class="space-y-2">
         ${items.map(([id, quant, why], i) => `
-          <div class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3">
+          <a href="${linkFor(id)}" target="_blank" rel="noreferrer" class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3 hover:border-accent/60 transition-colors">
             <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b'][i] || '#56565f'}">${'SABD'[i] || '?'}</span>
-            <div class="flex flex-col min-w-0">
+            <span class="flex flex-col min-w-0">
               <span class="mono text-sm font-semibold">${id}</span>
               <span class="mono text-xs text-muted">${why}</span>
-            </div>
-            <span class="ml-auto mono text-xs text-muted">${quant}</span>
-          </div>`).join('')}
+            </span>
+            <span class="ml-auto flex items-center gap-2 mono text-xs text-muted">${quant} <span class="text-accent">↗</span></span>
+          </a>`).join('')}
       </div>
       <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>`;
     btn.disabled = false;
@@ -259,4 +268,9 @@ const t = content[lang];
   }
   document.getElementById('dBtn')?.addEventListener('click', detect);
   setTimeout(detect, 700);
+
+  const pc = document.getElementById('particles');
+  if (pc) initParticles(pc as HTMLCanvasElement);
+  const rho = document.getElementById('rho');
+  if (rho) initRho(rho as HTMLElement);
 </script>
