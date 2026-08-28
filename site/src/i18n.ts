@@ -12,6 +12,8 @@ export interface OSGuide {
 
 export interface Landing {
   nav: { models: string; install: string; github: string };
+  arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
+  modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
   quick: string;
   traza: { t: string; d: string; items: string[] };
@@ -159,7 +161,9 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     quick: 'npm install -g randi-ai   ·   npx randi-ai setup',
     traza: { t: 'Todo queda trazado', d: 'Cada sesión registra contexto, actividad y tokens: resume, busca o reabre lo que ya hiciste.', items: ['Contexto en tiempo real y barra de RAM', 'Actividad y fases (server, descargas, sesiones)', 'Tokens por respuesta', 'Sesiones guardadas en tu dispositivo'] },
-    stats: [
+
+    arch: { t: 'Modelo + Harness', d: 'El modelo es el alma de la experiencia; RANDI es el harness que la organiza en tu equipo.', cards: [{ t: 'El modelo corre', d: 'LLMs y agentes locales ejecutan tus tareas: chat, codigo, razonamiento, vision.', tag: 'modelo' },{ t: 'RANDI organiza', d: 'Servidor, modelos, sesiones, contexto, tokens y voz gestionados por la herramienta.', tag: 'harness' },{ t: 'Todo queda trazado', d: 'Cada sesion registra y reanuda: contexto, actividad y tokens.', tag: 'trazabilidad' }] },
+        modes: { t: 'Modos', d: 'Usa RANDI para cada tipo de trabajo con los modelos que corren en tu equipo.', items: [{ t: 'Chat', d: 'Conversacion fluida con streaming y markdown.', tag: 'llm' },{ t: 'Codigo', d: 'Asistente de programacion local con OpenCode.', tag: 'code' },{ t: 'Eco', d: 'Menos RAM para equipos limitados.', tag: 'eco' },{ t: 'Imagen', d: 'FLUX.2, Z-Image, Qwen-Image con ComfyUI.', tag: 'image' },{ t: 'Video', d: 'Wan 2.2, HunyuanVideo, LTX 2.3 (GPU dedicada).', tag: 'video' },{ t: 'Embed', d: 'Embeddings para RAG (nomic, mxbai).', tag: 'embed' }] },    stats: [
       { v: '85+', l: 'modelos curados' },
       { v: '5', l: 'plataformas' },
       { v: '7', l: 'cuantizaciones' },
@@ -224,7 +228,9 @@ export const content: Record<'es' | 'en', Landing> = {
     },
     quick: 'npm install -g randi-ai   ·   npx randi-ai setup',
     traza: { t: 'Everything is traceable', d: 'Every session logs context, activity and tokens: resume, search or reopen what you already did.', items: ['Real-time context and RAM bar', 'Activity and phases (server, pulls, sessions)', 'Tokens per answer', 'Sessions saved on your device'] },
-    stats: [
+
+    arch: { t: 'Model + Harness', d: 'The model is the soul of the experience; RANDI is the harness that organizes it on your device.', cards: [{ t: 'The model runs', d: 'Local LLMs and agents handle your tasks: chat, code, reasoning, vision.', tag: 'model' },{ t: 'RANDI organizes', d: 'Server, models, sessions, context, tokens and voice handled by the tool.', tag: 'harness' },{ t: 'Everything is traceable', d: 'Every session logs and resumes: context, activity and tokens.', tag: 'traceability' }] },
+        modes: { t: 'Modes', d: 'Use RANDI for each kind of work with models that run on your device.', items: [{ t: 'Chat', d: 'Fluid conversation with streaming and markdown.', tag: 'llm' },{ t: 'Code', d: 'Local coding assistant with OpenCode.', tag: 'code' },{ t: 'Eco', d: 'Less RAM for constrained devices.', tag: 'eco' },{ t: 'Image', d: 'FLUX.2, Z-Image, Qwen-Image with ComfyUI.', tag: 'image' },{ t: 'Video', d: 'Wan 2.2, HunyuanVideo, LTX 2.3 (dedicated GPU).', tag: 'video' },{ t: 'Embed', d: 'Embeddings for RAG (nomic, mxbai).', tag: 'embed' }] },    stats: [
       { v: '85+', l: 'curated models' },
       { v: '5', l: 'platforms' },
       { v: '7', l: 'quantizations' },

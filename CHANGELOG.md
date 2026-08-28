@@ -12,7 +12,11 @@ Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Kee
   - **Composer full-width** de borde a borde (igual hasta la linea separadora del panel contexto), multilínea, siempre visible.
   - **Sugerencias `/` restauradas**: al escribir `/` se listan los comandos; **flechas mueven y Enter completa** (no envía).
   - **Fix `/models`**: instalación en **dos pasos** (selección → aviso → pulsa `i` para instalar), sin crashes ni cierre del CLI. Tests de regresión con pilot.
-- **Landing (`site/`) rediseñada** (base DeepSeek Harness): marca Ρ + acento rojo, **quick-start** npm/npx, sección **Todo queda trazado** (contexto/actividad/tokens), modos por hardware. ES/EN.
+- **Landing (`site/`) reestructurada** (base DeepSeek Harness, identidad rojo/Ρ): hero con
+  marca Ρ, quick-start npm/npx, **detector de hardware en vivo**, arquitectura
+  "Modelo + Harness", **modos** (Chat/Código/Eco/Imagen/Video/Embed), quick start por SO,
+  sección **"Todo queda trazado"** (contexto/actividad/tokens), features, FAQ y footer
+  multi-columna. ES/EN y SEO.
 - **`randi web` como workspace**: **rail izquierdo de sesiones**, **chat central** con botón copiar, **panel derecho Contexto/Actividad** (modelo·grado·quant·ctx·tokens con barra, actividad, atajos), barra superior con backend/modelo/eco/code. Tokens rojo en la app.
 
 ## [2.0.9] - 2026-08-28

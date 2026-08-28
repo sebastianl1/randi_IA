@@ -4,27 +4,26 @@ interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const t = content[lang];
 ---
-<section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-12">
-  <div class="mx-auto max-w-3xl text-center">
-    <span class="pill mx-auto">{t.hero.badge}</span>
-    <h1 class="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
-      {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
-    </h1>
-    <p class="mx-auto mt-6 max-w-2xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
-<div class="mt-9 flex flex-wrap justify-center gap-3">
-      <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
-      <a class="btn" href="#what">{t.hero.cta2}</a>
-    </div>
-    <div class="mt-6 mx-auto max-w-xl">
-      <code class="block">{t.quick}</code>
-    </div>
-    <p class="mt-6 text-xs text-muted mono">{t.hero.stats}</p>
+<!-- Hero -->
+<section class="hero-glow mx-auto max-w-6xl px-4 pt-16 pb-10 text-center">
+  <span class="pill mx-auto" style="border-color:var(--color-accent);color:var(--color-accent)">{t.hero.badge}</span>
+  <h1 class="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+    {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
+  </h1>
+  <p class="mx-auto mt-6 max-w-2xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
+  <div class="mt-8 mx-auto max-w-xl">
+    <code class="block">{t.quick}</code>
   </div>
+  <div class="mt-8 flex flex-wrap justify-center gap-3">
+    <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
+    <a class="btn" href="#modes">{t.hero.cta2}</a>
+  </div>
+  <p class="mt-6 text-xs text-muted mono">{t.hero.stats}</p>
 
-  <!-- Deteccion real de hardware (client-side, sin imagenes) -->
-  <div class="card mx-auto mt-12 max-w-3xl p-6">
+  <!-- Detector de hardware en vivo (client-side) -->
+  <div class="card mx-auto mt-12 max-w-3xl p-6 text-left">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● deteccion</span>
+      <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● {lang === 'es' ? 'detección' : 'detection'}</span>
       <span class="mono text-xs text-muted" id="dMeta">navegador · 100% local</span>
     </div>
     <button id="dBtn" class="btn btn-dark mt-5">⌖ {lang === 'es' ? 'Detectar mi equipo' : 'Detect my device'}</button>
@@ -32,6 +31,7 @@ const t = content[lang];
   </div>
 </section>
 
+<!-- Stats -->
 <section class="border-y border-line bg-bg-soft/60">
   <div class="mx-auto max-w-6xl px-4 py-9 grid grid-cols-2 md:grid-cols-4 gap-5 text-center">
     {t.stats.map((s) => (
@@ -43,12 +43,12 @@ const t = content[lang];
   </div>
 </section>
 
-<section id="what" class="mx-auto max-w-6xl px-4 py-16">
-  <p class="mono text-xs uppercase tracking-widest text-muted text-center">catalogo</p>
-  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.what.title}</h2>
-  <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.what.sub}</p>
-  <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {t.what.cards.map((c, i) => (
+<!-- Arquitectura: modelo + harness -->
+<section id="arch" class="mx-auto max-w-6xl px-4 py-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{t.arch.t}</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.arch.d}</h2>
+  <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {t.arch.cards.map((c, i) => (
       <div class="card p-6 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{c.tag}</span>
@@ -61,40 +61,27 @@ const t = content[lang];
   </div>
 </section>
 
-<section id="traza" class="border-y border-line bg-bg-soft/60 py-14">
-  <div class="mx-auto max-w-5xl px-4 grid gap-6 md:grid-cols-2">
-    <div>
-      <p class="mono text-xs uppercase tracking-widest text-muted">trazabilidad</p>
-      <h2 class="mt-2 text-3xl font-black tracking-tight">{t.traza.t}</h2>
-      <p class="mt-3 text-muted leading-relaxed">{t.traza.d}</p>
-    </div>
-    <ul class="space-y-2 text-sm">
-      {t.traza.items.map((it) => (
-        <li class="flex items-start gap-2 card p-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>
-      ))}
-    </ul>
-  </div>
-</section>
-
-<section id="how" class="border-y border-line bg-bg-soft/60 py-16">
+<!-- Modos -->
+<section id="modes" class="border-y border-line bg-bg-soft/60 py-16">
   <div class="mx-auto max-w-6xl px-4">
-    <p class="mono text-xs uppercase tracking-widest text-muted text-center">flujo</p>
-    <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.how.title}</h2>
-    <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.how.sub}</p>
-    <div class="mt-10 grid gap-4 md:grid-cols-3">
-      {t.how.steps.map((s, i) => (
-        <div class="card p-6 flex flex-col gap-3">
-          <span class="grade" style="--grade-color:var(--color-accent)">{i + 1}</span>
-          <h3 class="text-lg font-bold">{s.t}</h3>
-          <p class="text-sm text-muted leading-relaxed">{s.d}</p>
+    <p class="mono text-xs uppercase tracking-widest text-muted text-center">modos</p>
+    <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.modes.t}</h2>
+    <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.modes.d}</p>
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {t.modes.items.map((m) => (
+        <div class="card p-6 flex flex-col gap-3 hover:border-accent/60 transition-colors">
+          <span class="pill self-start" style="border-color:var(--color-accent);color:var(--color-accent)">{m.tag}</span>
+          <h3 class="text-lg font-bold">{m.t}</h3>
+          <p class="text-sm text-muted leading-relaxed">{m.d}</p>
         </div>
       ))}
     </div>
   </div>
 </section>
 
+<!-- Quick start / instalación por SO -->
 <section id="install" class="mx-auto max-w-6xl px-4 py-16">
-  <p class="mono text-xs uppercase tracking-widest text-muted text-center">setup</p>
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">quick start</p>
   <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.install.title}</h2>
   <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.install.sub}</p>
 
@@ -114,7 +101,7 @@ const t = content[lang];
               <span class="grade shrink-0" style="--grade-color:var(--color-line)">{i + 1}</span>
               <div class="space-y-1.5 pt-0.5">
                 <div class="font-semibold">{s.title.replace(/^[\d.]+\.\s*/, '')}</div>
-                {s.body.map((p) => <p class="text-muted text-sm leading-relaxed">{p}</p>)}
+                {s.body.map((x) => <p class="text-muted text-sm leading-relaxed">{x}</p>)}
               </div>
             </li>
           ))}
@@ -130,18 +117,34 @@ const t = content[lang];
   <p class="mt-6 text-center text-xs text-muted card p-3 mx-auto max-w-2xl">{t.install.note}</p>
 </section>
 
-<section class="border-y border-line bg-bg-soft/60 py-14">
-  <div class="mx-auto max-w-3xl px-4">
-    <h2 class="text-2xl font-black tracking-tight text-center mb-8">{t.features.title}</h2>
-    <ul class="grid gap-2.5 sm:grid-cols-2 text-sm">
-      {t.features.items.map((it) => (
-        <li class="flex items-start gap-2.5 rounded-xl border border-line bg-panel px-4 py-3"><span class="mt-0.5 text-good">✓</span>{it}</li>
+<!-- Todo queda trazado -->
+<section id="traza" class="border-y border-line bg-bg-soft/60 py-14">
+  <div class="mx-auto max-w-5xl px-4 grid gap-6 md:grid-cols-2">
+    <div>
+      <p class="mono text-xs uppercase tracking-widest text-muted">trazabilidad</p>
+      <h2 class="mt-2 text-3xl font-black tracking-tight">{t.traza.t}</h2>
+      <p class="mt-3 text-muted leading-relaxed">{t.traza.d}</p>
+    </div>
+    <ul class="space-y-2 text-sm">
+      {t.traza.items.map((it) => (
+        <li class="flex items-start gap-2 card p-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>
       ))}
     </ul>
   </div>
 </section>
 
-<section id="faq" class="mx-auto max-w-3xl px-4 py-16">
+<!-- Features -->
+<section class="mx-auto max-w-3xl px-4 py-14">
+  <h2 class="text-2xl font-black tracking-tight text-center mb-8">{t.features.title}</h2>
+  <ul class="grid gap-2.5 sm:grid-cols-2 text-sm">
+    {t.features.items.map((it) => (
+      <li class="flex items-start gap-2.5 rounded-xl border border-line bg-panel px-4 py-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>
+    ))}
+  </ul>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="mx-auto max-w-3xl px-4 py-14">
   <p class="mono text-xs uppercase tracking-widest text-muted">faq</p>
   <h2 class="mt-2 text-3xl font-black tracking-tight">FAQ</h2>
   <div class="mt-8 space-y-3">
@@ -165,28 +168,26 @@ const t = content[lang];
   tabs.forEach((b) => b.addEventListener('click', () => { active = b.dataset.tab; show(); }));
   show();
 
-  // ── Deteccion real de hardware (client-side, ~instantanea) ───────────
+  // ── Detector de hardware (client-side) ───────────────────────────────
   const isEs = document.documentElement.lang.startsWith('es');
-  const TXT = {
+  const D = {
     title: isEs ? 'Sugerencias para tu equipo' : 'Suggestions for your device',
     class: isEs ? 'Equipo' : 'Device class',
-    basic: isEs ? 'Básico / sin GPU (4GB+)' : 'Basic / no GPU (4GB+)',
-    igpu: isEs ? 'PC con gráficos integrados (8-16GB)' : 'PC with integrated graphics (8-16GB)',
-    gpu: isEs ? 'GPU dedicada (8-12GB)' : 'Dedicated GPU (8-12GB)',
-    pro: isEs ? 'GPU potente (24GB+)' : 'Powerful GPU (24GB+)',
-    mobile: isEs ? 'Móvil / tablet' : 'Mobile / tablet',
+    basic: isEs ? 'Básico / sin GPU' : 'Basic / no GPU',
+    igpu: isEs ? 'Gráficos integrados' : 'Integrated graphics',
+    gpu: isEs ? 'GPU dedicada' : 'Dedicated GPU',
+    pro: isEs ? 'GPU potente' : 'Powerful GPU',
+    mobile: isEs ? 'Móvil' : 'Mobile',
     vs: isEs ? 'detectado en' : 'detected in',
-    more: isEs ? 'Detalle completo y evaluación por cuantización en la web local:  randi web' : 'Full detail and per-quant eval in the local web:  randi web',
+    more: isEs ? 'Se instala con npm en Windows nativo:  npm install -g randi-ai' : 'Native Windows install:  npm install -g randi-ai',
   };
   const LITS: Record<string, Array<[string, string, string]>> = {
-    mobile: [['qwen3:0.6b', '0.4GB · Q4', 'chat + razonamiento'], ['qwen2.5-coder:0.5b', '0.4GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat + visión'], ['llama3.2:1b', '0.8GB · Q4', 'chat / tools'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento'], ['nomic-embed-text', '0.3GB', 'RAG / embeddings']],
-    basic: [['qwen3:0.6b', '0.4GB · Q4', 'chat'], ['qwen2.5-coder:1.5b', '0.9GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat + visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento'], ['qwen3:1.7b', '1.3GB · Q4', 'chat multilingüe'], ['llama3.2:3b', '2.0GB · Q4', 'general / tools']],
-    igpu: [['qwen2.5-coder:3b', '1.9GB · Q4', 'código (punto dulce)'], ['qwen3:4b', '2.5GB · Q4', 'chat'], ['llama3.1:8b', '4.6GB · Q4', 'general / tools'], ['qwen2.5-coder:7b', '4.1GB · Q4', 'código'], ['deepseek-r1:7b', '4.1GB · Q4', 'razonamiento'], ['qwen2.5-vl:7b', '6.5GB · Q4', 'visión']],
-    gpu: [['qwen3:8b', '4.6GB · Q6', 'chat + razonamiento'], ['qwen2.5-coder:7b', '4.1GB · Q6', 'código'], ['deepseek-r1:14b', '8.0GB · Q4', 'razonamiento'], ['qwen3:14b', '7.5GB · Q5', 'todo terreno'], ['gpt-oss:20b', '11.3GB · Q4', 'MoE 3.6B activos'], ['qwen3-vl:8b', '5.0GB · Q4', 'visión / VLM']],
-    pro: [['qwen3:32b', '17GB · Q4', 'chat + código'], ['gpt-oss:120b', '60GB · Q4', 'MoE 5.1B activos'], ['llama3.3:70b', '37GB · Q4', 'general frontier'], ['qwen3:235b-a22b', '120GB · Q4', 'MoE 22B activos'], ['deepseek-r1:671b', '350GB · Q4', 'MoE razonamiento'], ['gemma3:12b', '6.6GB · Q8', 'visión / chat']],
+    mobile: [['qwen3:0.6b', '0.4GB · Q4', 'chat'], ['qwen2.5-coder:0.5b', '0.4GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
+    basic: [['qwen2.5-coder:1.5b', '0.9GB · Q4', 'código'], ['qwen3:1.7b', '1.3GB · Q4', 'chat'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
+    igpu: [['qwen2.5-coder:3b', '1.9GB · Q4', 'código'], ['qwen3:4b', '2.5GB · Q4', 'chat'], ['llama3.1:8b', '4.6GB · Q4', 'general'], ['qwen2.5-coder:7b', '4.1GB · Q4', 'código']],
+    gpu: [['qwen3:8b', '4.6GB · Q6', 'chat'], ['qwen2.5-coder:7b', '4.1GB · Q6', 'código'], ['deepseek-r1:14b', '8.0GB · Q4', 'razonamiento'], ['gpt-oss:20b', '11.3GB · Q4', 'MoE']],
+    pro: [['qwen3:32b', '17GB · Q4', 'chat'], ['gpt-oss:120b', '60GB · Q4', 'MoE'], ['llama3.3:70b', '37GB · Q4', 'frontier'], ['deepseek-r1:671b', '350GB · Q4', 'MoE']],
   };
-  const CLASS_LABELS: Record<string, string> = { mobile: TXT.mobile, basic: TXT.basic, igpu: TXT.igpu, gpu: TXT.gpu, pro: TXT.pro };
-
   function detectPlatform(): string {
     const ua = navigator.userAgent;
     if (/iPhone|iPad/.test(ua)) return 'ios';
@@ -194,7 +195,7 @@ const t = content[lang];
     if (/Windows/.test(ua)) return 'windows';
     if (/Android/.test(ua)) return 'android';
     if (/Linux/.test(ua)) return 'linux';
-    return 'desconocido';
+    return '—';
   }
   function gpuInfo() {
     try {
@@ -203,20 +204,18 @@ const t = content[lang];
       return gl ? (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : null;
     } catch { return null; }
   }
-  function vramOf(renderer: string | null): number | null {
-    const m = renderer && (renderer.match(/\((\d+)\s*GB\)/i) || renderer.match(/\b(\d+)\s*GB\b/i));
+  function vramOf(r: string | null): number | null {
+    const m = r && (r.match(/\((\d+)\s*GB\)/i) || r.match(/\b(\d+)\s*GB\b/i));
     return m ? parseInt(m[1], 10) : null;
   }
-  function classify(p: string, renderer: string | null, mem: number | null, vram: number | null): string {
+  function classify(p: string, r: string | null, mem: number | null, vram: number | null): string {
     if (p === 'ios' || p === 'android') return 'mobile';
-    const apple = p === 'macos' && (renderer ? /\bm[1-9]\b|apple/i.test(renderer) : true);
-    if (apple) return (mem || 0) >= 32 ? 'pro' : 'gpu';
+    if (p === 'macos' && (r ? /\bm[1-9]\b|apple/i.test(r) : true)) return (mem || 0) >= 32 ? 'pro' : 'gpu';
     if (vram && vram >= 24) return 'pro';
     if (vram && vram >= 8) return 'gpu';
     if (mem && mem >= 12) return 'igpu';
     return 'basic';
   }
-
   function detect() {
     const btn = document.getElementById('dBtn') as HTMLButtonElement;
     const out = document.getElementById('dOut');
@@ -232,23 +231,21 @@ const t = content[lang];
     const vram = vramOf(renderer);
     const cls = classify(p, renderer, mem, vram);
     const ms = Math.round(performance.now() - start);
-    meta!.textContent = `${isEs ? 'navegador' : 'browser'} · 100% ${isEs ? 'local' : 'local'} · ${TXT.vs} ${ms}ms`;
-
+    meta!.textContent = `${isEs ? 'navegador' : 'browser'} · 100% ${isEs ? 'local' : 'local'} · ${D.vs} ${ms}ms`;
     const chips: Array<[string, string]> = [['RAM', mem ? `${mem}GB` : '—'], ['GPU', renderer || (isEs ? 'No detectada' : 'Not detected')]];
     if (vram) chips.push(['VRAM', `${vram}GB`]);
     chips.push([isEs ? 'Núcleos' : 'Cores', String(cores ?? '—')]);
     chips.push([isEs ? 'Plataforma' : 'Platform', p]);
-
     const items = LITS[cls] || LITS.basic;
     out.innerHTML = `
       <div class="flex flex-wrap gap-3">${chips.map(([k, v]) => `<div class="hw-chip"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
       <div class="hairline my-5"></div>
-      <p class="mono text-[11px] uppercase tracking-widest text-muted mb-1">${TXT.title}</p>
-      <p class="mono text-xs text-muted mb-3">${TXT.class}: <span class="text-ink">${CLASS_LABELS[cls] || cls}</span></p>
+      <p class="mono text-[11px] uppercase tracking-widest text-muted mb-1">${D.title}</p>
+      <p class="mono text-xs text-muted mb-3">${D.class}: <span class="text-ink">${D[cls as keyof typeof D] || cls}</span></p>
       <div class="space-y-2">
         ${items.map(([id, quant, why], i) => `
           <div class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-4 py-3">
-            <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b', '#f97316'][i] || '#56565f'}">${'SABDC'[i] || '?'}</span>
+            <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b'][i] || '#56565f'}">${'SABD'[i] || '?'}</span>
             <div class="flex flex-col min-w-0">
               <span class="mono text-sm font-semibold">${id}</span>
               <span class="mono text-xs text-muted">${why}</span>
@@ -256,11 +253,10 @@ const t = content[lang];
             <span class="ml-auto mono text-xs text-muted">${quant}</span>
           </div>`).join('')}
       </div>
-      <p class="mt-4 text-xs text-muted">💡 ${TXT.more}</p>`;
+      <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>`;
     btn.disabled = false;
     btn.textContent = isEs ? '↻ Detectar de nuevo' : '↻ Detect again';
   }
-
   document.getElementById('dBtn')?.addEventListener('click', detect);
-  setTimeout(detect, 700); // deteccion automatica al entrar
+  setTimeout(detect, 700);
 </script>
