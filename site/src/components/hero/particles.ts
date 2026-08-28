@@ -62,13 +62,13 @@ export function initParticles(canvas: HTMLCanvasElement): void {
     }
     raf = requestAnimationFrame(frame);
   }
-  canvas.addEventListener('pointermove', onMove);
+  document.addEventListener('pointermove', onMove);
   window.addEventListener('resize', resize);
   resize();
   raf = requestAnimationFrame(frame);
   (canvas as any).__destroy = () => {
     cancelAnimationFrame(raf);
     window.removeEventListener('resize', resize);
-    canvas.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointermove', onMove);
   };
 }
