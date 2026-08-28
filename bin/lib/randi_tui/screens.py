@@ -8,7 +8,9 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
+from . import chat as rchat
 from . import session as rs
+from .slash import COMMANDS
 
 
 def _hon(desc_: str) -> str:
@@ -40,10 +42,10 @@ class SetupScreen(_Back):
     """Onboarding: hardware -> clase -> recomendaciones -> instalar."""
 
     def compose(self) -> ComposeResult:
-        yield Static("Onboarding · analiza tu equipo", id="h")
+        yield Static(self.app.tr("onboarding_h"), id="h")
         yield VerticalScroll(Static("Cargando hardware...", id="info"), id="body")
-        yield Button("Instalar el recomendado", id="setup-install", variant="primary")
-        yield Button("Seguir al chat", id="setup-done")
+        yield Button(self.app.tr("ok_installed", "Instalar el recomendado"), id="setup-install", variant="primary")
+        yield Button(self.app.tr("onboarding_done", "Seguir al chat"), id="setup-done")
 
     def on_mount(self) -> None:
         self.app.run_worker(self._load())
@@ -86,11 +88,90 @@ class SetupScreen(_Back):
             self.app.mark_onboarded()
 
 
+class ModelPickerScreen(_Back):
+    """Lista de modelos seleccionable (flechas + Enter), con filtro."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._all: list = []
+        self._rows: list = []
+
+    def compose(self) -> ComposeResult:
+        yield Static("", id="h")
+        yield Input(id="mp-filter", placeholder="/", value="")
+        yield ListView(id="mp-list")
+        yield Button(self.app.tr("back", "← Volver"), id="back")
+
+    def on_mount(self) -> None:
+        try:
+            self.query_one("#h", Static).update(self.app.tr("models_title"))
+        except Exception:
+            pass
+        self.app.run_worker(self._load())
+
+    async def _load(self) -> None:
+        import catalog as _cat
+        import compat as _compat
+        import hardware as _hw
+
+        lv = self.query_one("#mp-list", ListView)
+        try:
+            mods = await rchat.tags()
+            hw = _hw.detect_hardware(cache=True)
+            rows = []
+            for m in _cat.get_models():
+                mid = m.get("ollamaId") or m["id"]
+                ev = _compat.evaluate_model_best(m, hw)
+                rows.append((mid, m.get("size", ""), f"q{ev.quant}", ev.grade, mid in mods))
+            self._all = sorted(rows, key=lambda x: (x[4], x[0]))
+        except Exception as e:
+            self._all = []
+            lv.append(ListItem(Label(f"error: {e}")))
+            return
+        self._rows = self._all
+        self._render()
+
+    def _render(self) -> None:
+        try:
+            lv = self.query_one("#mp-list", ListView)
+        except Exception:
+            return
+        lv.clear()
+        rows = getattr(self, "_rows", None) or []
+        for i, (mid, size, quant, grade, inst) in enumerate(rows):
+            mark = "✓" if inst else "  "
+            label = f"{mark} {mid:<26} {size:>7} · {quant:<6} [{grade}]"
+            lv.append(ListItem(Label(label), id=f"m-{i}"))
+
+    async def on_input_changed(self, event: Input.Changed) -> None:
+        q = event.value.strip().lower()
+        if not q:
+            self._rows = self._all
+        else:
+            self._rows = [r for r in self._all if q in r[0].lower() or q in r[3].lower()]
+        self._render()
+
+    async def on_list_view_selected(self, event: ListView.Selected) -> None:
+        item = event.item
+        if not item or not item.id:
+            return
+        try:
+            i = int(item.id.split("-", 1)[1])
+            mid, _size, _quant, _grade, inst = self._rows[i]
+        except (ValueError, IndexError):
+            return
+        self.dismiss()
+        if not inst:
+            self.app.install_model_cmd(mid)
+            self.app.notice(f"{self.app.tr('installing')} {mid}...")
+        self.app.set_model(mid)
+
+
 class SessionsScreen(_Back):
     """Gestion de sesiones: abrir, borrar, renombrar, guardar."""
 
     def compose(self) -> ComposeResult:
-        yield Static("Sesiones", id="h")
+        yield Static("", id="h")
         yield ListView(id="sess-list")
         with VerticalScroll(id="actions"):
             yield Input(id="sess-rename", placeholder="nuevo nombre")
@@ -98,9 +179,10 @@ class SessionsScreen(_Back):
             yield Button("Borrar seleccionada", id="sess-del", variant="error")
             yield Button("Guardar actual como...", id="sess-save", variant="primary")
             yield Button("Renombrar a 'nuevo nombre'", id="sess-ren")
-            yield Button("← Volver", id="back")
+            yield Button(self.app.tr("back", "← Volver"), id="back")
 
     def on_mount(self) -> None:
+        self.query_one("#h", Static).update(self.app.tr("sessions"))
         self._refresh_list()
 
     def _refresh_list(self) -> None:
@@ -151,17 +233,17 @@ class SessionsScreen(_Back):
 
 
 class SettingsScreen(_Back):
-    """Configuracion de la sesion (tema, temperatura, modos)."""
+    """Configuracion de la sesion (tema, temperatura, idioma, modos)."""
 
     def compose(self) -> ComposeResult:
-        yield Static("Configuracion", id="h")
+        yield Static(self.app.tr("settings_title"), id="h")
         with VerticalScroll(id="body"):
-            yield Input(id="cfg-temp", placeholder="temperatura 0.0-2.0", value=str(self.app.temp))
-            yield Button("Cambiar tema (dark/light)", id="cfg-theme", variant="primary")
-            yield Button("Alternar modo eco", id="cfg-eco")
-            yield Button("Alternar modo programador", id="cfg-code")
-            yield Button("Guardar y volver", id="cfg-save")
-            yield Button("← Volver", id="back")
+            yield Input(id="cfg-temp", placeholder=self.app.tr("temp_set", "temperatura 0.0-2.0"),
+                        value=str(self.app.temp))
+            yield Button(f"{self.app.tr('theme')}: dark/light", id="cfg-theme", variant="primary")
+            yield Button(f"{self.app.tr('lang')}: {self.app.tr('lang')}", id="cfg-lang")
+            yield Button(self.app.tr("settings_saved"), id="cfg-save")
+            yield Button(self.app.tr("back", "← Volver"), id="back")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id
@@ -169,16 +251,14 @@ class SettingsScreen(_Back):
             self.go_back()
         elif bid == "cfg-theme":
             self.app.toggle_theme()
-            self.notify(f"Tema: {self.app.theme}")
-        elif bid == "cfg-eco":
-            self.app.toggle_eco()
-        elif bid == "cfg-code":
-            self.app.toggle_code()
+            self.notify(f"{self.app.tr('theme')}: {self.app.theme}")
+        elif bid == "cfg-lang":
+            self.app.change_lang("en" if self.app.lang == "es" else "es")
         elif bid == "cfg-save":
             val = self.query_one("#cfg-temp", Input).value.strip()
             if val:
                 self.app.set_temp(val)
-            self.app.notice("Configuracion guardada")
+            self.app.notice(self.app.tr("settings_saved"))
             self.go_back()
 
 
@@ -186,16 +266,16 @@ class HelpScreen(_Back):
     """Ayuda de comandos y atajos en overlay."""
 
     def compose(self) -> ComposeResult:
-        from .slash import COMMANDS
+        from .i18n import slash_desc
 
-        lines = ["RANDI — ayuda", "=" * 24, ""]
-        lines.append("Comandos: / o Ctrl+K → paleta · Tab → panel · Ctrl+C → cancelar · Ctrl+D → salir")
+        lines = [self.app.tr("help_title"), "=" * 24, ""]
+        lines.append(self.app.tr("hint"))
         lines.append("")
         lines.append("Slash:")
-        for name, (desc, _h) in COMMANDS.items():
-            lines.append(f"  {name:<12} {desc}")
+        for name in COMMANDS:
+            lines.append(f"  {name:<12} {slash_desc(self.app.lang, name)}")
         yield Static("\n".join(lines), id="h")
-        yield Button("Cerrar", id="back")
+        yield Button(self.app.tr("back", "← Volver"), id="back")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back":

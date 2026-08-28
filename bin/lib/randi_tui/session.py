@@ -7,26 +7,30 @@ from pathlib import Path
 
 CONFIG_DIR = Path.home() / ".config" / "randi"
 SESSIONS_DIR = CONFIG_DIR / "sessions"
-CONFIG_FILE = CONFIG_DIR / "config.json"
+
+
+def _cfg_file() -> Path:
+    return Path(CONFIG_DIR) / "config.json"
 
 
 def _sdir() -> Path:
-    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    return SESSIONS_DIR
+    Path(SESSIONS_DIR).mkdir(parents=True, exist_ok=True)
+    return Path(SESSIONS_DIR)
 
 
 def load_config() -> dict:
     try:
-        if CONFIG_FILE.exists():
-            return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        f = _cfg_file()
+        if f.exists():
+            return json.loads(f.read_text(encoding="utf-8"))
     except Exception:
         pass
     return {}
 
 
 def save_config(cfg: dict):
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    Path(CONFIG_DIR).mkdir(parents=True, exist_ok=True)
+    _cfg_file().write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def list_sessions() -> list[tuple[str, str]]:

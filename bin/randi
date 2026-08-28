@@ -8,7 +8,7 @@ fi
 
 RANDI_DIR="${RANDI_DIR:-$HOME/.local/share/randi}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
-RANDI_VERSION="2.0.8"
+RANDI_VERSION="2.0.9"
 RANDI_AUTHOR="Sebastian Laguna"
 RANDI_REPO="${RANDI_REPO:-https://github.com/sebastianl1/randi_IA.git}"
 REPO_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"

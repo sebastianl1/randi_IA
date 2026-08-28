@@ -2,6 +2,29 @@
 
 Todas las versiones notables de RANDI se documentan aqui. Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.9] - 2026-08-28
+
+### Added
+
+- **TUI reestructurada (layout subdividido)** estilo opencode con 2 columnas + composer:
+  - **Chat grande al centro** (burbuja de usuario con borde accent, assistant Markdown)
+    y **panel derecho CONTEXTO / ACTIVIDAD** (modelo, grado y quant, sesión, contexto en
+    tokens, RAM, fases/actividad) que se pliega con `Tab`.
+  - **Composer separado** abajo (TextArea **multilinea**, `Enter` envío, `Ctrl+J` salto),
+    con placeholder contextual y hint de atajos; contador de tokens en vivo.
+  - **`/models` abre un selector seleccionable** (↑↓ + Enter usa/instala; filtro con texto;
+    ✓ instalado · grado S–F · tamano · quant) y **`/lang <es|en>`** cambia el idioma de toda
+    la UI (ES por defecto, EN completo; tambien desde Ajustes).
+  - i18n aplicado a status, placeholder, hint, bienvenida, ayuda, paleta y comandos `/`.
+- Panel contexto con barra de actividad y fases (server, instalaciones, sesiones).
+
+### Changed
+
+- Refactor del layout de `app.py`: header · body (chat + context) · composer · hint/footer.
+- Sesiones/config resuelven rutas dinámicamente (config aislada y testeable).
+- Se eliminan módulos obsoletos (`editor.py`, `sidebar.py`); el panel derecho es el
+  nuevo contexto y la navegación queda en paleta/comandos.
+
 ## [2.0.8] - 2026-08-27
 
 ### Changed

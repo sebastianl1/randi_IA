@@ -46,9 +46,13 @@ def _register() -> dict[str, tuple[str, Handler]]:
     def _load(app: "RandiApp", arg: str):
         app.load_session(arg.strip())
 
-    @cmd("/models", "Listar modelos instalados")
+    @cmd("/models", "Modelos disponibles (seleccionables)")
     def _models(app: "RandiApp", arg: str):
-        app.list_models_info()
+        app.open_models_picker()
+
+    @cmd("/lang", "Cambiar idioma  /lang es|en")
+    def _lang(app: "RandiApp", arg: str):
+        app.set_lang(arg.strip())
 
     @cmd("/install", "Instalar un modelo  /install <modelo>")
     def _install(app: "RandiApp", arg: str):
