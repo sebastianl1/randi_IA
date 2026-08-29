@@ -17,17 +17,32 @@ almacena aquí: el contexto vive en el navegador (localStorage).
 
 ## Despliegue (cuenta gratuita)
 
+**Opción A — desde Termux/Android (recomendada, solo curl):**
+
+```bash
+bash deploy.sh          # te pide Account ID y API Token
+```
+
+1. Crea (o usa) una cuenta en `dash.cloudflare.com` — **podés crear una
+   nueva** para este proyecto; Cloudflare permite varias cuentas por persona.
+2. **My Profile → API Tokens → Create Token** → template *Edit Cloudflare
+   Workers* → copiá el token.
+3. **Account ID**: en *Workers & Pages → Overview* (barra lateral).
+4. Corré `bash deploy.sh`, pegá ambos. Al final te da la URL del Worker,
+   que ponés en `site/public/chat-config.json` y hacés commit + push.
+
+**Opción B — desde un PC:**
+
 ```bash
 cd workers/chat
-npm install          # sirve para typecheck; wrangler se ejecuta bajo demanda
 npx wrangler@latest login   # una vez
 npx wrangler@latest deploy
 ```
 
-> En Android/Termux wrangler no corre (workerd no soporta esa plataforma):
-> desplegá desde un PC, o subí `src/index.ts` directo desde el
-> **dashboard de Cloudflare** (Workers → Create Worker → paste the code),
-> y no olvides crear el binding de Workers AI (ver abajo).
+> En Android/Termux wrangler no corre (workerd no tiene binario para esa
+> plataforma); por eso `deploy.sh` usa la API REST directa.
+> Alternativa manual: subí el contenido de `src/index.ts` desde el
+> dashboard (Workers → Create Worker → paste) y creá el binding abajo.
 
 Luego, en el dashboard del Worker (pestaña **Settings → Bindings**), crea el
 binding de **Workers AI** con nombre `AI` (Workers → Create → Workers AI). Sin
