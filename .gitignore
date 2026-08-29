@@ -17,3 +17,5 @@ web/.astro/
 site/node_modules/
 site/dist/
 site/.astro/
+# build del worker
+dist/
