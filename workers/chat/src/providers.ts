@@ -26,6 +26,8 @@ export const MODELS: ModelDef[] = [
   { id: 'llama-3.1-8b', label: 'Llama 3.1 8B', provider: 'workers-ai', ref: '@cf/meta/llama-3.1-8b-instruct-fast', note: 'Generalista y equilibrado' },
   { id: 'glm-4.7-flash', label: 'GLM 4.7 Flash', provider: 'workers-ai', ref: '@cf/zai-org/glm-4.7-flash', note: 'Rápido y multilingüe' },
   { id: 'llama-3.2-3b', label: 'Llama 3.2 3B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-3b-instruct', note: 'Ligero y veloz' },
+  { id: 'gpt-oss-20b', label: 'GPT-OSS 20B', provider: 'workers-ai', ref: '@cf/openai/gpt-oss-20b', note: 'Candidato' },
+  { id: 'llama-3.2-1b', label: 'Llama 3.2 1B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-1b-instruct', note: 'Candidato' },
 ];
 
 // Crosstream compatible OpenAI (OpenRouter y Hugging Face Inference).
