@@ -1,9 +1,9 @@
 {
-  "endpoint": "",
+  "endpoint": "https://randi-chat.na11tsabes11.workers.dev",
   "models": [
-    { "id": "qwen2.5-7b", "label": "Qwen 2.5 7B", "provider": "workers-ai", "note": "Rápido y muy bueno en español" },
+    { "id": "qwen-coder-32b", "label": "Qwen Coder 32B", "provider": "workers-ai", "note": "Especialista en código" },
     { "id": "llama-3.1-8b", "label": "Llama 3.1 8B", "provider": "workers-ai", "note": "Generalista y equilibrado" },
-    { "id": "deepseek-r1-14b", "label": "DeepSeek R1 · 14B", "provider": "workers-ai", "note": "Razonamiento paso a paso" },
-    { "id": "mistral-7b", "label": "Mistral 7B", "provider": "workers-ai", "note": "Directo y veloz" }
+    { "id": "glm-4.7-flash", "label": "GLM 4.7 Flash", "provider": "workers-ai", "note": "Rápido y multilingüe" },
+    { "id": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "provider": "workers-ai", "note": "Ágil, con razonamiento" }
   ]
 }

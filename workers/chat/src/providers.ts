@@ -22,10 +22,10 @@ export interface ModelDef {
 }
 
 export const MODELS: ModelDef[] = [
-  { id: 'qwen2.5-7b', label: 'Qwen 2.5 7B', provider: 'workers-ai', ref: '@cf/qwen/qwen2.5-7b-instruct', note: 'Rápido y muy bueno en español' },
-  { id: 'llama-3.1-8b', label: 'Llama 3.1 8B', provider: 'workers-ai', ref: '@cf/meta/llama-3.1-8b-instruct', note: 'Generalista y equilibrado' },
-  { id: 'deepseek-r1-14b', label: 'DeepSeek R1 · 14B', provider: 'workers-ai', ref: '@cf/deepseek-ai/deepseek-r1-distill-qwen-14b', note: 'Razonamiento paso a paso' },
-  { id: 'mistral-7b', label: 'Mistral 7B', provider: 'workers-ai', ref: '@cf/mistral/mistral-7b-instruct-v0.1', note: 'Directo y veloz' },
+  { id: 'qwen-coder-32b', label: 'Qwen Coder 32B', provider: 'workers-ai', ref: '@cf/qwen/qwen2.5-coder-32b-instruct', note: 'Especialista en código' },
+  { id: 'llama-3.1-8b', label: 'Llama 3.1 8B', provider: 'workers-ai', ref: '@cf/meta/llama-3.1-8b-instruct-fast', note: 'Generalista y equilibrado' },
+  { id: 'glm-4.7-flash', label: 'GLM 4.7 Flash', provider: 'workers-ai', ref: '@cf/zai-org/glm-4.7-flash', note: 'Rápido y multilingüe' },
+  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', provider: 'workers-ai', ref: '@cf/deepseek-ai/deepseek-v4-flash-0731', note: 'Ágil, con razonamiento' },
 ];
 
 // Crosstream compatible OpenAI (OpenRouter y Hugging Face Inference).
