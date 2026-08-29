@@ -1,0 +1,42 @@
+name: Deploy Worker (randi-chat)
+
+# Se ejecuta solo cuando cambian archivos del Worker (workers/chat/**).
+# Usa wrangler en el runner de GitHub (no necesitás wrangler local).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/chat/**'
+  workflow_dispatch:
+
+concurrency:
+  group: worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar secrets configurados
+        id: check
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "Secrets no configurados — se salta el deploy (agregá CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID en Settings → Secrets and variables → Actions)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy Worker a Cloudflare
+        if: steps.check.outputs.skip == 'false'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          workingDirectory: workers/chat

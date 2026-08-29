@@ -15,9 +15,28 @@ almacena aquí: el contexto vive en el navegador (localStorage).
 | OpenRouter (`:free`) | modelos gratis con límites | `OPENROUTER_API_KEY` opcional |
 | Hugging Face Inference | tier gratuito | `HF_API_KEY` opcional |
 
-## Despliegue (cuenta gratuita)
+## Despliegue automático (GitHub Actions) — opción recomendada
 
-**Opción A — desde Termux/Android (recomendada, solo curl):**
+Una vez configurado, **cada push que toque `workers/chat/**` despliega el
+Worker solo** (no volvés a hacer nada). La URL no cambia: `randi-chat`.
+
+Solo hay que cargar 2 secretos **una sola vez** en el repo
+`Settings → Secrets and variables → Actions → New repository secret`:
+
+| Nombre | Valor |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Token API (My Profile → API Tokens → template *Edit Cloudflare Workers*) |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID (Workers & Pages → Overview) |
+
+Y crear **una vez** el binding de Workers AI `AI` (ver abajo).
+
+Después: editar `src/providers.ts` (modelos) o `wrangler.toml` (límites),
+hacer commit + push, y el workflow `.github/workflows/worker-deploy.yml`
+lo sube. Si falta algún secret, el workflow se salta sin romper el repo.
+
+## Despliegue manual (alternativa)
+
+**Opción A — desde Termux/Android (solo curl):**
 
 ```bash
 bash deploy.sh          # te pide Account ID y API Token
@@ -71,4 +90,4 @@ curl -N -X POST localhost:8787/api/chat \
 
 Edita `src/providers.ts` (`MODELS`): para Workers AI usá un id `@cf/...`;
 para OpenRouter un id `:free` (ej. `deepseek/deepseek-chat-v3-0324:free`).
-Luego `npx wrangler deploy` otra vez.
+Luego commit + push → el GitHub Action despliega solo.
