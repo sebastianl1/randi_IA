@@ -1,13 +1,24 @@
-// Catálogo de modelos: carrusel paginado (4 columnas × 2 filas por página)
-// con botones laterales, búsqueda por texto y filtro por familia.
-// Al hacer clic en una tarjeta se abre la ficha en pestaña nueva.
+// Catálogo de modelos: filas estilo "detección" (badge de color por tamaño)
+// paginadas con carrusel (‹ ›), buscador y filtro por familia.
+// Al hacer clic se abre la ficha en pestaña nueva.
 interface CatModel {
   id: string; slug: string; name: string; size: string | null;
   params: number | null; arch: string | null; family: string | null;
   provider: string | null; useCase: string[];
 }
 
-const PER = 8; // 4 columnas × 2 filas
+const PER = 12; // 12 filas por página (2 columnas × 6)
+
+// Badge por tamaño: S=super ligero … F=pesado (paleta de grados).
+function bandOf(params: number | null): { g: string; c: string } {
+  const p = params ?? 99;
+  if (p <= 1.5) return { g: 'S', c: '#22c55e' };
+  if (p <= 4) return { g: 'A', c: '#4ade80' };
+  if (p <= 8) return { g: 'B', c: '#a3e635' };
+  if (p <= 14) return { g: 'C', c: '#f59e0b' };
+  if (p <= 32) return { g: 'D', c: '#f97316' };
+  return { g: 'F', c: '#ef4444' };
+}
 
 export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
   const root = document.getElementById('models');
@@ -87,7 +98,7 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
       empty.classList.remove('hidden');
     } else {
       const start = page * PER;
-      for (const m of filtered.slice(start, start + PER)) list.appendChild(card(m));
+      for (const m of filtered.slice(start, start + PER)) list.appendChild(row(m));
     }
     const tp = totalPages();
     pageEl.textContent = `${L.page} ${page + 1} / ${tp}`;
@@ -97,55 +108,45 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
     list.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
-  function card(m: CatModel): HTMLElement {
+  function row(m: CatModel): HTMLElement {
     const href = `${base}${lang === 'en' ? 'en/' : ''}model/${m.slug}`;
     const a = document.createElement('a');
-    a.className = 'mc-card';
+    a.className = 'mc-row';
     a.href = href;
     a.target = '_blank';
     a.rel = 'noreferrer';
-    const head = document.createElement('div');
-    head.className = 'mc-head';
-    if (m.params != null) {
-      const p = document.createElement('span');
-      p.className = 'mc-params';
-      p.textContent = `#${m.params}B`;
-      head.appendChild(p);
-    }
-    if (m.arch) {
-      const ar = document.createElement('span');
-      ar.className = 'mc-arch';
-      ar.textContent = m.arch;
-      head.appendChild(ar);
-    }
-    const h = document.createElement('div');
-    h.className = 'mc-name';
-    h.textContent = m.name;
-    const meta = document.createElement('div');
-    meta.className = 'mc-meta';
-    meta.textContent = [m.family, m.provider].filter(Boolean).join(' · ');
-    a.appendChild(head);
-    a.appendChild(h);
-    a.appendChild(meta);
-    if (m.useCase && m.useCase.length) {
-      const u = document.createElement('div');
-      u.className = 'mc-use';
-      for (const uc of m.useCase.slice(0, 3)) {
-        const s = document.createElement('span');
-        s.textContent = uc;
-        u.appendChild(s);
-      }
-      a.appendChild(u);
-    }
-    const foot = document.createElement('div');
-    foot.className = 'mc-foot';
+
+    const b = bandOf(m.params);
+    const badge = document.createElement('span');
+    badge.className = 'grade';
+    badge.style.setProperty('--grade-color', b.c);
+    badge.textContent = b.g;
+    a.appendChild(badge);
+
+    const mid = document.createElement('span');
+    mid.className = 'mc-mid';
+    const name = document.createElement('span');
+    name.className = 'mc-name';
+    name.textContent = m.name;
+    const sub = document.createElement('span');
+    sub.className = 'mc-sub';
+    const label = m.useCase && m.useCase.length ? m.useCase.join(' · ') : [m.family, m.arch].filter(Boolean).join(' · ');
+    sub.textContent = label || '—';
+    mid.appendChild(name);
+    mid.appendChild(sub);
+    a.appendChild(mid);
+
+    const right = document.createElement('span');
+    right.className = 'mc-right';
     const sz = document.createElement('span');
-    sz.textContent = m.size || '';
-    foot.appendChild(sz);
+    sz.className = 'mc-size';
+    sz.textContent = m.size ? `${m.size}` : (m.params != null ? `#${m.params}B` : '');
+    right.appendChild(sz);
     const go = document.createElement('span');
+    go.className = 'mc-go';
     go.textContent = '↗';
-    foot.appendChild(go);
-    a.appendChild(foot);
+    right.appendChild(go);
+    a.appendChild(right);
     return a;
   }
 

@@ -11,6 +11,7 @@ interface L10n {
   offline: string; sel: string; send: string; stop: string; placeholder: string;
   ctx: string; export: string; clear: string; pro: string; sponsor: string;
   limit: string; reset: string; err: string; hint: string; typing: string;
+  newConv: string; msgsL: string; tokL: string; sugg: string[];
 }
 
 const es: L10n = {
@@ -29,6 +30,14 @@ const es: L10n = {
   err: 'Ups, algo falló al chatear. Intentá de nuevo.',
   hint: 'Enter enviar · Shift+Enter salto de línea',
   typing: 'Pensando…',
+  newConv: 'Nueva conversación',
+  msgsL: 'mensajes',
+  tokL: '≈ tokens',
+  sugg: [
+    'Explicame qué es un LLM en términos simples',
+    'Escribí un script de Python para leer un CSV',
+    'Dame 3 ideas para presentar un proyecto',
+  ],
 };
 const en: L10n = {
   offline: 'The online chat is not connected yet. Set the Worker URL in /chat-config.json',
@@ -46,6 +55,14 @@ const en: L10n = {
   err: 'Something went wrong while chatting. Try again.',
   hint: 'Enter to send · Shift+Enter for newline',
   typing: 'Thinking…',
+  newConv: 'New conversation',
+  msgsL: 'messages',
+  tokL: '≈ tokens',
+  sugg: [
+    'Explain what an LLM is in simple terms',
+    'Write a Python script to read a CSV',
+    'Give me 3 ideas to present a project',
+  ],
 };
 
 export async function mountChat(): Promise<void> {
@@ -61,6 +78,11 @@ export async function mountChat(): Promise<void> {
   const status = root.querySelector<HTMLElement>('[data-cd-status]');
   const exportBtn = root.querySelector<HTMLButtonElement>('[data-cd-export]');
   const clearBtn = root.querySelector<HTMLButtonElement>('[data-cd-clear]');
+  const newBtn = root.querySelector<HTMLButtonElement>('[data-cd-new]');
+  const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
+  const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
+  const modelLabel = root.querySelector<HTMLElement>('[data-cd-model-label]');
+  const suggEl = root.querySelector<HTMLElement>('[data-cd-sugg]');
   if (!sel || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
 
   let endpoint = '';
@@ -84,6 +106,29 @@ export async function mountChat(): Promise<void> {
   }
   function esc(s: string): string { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+  function estTokens(list: Msg[]): number {
+    let chars = 0;
+    for (const m of list) chars += m.content.length;
+    return Math.round(chars / 4);
+  }
+  function updateStat(): void {
+    const c = `${ctx.length} ${L.msgsL}`;
+    const t = `${L.tokL} ${estTokens(ctx).toLocaleString()}`;
+    countEls.forEach((el) => { el.textContent = c; });
+    tokEls.forEach((el) => { el.textContent = t; });
+  }
+  function refresh(): void {
+    msgs.innerHTML = '';
+    for (const m2 of ctx) addBubble(m2.role, m2.content);
+    updateStat();
+  }
+  function nuevaConversacion(): void {
+    try { localStorage.removeItem(LS_NS + current); } catch { /* noop */ }
+    ctx = [];
+    refresh();
+    input.focus();
+  }
+
   function renderModels(): void {
     sel.innerHTML = '';
     for (const m of models) {
@@ -92,7 +137,18 @@ export async function mountChat(): Promise<void> {
       sel.appendChild(o);
     }
     current = sel.value;
+    if (modelLabel) {
+      const mm = models.find((x) => x.id === current);
+      modelLabel.textContent = mm ? mm.label : current;
+    }
     if (status) status.textContent = `${L.ctx} · ${L.reset}`;
+  }
+
+  function setModelLabel(): void {
+    if (modelLabel) {
+      const mm = models.find((x) => x.id === sel.value);
+      modelLabel.textContent = mm ? mm.label : sel.value;
+    }
   }
 
   async function offline(msg?: string): Promise<void> {
@@ -122,7 +178,7 @@ export async function mountChat(): Promise<void> {
       if (!models.length) { await offline(L.offline); return; }
       renderModels();
       ctx = load();
-      for (const m2 of ctx) addBubble(m2.role, m2.content);
+      refresh();
     } catch {
       await offline();
     }
@@ -136,14 +192,27 @@ export async function mountChat(): Promise<void> {
   sel.addEventListener('change', () => {
     current = sel.value;
     ctx = load();
-    msgs.innerHTML = '';
-    for (const m2 of ctx) addBubble(m2.role, m2.content);
+    setModelLabel();
+    refresh();
   });
+  if (newBtn) newBtn.addEventListener('click', () => nuevaConversacion());
   clearBtn.addEventListener('click', () => {
     try { localStorage.removeItem(LS_NS + current); } catch { /* noop */ }
     ctx = [];
-    msgs.innerHTML = '';
+    refresh();
   });
+  if (suggEl) {
+    for (const s of L.sugg) {
+      const c = document.createElement('button');
+      c.className = 'cd-sugg';
+      c.textContent = s;
+      c.addEventListener('click', () => {
+        input.value = s;
+        input.focus();
+      });
+      suggEl.appendChild(c);
+    }
+  }
   exportBtn.addEventListener('click', () => {
     const payload = { model: current, exportedAt: new Date().toISOString(), context: ctx };
     const file = new File([JSON.stringify(payload, null, 2)], `randi-chat-${current}.json`, { type: 'application/json' });
@@ -161,6 +230,7 @@ export async function mountChat(): Promise<void> {
     ctx.push({ role: 'user', content: text });
     save();
     addBubble('user', text);
+    updateStat();
     const aiEl = addBubble('assistant', '');
     addBubble('typing' as 'assistant', L.typing);
     setBusy(true);
@@ -204,6 +274,7 @@ export async function mountChat(): Promise<void> {
               if (aiEl.textContent && aiEl.textContent.trim()) {
                 ctx.push({ role: 'assistant', content: aiEl.textContent });
                 save();
+                updateStat();
               }
             } else if (j.type === 'error') {
               const typing = msgs.querySelector('.cd-typing');
