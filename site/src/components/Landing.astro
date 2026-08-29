@@ -1,6 +1,6 @@
 ---
 import { content, installSteps } from '../i18n.js';
-import ChatDemo from './ChatDemo.astro';
+import ModelGrid from './ModelGrid.astro';
 interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const t = content[lang];
@@ -63,8 +63,8 @@ const t = content[lang];
   </div>
 </section>
 
-<!-- Chatea ahora: widget demo online (sección adquisición) -->
-<ChatDemo lang={lang} />
+<!-- Catálogo de modelos con scroll infinito (sección adquisición) -->
+<ModelGrid lang={lang} />
 
 <!-- Arquitectura: modelo + harness -->
 <section id="arch" class="mx-auto max-w-6xl px-4 py-16">

@@ -19,3 +19,6 @@ site/dist/
 site/.astro/
 # build del worker
 dist/
+
+# temporales de build/tests
+.wbuild/

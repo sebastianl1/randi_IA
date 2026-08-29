@@ -1,0 +1,154 @@
+---
+import { content, installSteps } from '../i18n.js';
+import { cmdEs, cmdEn } from '../lib/docs.js';
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const es = lang === 'es';
+const t = content[lang];
+const cmds = es ? cmdEs : cmdEn;
+const base = import.meta.env.BASE_URL;
+const modelsUrl = `${base}${lang === 'en' ? 'en/' : ''}#models`;
+const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
+const L = {
+  eyebrow: es ? 'documentación' : 'documentation',
+  title: es ? 'Documentación de RANDI' : 'RANDI documentation',
+  sub: es ? 'Todo lo que necesitás para instalar, usar y sacarle provecho a RANDI: comandos, instalación por plataforma, arquitectura y más.' :
+          'Everything you need to install, use and get the most out of RANDI: commands, per-OS install, architecture and more.',
+  toc: es ? 'En esta página' : 'On this page',
+  intro: es ? 'Qué es RANDI' : 'What is RANDI',
+  introD: es ? 'RANDI es un asistente de IA 100% local, multiplataforma (Termux, Linux, macOS, Windows nativo y WSL2) que detecta tu hardware, te recomienda los modelos que tu equipo puede correr y los ejecuta sin conexión ni consumo de tokens. Incluye chat en terminal (TUI), interfaz web con WebGPU, visión, voz y generación de imágenes.' :
+            'RANDI is a 100% local AI assistant, cross-platform (Termux, Linux, macOS, native Windows and WSL2) that detects your hardware, recommends the models your device can run and serves them offline with no token cost. Includes terminal chat (TUI), a WebGPU web UI, vision, voice and image generation.',
+  install: es ? 'Instalación por plataforma' : 'Install by platform',
+  installD: es ? 'Elegí tu sistema operativo. RANDI instala Ollama, python y configura tu shell con un solo comando.' :
+               'Pick your OS. RANDI installs Ollama, python and sets up your shell with one command.',
+  cmdsT: es ? 'Comandos de RANDI' : 'RANDI commands',
+  cmdsD: es ? 'La interfaz completa desde la terminal:' : 'The full interface from the terminal:',
+  arch: es ? 'Arquitectura' : 'Architecture',
+  catalog: es ? 'Catálogo de modelos' : 'Model catalog',
+  catalogD: es ? 'Explorá los 72 modelos compatibles con sus fichas completas (especificaciones, requisitos de hardware e instalación).' :
+               'Browse all 72 compatible models with full cards (specs, hardware requirements and install).',
+  openCat: es ? 'Abrir catálogo →' : 'Open the catalog →',
+  tryChat: es ? '¿Preferís probar primero? →' : 'Rather try first? →',
+  faqT: es ? 'Preguntas frecuentes' : 'FAQ',
+};
+const toc: Array<[string, string]> = [
+  ['intro', L.intro],
+  ['install', L.install],
+  ['comandos', L.cmdsT],
+  ['arquitectura', L.arch],
+  ['catalogo', L.catalog],
+  ['faq', L.faqT],
+];
+const keys: Array<'android' | 'linux' | 'macos' | 'windows-wsl' | 'windows-gitbash'> = ['android', 'linux', 'macos', 'windows-wsl', 'windows-gitbash'];
+---
+<section class="mx-auto max-w-6xl px-4 pt-14 pb-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.eyebrow}</p>
+  <h1 class="mt-2 text-center text-4xl md:text-5xl font-black tracking-tight">{L.title}</h1>
+  <p class="mx-auto mt-3 max-w-2xl text-center text-muted leading-relaxed">{L.sub}</p>
+
+  <div class="mt-10 grid gap-10 lg:grid-cols-[220px_1fr]">
+    <!-- TOC -->
+    <aside class="lg:sticky lg:top-20 lg:self-start">
+      <p class="mono text-[11px] uppercase tracking-widest text-muted mb-3">{L.toc}</p>
+      <nav class="docs-toc">
+        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      </nav>
+    </aside>
+
+    <!-- Contenido -->
+    <div class="space-y-12 min-w-0">
+      <!-- Intro -->
+      <section id="intro" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.intro}</h2>
+        <p class="mt-3 text-muted leading-relaxed">{L.introD}</p>
+        <ul class="mt-4 grid gap-2 sm:grid-cols-2 text-sm">
+          {t.traza.items.map((it) => <li class="flex items-start gap-2 card p-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>)}
+        </ul>
+      </section>
+
+      <!-- Instalación -->
+      <section id="install" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.install}</h2>
+        <p class="mt-2 text-muted text-sm">{L.installD}</p>
+        <div class="mt-5 space-y-3">
+          {t.install.guides.map((g) => (
+            <details class="card p-5">
+              <summary class="font-semibold cursor-pointer flex items-center justify-between gap-3">{g.label}<span class="text-muted mono">+</span></summary>
+              <p class="mt-2 text-sm text-muted">{g.intro}</p>
+              <ol class="mt-3 space-y-2 text-sm">
+                {g.steps.map((s) => (
+                  <li><span class="mono text-accent">◆</span> <span class="font-medium">{s.title.replace(/^[\d.]+\.\s*/, '')}</span> <span class="text-muted inline"> — {s.body.filter(Boolean).join(' · ')}</span></li>
+                ))}
+              </ol>
+              <code class="block mt-3">{installSteps[g.key].join('\n')}</code>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <!-- Comandos -->
+      <section id="comandos" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.cmdsT}</h2>
+        <p class="mt-2 text-muted text-sm">{L.cmdsD}</p>
+        <div class="mt-4 card p-2 divide-y divide-line/40">
+          {cmds.map(([cmd, d]) => (
+            <div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 px-3 py-2">
+              <code class="text-accent text-[13px]">{cmd}</code>
+              <span class="text-sm text-muted">{d}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- Arquitectura -->
+      <section id="arquitectura" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.arch}</h2>
+        <p class="mt-2 text-muted text-sm">{t.arch.d}</p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {t.arch.cards.map((c) => (
+            <div class="card p-5">
+              <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{c.tag}</span>
+              <h3 class="mt-3 font-bold">{c.t}</h3>
+              <p class="mt-1.5 text-sm text-muted leading-relaxed">{c.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- Catálogo -->
+      <section id="catalogo" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.catalog}</h2>
+        <p class="mt-2 text-muted text-sm max-w-xl">{L.catalogD}</p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a href={modelsUrl} class="btn btn-primary">{L.openCat}</a>
+          <a href={chatUrl} class="btn">{L.tryChat}</a>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="docs-section">
+        <h2 class="text-2xl font-black tracking-tight">{L.faqT}</h2>
+        <div class="mt-4 space-y-3">
+          {t.faq.map((f) => (
+            <details class="card p-5">
+              <summary class="font-semibold cursor-pointer flex items-center justify-between gap-3">{f.q}<span class="text-muted mono">+</span></summary>
+              <p class="mt-2.5 text-sm text-muted leading-relaxed">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<style>
+  .docs-toc { display: flex; flex-direction: column; gap: .15rem; font-size: .875rem; overflow-x: auto; }
+  .docs-toc a { color: var(--color-muted); padding: .3rem .5rem; border-left: 2px solid var(--color-line); transition: color .15s, border-color .15s; }
+  .docs-toc a:hover { color: var(--color-ink); border-color: var(--color-accent); }
+  .docs-section { scroll-margin-top: 5rem; }
+  @media (max-width: 1023px) {
+    .docs-toc { flex-direction: row; flex-wrap: wrap; gap: .4rem; }
+    .docs-toc a { border-left: none; border: 1px solid var(--color-line); border-radius: 99px; padding: .25rem .7rem; white-space: nowrap; }
+    .docs-toc a:hover { border-color: var(--color-accent); }
+  }
+</style>

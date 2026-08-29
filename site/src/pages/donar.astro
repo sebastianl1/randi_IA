@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DonarPage from '../components/DonarPage.astro';
+const t = {
+  title: 'RANDI — Apoya el proyecto',
+  desc: 'Donaciones para mantener RANDI, IA local open source: GitHub Sponsors, Buy Me a Coffee y más.',
+};
+---
+<Layout lang="es" title={t.title} description={t.desc}>
+  <DonarPage lang="es" />
+</Layout>

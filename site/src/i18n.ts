@@ -11,7 +11,7 @@ export interface OSGuide {
 }
 
 export interface Landing {
-  nav: { models: string; install: string; github: string };
+  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string };
   arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
   modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
@@ -150,7 +150,7 @@ const guidesEn: OSGuide[] = [
 
 export const content: Record<'es' | 'en', Landing> = {
   es: {
-    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub' },
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea con nosotros', docs: 'Documentación', donar: 'Donar' },
     hero: {
       badge: 'Ρ RANDI · IA local multiplataforma · Termux · Linux · macOS · Windows nativo',
       title: ['IA local para tu', 'equipo real'],
@@ -217,7 +217,7 @@ export const content: Record<'es' | 'en', Landing> = {
     footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
-    nav: { models: 'Models', install: 'Installation', github: 'GitHub' },
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat with us', docs: 'Documentation', donar: 'Donate' },
     hero: {
       badge: 'Ρ RANDI · 100% local cross-platform AI · Termux, Linux, macOS, native Windows',
       title: ['Local AI for your', 'actual device'],
