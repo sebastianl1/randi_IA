@@ -20,6 +20,11 @@ almacena aquí: el contexto vive en el navegador (localStorage).
 Una vez configurado, **cada push que toque `workers/chat/**` despliega el
 Worker solo** (no volvés a hacer nada). La URL no cambia: `randi-chat`.
 
+> **El Worker se crea automáticamente en el primer deploy** con el nombre del
+> `wrangler.toml` (`randi-chat`). NO hace falta crearlo en el dashboard; el
+> token debe permitir *edit de Workers* (template "Edit Cloudflare Workers"),
+> que ya incluye la creación.
+
 Solo hay que cargar 2 secretos **una sola vez** en el repo
 `Settings → Secrets and variables → Actions → New repository secret`:
 
