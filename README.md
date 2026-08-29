@@ -5,9 +5,35 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Plataformas](https://img.shields.io/badge/Termux%20%E2%80%A2%20Linux%20%E2%80%A2%20macOS%20%E2%80%A2%20Windows%20%E2%80%A2%20WSL2-6c8cff?style=flat-square)]()
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square)]()
+[![Web](https://img.shields.io/badge/Web-sebastianl1.github.io/randi_IA-6c8cff?style=flat-square)](https://sebastianl1.github.io/randi_IA/)
 
 **RANDI** — Asistente de IA local **multiplataforma**: Android (Termux), Linux, macOS y **Windows nativo** (se instala desde npm, sin WSL).
 Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, deteccion de hardware con recomendacion automatica, vision, voz, texto a voz y generacion de imagenes.
+
+> 🔥 **Chatea online sin instalar nada** — probá el **"Chatea con nosotros"** de la
+> landing: [abrir el chat online](https://sebastianl1.github.io/randi_IA/chat/) ·
+> [modelos](https://sebastianl1.github.io/randi_IA/#models) ·
+> [documentación](https://sebastianl1.github.io/randi_IA/docs/) ·
+> [apoyar el proyecto](https://sebastianl1.github.io/randi_IA/donar/)
+
+## Chatea online (sin instalar nada)
+
+La **landing** (GitHub Pages, ES/EN) incluye un **"Chatea con nosotros"** listo para
+probar IA en la nube desde el navegador, sin cuenta ni tarjeta:
+
+- **4 modelos de libre uso** servidos por **Cloudflare Workers AI** (plan gratuito):
+  Qwen Coder 32B · Llama 3.1 8B · Llama 3.2 3B · Llama 3.2 1B.
+- **Streaming real** vía un **Worker proxy** (`workers/chat/`, gratis en Cloudflare)
+  con límite diario por IP (`FREE_DAILY_LIMIT`).
+- **Contexto 100% local**: cada conversación vive en el `localStorage` del
+  navegador, por modelo, con exportación JSON y botón "Nueva conversación".
+- Cero cookies y cero rastreo. **Pro "sin límites"** (modelos más grandes,
+  más mensajes) está en el roadmap como tier freemium.
+
+Secciones de la web: [Chatear](https://sebastianl1.github.io/randi_IA/chat/) ·
+[Catálogo (72 modelos)](https://sebastianl1.github.io/randi_IA/#models) ·
+[Documentación](https://sebastianl1.github.io/randi_IA/docs/) ·
+[Donaciones](https://sebastianl1.github.io/randi_IA/donar/).
 
 ## Requisitos
 
@@ -137,8 +163,9 @@ randi img "un perro astronauta"
 
 ## Modelos recomendados
 
-El catalogo completo (**85 modelos, v2**) se centraliza en `models.json` y se consulta con
-`randi models`, `randi models media`, `randi setup` o la web. Clasificados por tipo:
+El catalogo se centraliza en `models.json` y se consulta con
+`randi models`, `randi models media`, `randi setup` o la web (**72 modelos** en el
+listado online). Clasificados por tipo:
 **texto/codigo/razonamiento/vision**, **imagen** y **video**. Algunos destacados:
 
 ### Bajo consumo (< 2GB RAM) — 4-6GB RAM
@@ -295,9 +322,13 @@ randi/
 │       └── pull.py         # Menu de descarga de modelos
 ├── web/                    # SPA `randi web` (Astro 5 + Tailwind 4)
 │   ├── server.py          # Servidor web (proxy + motor compat + jobs de install)
-│   ├── models.json        # Catalogo central v2 (85 modelos)
+│   ├── models.json        # Catalogo central v2 (72 modelos)
 │   └── src/               # Paginas y scripts de la SPA
-├── site/                   # Landing GitHub Pages (Astro, ES/EN) + guias por SO
+├── site/                   # Landing GitHub Pages (Astro, ES/EN): /chat, /docs,
+│   │                       #  /donar, catálogo con carrusel, detección de hardware
+├── workers/
+│   └── chat/               # Worker Cloudflare (gratis): /api/chat streaming +
+│                           #  /api/models (back del "Chatea con nosotros")
 └── docs/                   # Documentacion: ARCHITECTURE, ROADMAP
 ```
 
@@ -338,5 +369,16 @@ RANDI es un proyecto open source, gratuito y sin publicidad, hecho con dedicacio
 - 🐛 Reporta errores o sugiere mejoras en [Issues](https://github.com/sebastianl1/randi_IA/issues).
 - 🌐 Comparte el proyecto en redes, comunidades de Termux/IA y listas de recursos.
 - 🤝 Las contribuciones son bienvenidas (ver `CONTRIBUTING.md`).
+
+### Apoya el desarrollo (open source)
+
+Tu apoyo mantiene el chat online gratis, el catálogo y el desarrollo constante:
+
+- ❤️ **GitHub Sponsors** — [sebastianl1](https://github.com/sponsors/sebastianl1)
+- ☕ **Buy Me a Coffee** — [sebasbele1c](https://buymeacoffee.com/sebasbele1c)
+- 💳 **Cripto y otros métodos** están en el roadmap; escribinos si preferís
+  arreglar otra forma a medida.
+- 🔜 **Tier Pro "sin límites"** (modelos más grandes y más mensajes en el chat
+  online) próximo; financiará, además, los modelos de pago del servicio.
 
 ## HECHO POR SEBASTIAN LAGUNA
