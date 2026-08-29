@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { mountChat } from '../../lib/demo-chat.js';
+const base = import.meta.env.BASE_URL;
+const donarUrl = `${base}en/donar/`;
+const L = {
+  badge: 'chat now',
+  title: 'Try AI online, nothing to install',
+  sub: 'Light, free-to-use models running in the cloud. Your conversation stays in your browser, with JSON export.',
+  pick: 'Pick your model',
+  info: 'About this chat',
+  i1: 'Local context: each conversation lives on your device.',
+  i2: 'Free daily limit: no account, no card.',
+  i3: 'Zero cookies, zero tracking.',
+  sponsor: 'Sponsor RANDI',
+  soon: 'Coming soon',
+  soonD: 'The "Chat with us" grows. This is already planned for upcoming versions.',
+  soon1: 'Image generation',
+  soon1d: 'Hugging Face models to generate images right from the browser.',
+  soon2: 'More online models',
+  soon2d: 'Code, vision and reasoning: more options for your use.',
+  soon3: 'Voice and audio',
+  soon3d: 'Dictation and read-aloud of the answers.',
+  send: 'Send',
+  stop: 'Stop',
+  placeholder: 'Type your message...',
+  exportB: 'Export',
+  clearB: 'Clear',
+};
+const t = {
+  title: 'RANDI — Chat with us',
+  desc: 'Try AI models online with nothing to install: streaming chat, local context in your browser, no account.',
+};
+---
+<Layout lang="en" title={t.title} description={t.desc}>
+  <section class="mx-auto max-w-6xl px-4 pt-14 pb-16">
+    <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.badge}</p>
+    <h1 class="mt-2 text-center text-4xl md:text-5xl font-black tracking-tight">{L.title}</h1>
+    <p class="mx-auto mt-3 max-w-2xl text-center text-muted leading-relaxed">{L.sub}</p>
+
+    <div id="chat-online" class="mt-10 grid gap-6 lg:grid-cols-2">
+      <div class="card p-6 flex flex-col gap-4">
+        <div>
+          <p class="font-semibold mb-2">{L.pick}</p>
+          <select data-cd-model class="cd-select"></select>
+        </div>
+        <div>
+          <p class="font-semibold mb-2 text-sm text-muted">{L.info}</p>
+          <ul class="space-y-2 text-sm text-muted">
+            <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.i1}</li>
+            <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.i2}</li>
+            <li class="flex items-start gap-2.5"><span class="cd-check">✓</span>{L.i3}</li>
+          </ul>
+        </div>
+        <div class="grid gap-2.5 mt-auto">
+          <a href={donarUrl} class="btn btn-dark justify-center">{L.sponsor}</a>
+        </div>
+      </div>
+
+      <div class="card p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
+          <div class="flex gap-2">
+            <button data-cd-export class="btn btn-dark text-xs !px-3 !py-1.5">{L.exportB}</button>
+            <button data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
+          </div>
+        </div>
+        <div data-cd-msgs class="cd-msgs"></div>
+        <textarea data-cd-input class="cd-input" rows="2" placeholder={L.placeholder}></textarea>
+        <div class="flex items-center justify-between gap-2">
+          <span class="mono text-[10px] text-muted" data-cd-status>…</span>
+          <div class="flex gap-2">
+            <button data-cd-stop class="btn btn-dark text-xs !px-3 !py-1.5" hidden>{L.stop}</button>
+            <button data-cd-send class="btn btn-primary text-xs !px-4 !py-1.5">{L.send} →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.soon}</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <div class="card p-5 opacity-80">
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">soon</span>
+          <h3 class="mt-3 font-bold">{L.soon1}</h3>
+          <p class="mt-1.5 text-sm text-muted leading-relaxed">{L.soon1d}</p>
+        </div>
+        <div class="card p-5 opacity-80">
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">soon</span>
+          <h3 class="mt-3 font-bold">{L.soon2}</h3>
+          <p class="mt-1.5 text-sm text-muted leading-relaxed">{L.soon2d}</p>
+        </div>
+        <div class="card p-5 opacity-80">
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">soon</span>
+          <h3 class="mt-3 font-bold">{L.soon3}</h3>
+          <p class="mt-1.5 text-sm text-muted leading-relaxed">{L.soon3d}</p>
+        </div>
+      </div>
+      <p class="mt-4 text-center text-xs text-muted">{L.soonD}</p>
+    </div>
+  </section>
+
+  <style>
+    .cd-select {
+      width: 100%; appearance: none;
+      background: var(--color-bg-soft); color: var(--color-ink);
+      border: 1px solid var(--color-line); border-radius: .5rem;
+      padding: .625rem .75rem; font: inherit; font-size: .875rem;
+    }
+    .cd-select:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+    .cd-check { color: var(--color-accent); font-weight: 800; }
+    .cd-msgs {
+      flex: 1; min-height: 20rem; max-height: 30rem; overflow-y: auto;
+      display: flex; flex-direction: column; gap: .625rem; padding-right: .25rem;
+    }
+    .cd-bubble {
+      max-width: 86%; padding: .5rem .75rem; border-radius: .75rem;
+      font-size: .875rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+    }
+    .cd-bubble.user { align-self: flex-end; background: var(--color-accent); color: #1a0506; }
+    .cd-bubble.assistant { align-self: flex-start; background: var(--color-bg-soft); border: 1px solid var(--color-line); }
+    .cd-bubble.typing { align-self: flex-start; color: var(--color-muted); border-style: dashed; opacity: .8; animation: cd-pulse 1s ease-in-out infinite; }
+    .cd-note { font-size: .8rem; color: var(--color-warn); line-height: 1.5; }
+    @keyframes cd-pulse { 50% { opacity: .45; } }
+    .cd-input {
+      width: 100%; resize: none; background: var(--color-bg-soft); color: var(--color-ink);
+      border: 1px solid var(--color-line); border-radius: .5rem; padding: .625rem .75rem;
+      font: inherit; font-size: .875rem; line-height: 1.4;
+    }
+    .cd-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+  </style>
+
+  <script>
+    import { mountChat } from '../../lib/demo-chat.js';
+    void mountChat();
+  </script>
+</Layout>

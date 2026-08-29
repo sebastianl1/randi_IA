@@ -1,12 +1,13 @@
-// Listado de modelos con scroll infinito, búsqueda por texto y filtro por
-// familia. Al hacer click en una tarjeta se abre la ficha en pestaña nueva.
+// Catálogo de modelos: carrusel paginado (4 columnas × 2 filas por página)
+// con botones laterales, búsqueda por texto y filtro por familia.
+// Al hacer clic en una tarjeta se abre la ficha en pestaña nueva.
 interface CatModel {
   id: string; slug: string; name: string; size: string | null;
   params: number | null; arch: string | null; family: string | null;
   provider: string | null; useCase: string[];
 }
 
-const PAGE = 18;
+const PER = 8; // 4 columnas × 2 filas
 
 export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
   const root = document.getElementById('models');
@@ -18,23 +19,25 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
     all: es ? 'Todos' : 'All',
     empty: es ? 'Sin resultados para esa búsqueda.' : 'No results for that search.',
     shown: es ? 'modelos' : 'models',
-    more: es ? 'Cargar más' : 'Load more',
-    back: es ? 'Ver catálogo completo' : 'See full catalog',
+    page: es ? 'página' : 'page',
   };
 
   const input = root.querySelector<HTMLInputElement>('[data-mc-q]');
   const chips = root.querySelector<HTMLElement>('[data-mc-families]');
   const list = root.querySelector<HTMLElement>('[data-mc-list]');
-  const sentinel = root.querySelector<HTMLElement>('[data-mc-sentinel]');
+  const prev = root.querySelector<HTMLButtonElement>('[data-mc-prev]');
+  const next = root.querySelector<HTMLButtonElement>('[data-mc-next]');
+  const pageEl = root.querySelector<HTMLElement>('[data-mc-page]');
   const status = root.querySelector<HTMLElement>('[data-mc-status]');
   const empty = root.querySelector<HTMLElement>('[data-mc-empty]');
-  if (!input || !chips || !list || !sentinel || !status || !empty) return;
+  if (!input || !chips || !list || !prev || !next || !pageEl || !status || !empty) return;
 
   let all: CatModel[] = [];
   let filtered: CatModel[] = [];
   let fam: string | null = null;
-  let shown = 0;
-  let busy = false;
+  let page = 0;
+
+  function totalPages(): number { return Math.max(1, Math.ceil(filtered.length / PER)); }
 
   async function load(): Promise<void> {
     try {
@@ -58,7 +61,6 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
       b.textContent = label;
       b.addEventListener('click', onClick);
       chips.appendChild(b);
-      return b;
     };
     btn(L.all, fam === null, () => { fam = null; apply(); });
     for (const [f, c] of top) {
@@ -74,33 +76,28 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
       const hay = [m.name, m.id, m.family, m.arch, m.provider, ...(m.useCase || [])].join(' ').toLowerCase();
       return hay.includes(q);
     });
-    shown = 0;
-    const was = chips.querySelector('.mc-chip.on');
-    list.innerHTML = '';
+    page = 0;
     empty.classList.add('hidden');
+    render();
+  }
+
+  function render(): void {
+    list.innerHTML = '';
+    if (!filtered.length) {
+      empty.classList.remove('hidden');
+    } else {
+      const start = page * PER;
+      for (const m of filtered.slice(start, start + PER)) list.appendChild(card(m));
+    }
+    const tp = totalPages();
+    pageEl.textContent = `${L.page} ${page + 1} / ${tp}`;
+    prev.disabled = page <= 0;
+    next.disabled = page >= tp - 1;
     status.textContent = `${filtered.length} ${L.shown}`;
-    renderChunk();
-    if (was) void was;
+    list.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
-  function renderChunk(): void {
-    const end = Math.min(shown + PAGE, filtered.length);
-    const frag = document.createDocumentFragment();
-    for (let i = shown; i < end; i++) frag.appendChild(card(filtered[i], base, lang));
-    list.appendChild(frag);
-    shown = end;
-    if (shown >= filtered.length) list.appendChild(endMarker());
-    busy = false;
-  }
-
-  function endMarker(): HTMLElement {
-    const p = document.createElement('p');
-    p.className = 'mc-end';
-    p.textContent = filtered.length ? `— ${filtered.length} ${L.shown} —` : L.empty;
-    return p;
-  }
-
-  function card(m: CatModel, base: string, lang: 'es' | 'en'): HTMLElement {
+  function card(m: CatModel): HTMLElement {
     const href = `${base}${lang === 'en' ? 'en/' : ''}model/${m.slug}`;
     const a = document.createElement('a');
     a.className = 'mc-card';
@@ -153,22 +150,8 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
   }
 
   input.addEventListener('input', () => apply());
-
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting) && shown < filtered.length && !busy) {
-        busy = true;
-        renderChunk();
-      }
-    }, { rootMargin: '300px' });
-    io.observe(sentinel);
-  } else {
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-dark text-xs';
-    btn.textContent = L.more;
-    btn.addEventListener('click', () => renderChunk());
-    sentinel.replaceWith(btn);
-  }
+  prev.addEventListener('click', () => { if (page > 0) { page -= 1; render(); } });
+  next.addEventListener('click', () => { if (page < totalPages() - 1) { page += 1; render(); } });
 
   await load();
 }
