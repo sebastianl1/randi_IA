@@ -7,7 +7,7 @@ interface CatModel {
   provider: string | null; useCase: string[];
 }
 
-const PER = 12; // 12 filas por página (2 columnas × 6)
+const PER = 8; // 4 filas × 2 columnas por página
 
 // Badge por tamaño: S=super ligero … F=pesado (paleta de grados).
 function bandOf(params: number | null): { g: string; c: string } {

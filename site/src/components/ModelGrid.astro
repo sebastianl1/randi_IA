@@ -59,13 +59,17 @@ const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
   .mc-chip:hover { color: var(--color-ink); border-color: var(--color-accent); }
   .mc-chip.on { color: var(--color-accent); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
   .mc-arrow {
-    flex: none; width: 2.75rem; border: 1px solid var(--color-line); border-radius: .75rem;
-    background: var(--color-panel); color: var(--color-ink); font-size: 1.4rem; line-height: 1;
-    cursor: pointer; transition: border-color .15s, background .15s;
+    flex: none; width: 2.75rem; border: 1px solid transparent; border-radius: .75rem;
+    background: transparent; color: var(--color-muted); font-size: 1.4rem; line-height: 1;
+    cursor: pointer; transition: color .15s, border-color .15s, box-shadow .15s;
     display: flex; align-items: center; justify-content: center;
   }
-  .mc-arrow:hover:not(:disabled) { border-color: var(--color-accent); }
-  .mc-arrow:disabled { opacity: .4; cursor: default; }
+  .mc-arrow:hover:not(:disabled) {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .mc-arrow:disabled { opacity: .3; cursor: default; }
   .mc-row {
     display: flex; align-items: center; gap: .8rem;
     padding: .7rem .9rem;

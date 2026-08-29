@@ -9,19 +9,19 @@ const L = {
   sub: 'Modelos livianos y de libre uso que corren en la nube. Tu conversación se guarda solo en tu navegador, con exportación JSON.',
   pick: 'Elige tu modelo',
   pickD: 'Cada modelo guarda su propio contexto en tu dispositivo.',
-  modelList: 'Hay 4 modelos online (gratis):',
+  modelList: 'Online (gratis):',
   ctxT: 'Contexto',
-  ctxD: 'Cada conversación se guarda en tu navegador (localStorage) por modelo. Podés exportarla o empezar de cero cuando quieras.',
+  ctxD: 'Guardado en tu navegador (localStorage) por modelo. Podés exportarlo o empezar de cero.',
   privT: 'Privacidad y límite',
   priv1: 'Cero cookies y cero rastreo.',
   priv2: 'Sin cuenta y sin tarjeta.',
-  priv3: 'Límite diario gratuito por IP; se reinicia cada día.',
+  priv3: '40 mensajes gratis por IP y por día (se reinicia).',
   soon: 'Próximamente',
   soon1: 'Imágenes (Hugging Face)',
   soon2: 'Más modelos online',
   soon3: 'Voz y audio',
-  soonD: 'El "Chatea con nosotros" crece. Esto ya está planificado para las próximas versiones.',
   sponsor: 'Patrocina RANDI',
+  sponsorD: 'Tu apoyo mantiene el chat online gratis y el desarrollo open source.',
   send: 'Enviar',
   stop: 'Detener',
   placeholder: 'Escribí tu mensaje…',
@@ -29,7 +29,6 @@ const L = {
   clearB: 'Borrar',
   newB: 'Nueva conversación',
   hint: 'Enter enviar · Shift+Enter salto de línea',
-  about: 'Sobre el chat',
 };
 const t = {
   title: 'RANDI — Chatea con nosotros',
@@ -43,21 +42,19 @@ const modelsOnline = [
 ];
 ---
 <Layout lang="es" title={t.title} description={t.desc}>
-  <section class="mx-auto max-w-6xl px-4 pt-14 pb-16">
+  <section class="mx-auto max-w-7xl px-4 pt-10 pb-16">
     <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.badge}</p>
-    <h1 class="mt-2 text-center text-4xl md:text-5xl font-black tracking-tight">{L.title}</h1>
-    <p class="mx-auto mt-3 max-w-2xl text-center text-muted leading-relaxed">{L.sub}</p>
+    <h1 class="mt-1 text-center text-3xl md:text-4xl font-black tracking-tight">{L.title}</h1>
+    <p class="mx-auto mt-2 max-w-2xl text-center text-muted leading-relaxed text-sm">{L.sub}</p>
 
-    <div id="chat-online" class="mt-10 grid gap-5 lg:grid-cols-[1.2fr_0.8fr] items-start">
+    <div id="chat-online" class="mt-8 grid gap-5 lg:grid-cols-[0.9fr_1.55fr_0.9fr] items-start">
 
-      <!-- Consola -->
-      <div class="card p-5 flex flex-col gap-3">
-        <div class="flex flex-wrap items-center justify-between gap-2.5">
+      <!-- Consola central (la protagonista) -->
+      <div class="card cd-console p-5 flex flex-col gap-3 order-1 lg:order-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2.5 flex-wrap">
             <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
             <span class="mono text-xs text-muted" data-cd-model-label></span>
-            <span class="mono text-[10px] text-muted" data-cd-count></span>
-            <span class="mono text-[10px] text-muted" data-cd-tokens></span>
           </div>
           <div class="flex gap-2">
             <button data-cd-new class="btn btn-primary text-xs !px-3 !py-1.5">{L.newB}</button>
@@ -69,20 +66,22 @@ const modelsOnline = [
         <div data-cd-sugg class="cd-sugg-row"></div>
         <div data-cd-msgs class="cd-msgs"></div>
 
-        <textarea data-cd-input class="cd-input" rows="2" placeholder={L.placeholder}></textarea>
+        <textarea data-cd-input class="cd-input" rows="3" placeholder={L.placeholder}></textarea>
         <div class="flex items-center justify-between gap-2">
-          <span class="mono text-[10px] text-muted">{L.hint}</span>
+          <span class="mono text-[10px] text-muted">
+            <span data-cd-count></span> · <span data-cd-tokens></span> · {L.hint}
+          </span>
           <div class="flex gap-2">
             <button data-cd-stop class="btn btn-dark text-xs !px-3 !py-1.5" hidden>{L.stop}</button>
-            <button data-cd-send class="btn btn-primary text-xs !px-4 !py-1.5">{L.send} →</button>
+            <button data-cd-send class="btn btn-primary text-sm !px-6 !py-2">{L.send} →</button>
           </div>
         </div>
       </div>
 
-      <!-- Panel de contexto -->
-      <div class="space-y-4">
+      <!-- Rail izquierdo: modelo + contexto -->
+      <div class="space-y-4 order-2 lg:order-1">
         <div class="card p-5">
-          <p class="font-semibold mb-1">{L.pick}</p>
+          <p class="font-semibold mb-1 text-sm">{L.pick}</p>
           <select data-cd-model class="cd-select"></select>
           <p class="mt-2 text-xs text-muted">{L.pickD}</p>
           <p class="mt-3 text-[11px] font-semibold text-muted">{L.modelList}</p>
@@ -92,8 +91,8 @@ const modelsOnline = [
         </div>
 
         <div class="card p-5">
-          <p class="font-semibold mb-1">{L.ctxT}</p>
-          <div class="flex gap-3 mt-2 mono text-xs text-muted">
+          <p class="font-semibold mb-2 text-sm">{L.ctxT}</p>
+          <div class="flex gap-3 mono text-xs text-muted">
             <span data-cd-count></span>
             <span data-cd-tokens></span>
           </div>
@@ -103,9 +102,17 @@ const modelsOnline = [
             <button data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
           </div>
         </div>
+      </div>
+
+      <!-- Rail derecho: patrocina + privacidad + próximamente -->
+      <div class="space-y-4 order-3">
+        <div class="card p-5 text-center">
+          <a href={donarUrl} class="btn btn-primary w-full !py-3 text-sm">{L.sponsor}</a>
+          <p class="mt-2 text-[11px] text-muted leading-relaxed">{L.sponsorD}</p>
+        </div>
 
         <div class="card p-5">
-          <p class="font-semibold mb-2">{L.privT}</p>
+          <p class="font-semibold mb-2 text-sm">{L.privT}</p>
           <ul class="space-y-2 text-xs text-muted">
             <li class="flex items-start gap-2"><span class="cd-check">✓</span>{L.priv1}</li>
             <li class="flex items-start gap-2"><span class="cd-check">✓</span>{L.priv2}</li>
@@ -120,10 +127,7 @@ const modelsOnline = [
             <span>· {L.soon2}</span>
             <span>· {L.soon3}</span>
           </div>
-          <p class="mt-2 text-[11px] text-muted leading-relaxed">{L.soonD}</p>
         </div>
-
-        <a href={donarUrl} class="btn btn-dark justify-center">{L.sponsor}</a>
       </div>
     </div>
   </section>
@@ -145,13 +149,17 @@ const modelsOnline = [
       background: transparent; cursor: pointer; transition: color .15s, border-color .15s;
     }
     .cd-sugg:hover { color: var(--color-ink); border-color: var(--color-accent); }
+    .cd-console {
+      border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-line));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
     .cd-msgs {
-      flex: 1; min-height: 22rem; max-height: 30rem; overflow-y: auto;
+      flex: 1; min-height: 24rem; max-height: 34rem; overflow-y: auto;
       display: flex; flex-direction: column; gap: .625rem; padding-right: .25rem;
     }
     .cd-bubble {
-      max-width: 86%; padding: .55rem .8rem; border-radius: .8rem;
-      font-size: .875rem; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+      max-width: 80%; padding: .6rem .9rem; border-radius: .8rem;
+      font-size: .9rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
     }
     .cd-bubble.user { align-self: flex-end; background: var(--color-accent); color: #1a0506; }
     .cd-bubble.assistant { align-self: flex-start; background: var(--color-bg-soft); border: 1px solid var(--color-line); }
@@ -160,8 +168,8 @@ const modelsOnline = [
     @keyframes cd-pulse { 50% { opacity: .45; } }
     .cd-input {
       width: 100%; resize: none; background: var(--color-bg-soft); color: var(--color-ink);
-      border: 1px solid var(--color-line); border-radius: .5rem; padding: .625rem .75rem;
-      font: inherit; font-size: .875rem; line-height: 1.4;
+      border: 1px solid var(--color-line); border-radius: .5rem; padding: .7rem .8rem;
+      font: inherit; font-size: .9rem; line-height: 1.45;
     }
     .cd-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
   </style>
