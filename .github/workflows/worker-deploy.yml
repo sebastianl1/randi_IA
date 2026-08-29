@@ -9,6 +9,9 @@ on:
       - 'workers/chat/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: worker-deploy
   cancel-in-progress: false
