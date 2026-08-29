@@ -4,6 +4,6 @@
     { "id": "qwen-coder-32b", "label": "Qwen Coder 32B", "provider": "workers-ai", "note": "Especialista en código" },
     { "id": "llama-3.1-8b", "label": "Llama 3.1 8B", "provider": "workers-ai", "note": "Generalista y equilibrado" },
     { "id": "glm-4.7-flash", "label": "GLM 4.7 Flash", "provider": "workers-ai", "note": "Rápido y multilingüe" },
-    { "id": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "provider": "workers-ai", "note": "Ágil, con razonamiento" }
+    { "id": "llama-3.2-3b", "label": "Llama 3.2 3B", "provider": "workers-ai", "note": "Ligero y veloz" }
   ]
 }

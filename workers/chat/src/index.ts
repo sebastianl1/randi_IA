@@ -74,11 +74,17 @@ async function handleChat(request: Request, env: Env, freeLimit: number): Promis
           if (!s) { send('error', { message: 'El modelo no devolvió un stream válido.' }); controller.close(); return; }
           const reader = s.getReader();
           const dec = new TextDecoder();
+          let buf = '';
           for (;;) {
             const { done, value } = await reader.read();
             if (done) break;
-            for (const line of dec.decode(value).split('\n')) {
-              if (!line.trim()) continue;
+            buf += dec.decode(value, { stream: true });
+            let nl;
+            while ((nl = buf.indexOf('\n')) >= 0) {
+              let line = buf.slice(0, nl).trim();
+              buf = buf.slice(nl + 1);
+              if (line.startsWith('data:')) line = line.slice(5).trim();
+              if (!line) continue;
               try {
                 const j = JSON.parse(line);
                 if (typeof j.response === 'string' && j.response) send('delta', j.response);
