@@ -17,8 +17,8 @@ almacena aquí: el contexto vive en el navegador (localStorage).
 
 > 💡 **Dígitos**: el plan gratuito de Workers AI **borra los números** del stream
 > (probado: `1+1` responde "es __"). Para respuestas con cifras/tablas usá los
-> modelos **OpenRouter `:free`** (`deepseek-v3-free`, `llama-3.3-70b-free`,
-> `qwen-2.5-72b-free`). Carga la key gratis:
+> modelos **OpenRouter `:free`** (`glm-5.2-free`, `gemma-4-26b-free`,
+> `nemotron-3-free`). Carga la key gratis:
 
 ```bash
 gh secret set OPENROUTER_API_KEY     # en el repo (disponible para el workflow)
