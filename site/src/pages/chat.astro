@@ -8,9 +8,8 @@ const L = {
   title: 'Probá IA online, sin instalar nada',
   sub: 'Modelos livianos y de libre uso que corren en la nube. Tu conversación se guarda solo en tu navegador, con exportación JSON.',
   pick: 'Elige tu modelo',
-  pickD: 'Cada modelo guarda su propio contexto en tu dispositivo.',
-  modelList: 'Online (gratis):',
-  ctxT: 'Contexto',
+  pickD: 'Cada modelo guarda su propio contexto en tu dispositivo. Los de OpenRouter responden con números y tablas.',
+  ctxT: 'Contexto (local)',
   ctxD: 'Guardado en tu navegador (localStorage) por modelo. Podés exportarlo o empezar de cero.',
   privT: 'Privacidad y límite',
   priv1: 'Cero cookies y cero rastreo.',
@@ -19,7 +18,6 @@ const L = {
   soon: 'Próximamente',
   soon1: 'Imágenes (Hugging Face)',
   soon2: 'Más modelos online',
-  soon3: 'Voz y audio',
   sponsor: 'Patrocina RANDI',
   sponsorD: 'Tu apoyo mantiene el chat online gratis y el desarrollo open source.',
   send: 'Enviar',
@@ -38,7 +36,7 @@ const modelsOnline = [
   'Qwen Coder 32B · código',
   'Llama 3.1 8B · general',
   'Llama 3.2 3B · ligero',
-  'Llama 3.2 1B · ultraligero',
+  'DeepSeek V3 · Free · con números',
 ];
 ---
 <Layout lang="es" title={t.title} description={t.desc}>
@@ -47,10 +45,9 @@ const modelsOnline = [
     <h1 class="mt-1 text-center text-3xl md:text-4xl font-black tracking-tight">{L.title}</h1>
     <p class="mx-auto mt-2 max-w-2xl text-center text-muted leading-relaxed text-sm">{L.sub}</p>
 
-    <div id="chat-online" class="mt-8 grid gap-5 lg:grid-cols-[0.9fr_1.55fr_0.9fr] items-start">
-
-      <!-- Consola central (la protagonista) -->
-      <div class="card cd-console p-5 flex flex-col gap-3 order-1 lg:order-2">
+    <div id="chat-online" class="mt-6 space-y-5">
+      <!-- Consola full-width (la protagonista) -->
+      <div class="card cd-console p-4 md:p-5 flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2.5 flex-wrap">
             <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
@@ -78,19 +75,19 @@ const modelsOnline = [
         </div>
       </div>
 
-      <!-- Rail izquierdo: modelo + contexto -->
-      <div class="space-y-4 order-2 lg:order-1">
-        <div class="card p-5">
+      <!-- Fila compacta: selector · contexto · resto -->
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="card p-4">
           <p class="font-semibold mb-1 text-sm">{L.pick}</p>
           <select data-cd-model class="cd-select"></select>
-          <p class="mt-2 text-xs text-muted">{L.pickD}</p>
-          <p class="mt-3 text-[11px] font-semibold text-muted">{L.modelList}</p>
-          <ul class="mt-1.5 space-y-1 text-xs text-muted">
+          <p class="mt-2 text-xs text-muted leading-relaxed">{L.pickD}</p>
+          <p class="mt-2 text-[11px] font-semibold text-muted">Online (gratis):</p>
+          <ul class="mt-1 space-y-1 text-xs text-muted">
             {modelsOnline.map((m) => <li class="flex items-center gap-2"><span class="cd-dot" />{m}</li>)}
           </ul>
         </div>
 
-        <div class="card p-5">
+        <div class="card p-4">
           <p class="font-semibold mb-2 text-sm">{L.ctxT}</p>
           <div class="flex gap-3 mono text-xs text-muted">
             <span data-cd-count></span>
@@ -102,31 +99,20 @@ const modelsOnline = [
             <button data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
           </div>
         </div>
-      </div>
 
-      <!-- Rail derecho: patrocina + privacidad + próximamente -->
-      <div class="space-y-4 order-3">
-        <div class="card p-5 text-center">
-          <a href={donarUrl} class="btn btn-primary w-full !py-3 text-sm">{L.sponsor}</a>
-          <p class="mt-2 text-[11px] text-muted leading-relaxed">{L.sponsorD}</p>
-        </div>
-
-        <div class="card p-5">
-          <p class="font-semibold mb-2 text-sm">{L.privT}</p>
-          <ul class="space-y-2 text-xs text-muted">
+        <div class="card p-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <p class="font-semibold text-sm">{L.privT}</p>
+            <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{L.soon}</span>
+          </div>
+          <ul class="space-y-1.5 text-xs text-muted">
             <li class="flex items-start gap-2"><span class="cd-check">✓</span>{L.priv1}</li>
             <li class="flex items-start gap-2"><span class="cd-check">✓</span>{L.priv2}</li>
             <li class="flex items-start gap-2"><span class="cd-check">✓</span>{L.priv3}</li>
           </ul>
-        </div>
-
-        <div class="card p-5 opacity-85">
-          <p class="mono text-[10px] uppercase tracking-widest text-muted mb-2">{L.soon}</p>
-          <div class="flex flex-col gap-1.5 text-sm text-muted">
-            <span>· {L.soon1}</span>
-            <span>· {L.soon2}</span>
-            <span>· {L.soon3}</span>
-          </div>
+          <p class="text-[11px] text-muted">· {L.soon1} · {L.soon2}</p>
+          <a href={donarUrl} class="btn btn-primary w-full !py-2.5 text-sm mt-auto">{L.sponsor}</a>
+          <p class="text-[10px] text-muted text-center leading-relaxed">{L.sponsorD}</p>
         </div>
       </div>
     </div>
@@ -137,9 +123,10 @@ const modelsOnline = [
       width: 100%; appearance: none;
       background: var(--color-bg-soft); color: var(--color-ink);
       border: 1px solid var(--color-line); border-radius: .5rem;
-      padding: .625rem .75rem; font: inherit; font-size: .875rem;
+      padding: .6rem .75rem; font: inherit; font-size: .85rem;
     }
     .cd-select:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+    .cd-select option:disabled { color: var(--color-muted); }
     .cd-dot { width: .4rem; height: .4rem; border-radius: 99px; background: var(--color-accent); flex: none; opacity: .8; }
     .cd-check { color: var(--color-accent); font-weight: 800; flex: none; }
     .cd-sugg-row { display: flex; gap: .5rem; flex-wrap: wrap; }
@@ -154,14 +141,14 @@ const modelsOnline = [
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
     }
     .cd-msgs {
-      flex: 1; min-height: 24rem; max-height: 34rem; overflow-y: auto;
-      display: flex; flex-direction: column; gap: .625rem; padding-right: .25rem;
+      flex: 1; min-height: 52vh; max-height: 62vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: .625rem; padding: .25rem .25rem .25rem 0;
     }
     .cd-bubble {
-      max-width: 80%; padding: .6rem .9rem; border-radius: .8rem;
-      font-size: .9rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+      max-width: 92%; padding: .65rem 1rem; border-radius: .85rem;
+      font-size: .9rem; line-height: 1.6; word-break: break-word;
     }
-    .cd-bubble.user { align-self: flex-end; background: var(--color-accent); color: #1a0506; }
+    .cd-bubble.user { align-self: flex-end; background: #d84248; color: #180405; white-space: pre-wrap; }
     .cd-bubble.assistant { align-self: flex-start; background: var(--color-bg-soft); border: 1px solid var(--color-line); }
     .cd-bubble.typing { align-self: flex-start; color: var(--color-muted); border-style: dashed; opacity: .8; animation: cd-pulse 1s ease-in-out infinite; }
     .cd-note { font-size: .8rem; color: var(--color-warn); line-height: 1.5; }
@@ -172,6 +159,28 @@ const modelsOnline = [
       font: inherit; font-size: .9rem; line-height: 1.45;
     }
     .cd-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+    /* Markdown organizado */
+    .md-h1 { font-size: 1.1rem; font-weight: 800; margin: .5rem 0 .25rem; }
+    .md-h2 { font-size: 1rem; font-weight: 700; margin: .45rem 0 .2rem; }
+    .md-h3 { font-size: .92rem; font-weight: 700; margin: .4rem 0 .15rem; }
+    .md-p { margin: .3rem 0; }
+    .md-ul, .md-ol { margin: .35rem 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: .18rem; }
+    .md-quote { border-left: 3px solid var(--color-accent); padding: .15rem .65rem; margin: .4rem 0; color: var(--color-muted); background: color-mix(in srgb, var(--color-accent) 8%, transparent); border-radius: 0 .5rem .5rem 0; }
+    .md-hr { border: 0; border-top: 1px solid var(--color-line); margin: .6rem 0; }
+    .md-table-wrap { overflow-x: auto; margin: .5rem 0; }
+    .md-table { border-collapse: collapse; font-size: .82rem; min-width: 60%; }
+    .md-table th, .md-table td { border: 1px solid var(--color-line); padding: .35rem .6rem; text-align: left; }
+    .md-table th { background: color-mix(in srgb, var(--color-accent) 14%, transparent); font-weight: 700; }
+    .md-table tr:nth-child(even) td { background: color-mix(in srgb, var(--color-line) 8%, transparent); }
+    .md-pre { background: #0b0b0d; border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-line)); border-left: 3px solid var(--color-accent); border-radius: .55rem; padding: .7rem .85rem; overflow-x: auto; margin: .5rem 0; }
+    .md-code { font-family: var(--font-mono); font-size: .8rem; line-height: 1.5; color: #e9e9ea; }
+    .md-c { font-family: var(--font-mono); background: color-mix(in srgb, var(--color-accent) 15%, transparent); border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-line)); border-radius: .3rem; padding: 0 .25rem; font-size: .82em; }
+    .md-str { color: #f2a65a; }
+    .md-kw { color: #ff7b81; font-weight: 600; }
+    .md-num { color: #8fd4ff; }
+    .md-com { color: #5f6368; font-style: italic; }
+    .md-bubble a { color: var(--color-accent); text-decoration: underline; }
   </style>
 
   <script>

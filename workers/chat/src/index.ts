@@ -3,7 +3,7 @@
 // - /api/models: manifiesto de modelos gratis que alimenta la UI.
 // - /          : health.
 // Contexto: vive en el navegador (localStorage), aquí nunca se guarda.
-import { MODELS, streamModel, type Env, type ChatMsg, type ModelDef } from './providers.js';
+import { MODELS, modelReady, streamModel, type Env, type ChatMsg, type ModelDef } from './providers.js';
 
 const USAGE = new Map<string, { day: string; used: number }>();
 
@@ -33,7 +33,7 @@ export default {
       return json({ ok: true, service: 'randi-chat', freeDailyLimit: freeLimit, models: MODELS.map((m) => m.id) });
     }
     if (request.method === 'GET' && url.pathname === '/api/models') {
-      return json({ name: 'randi-chat', freeDailyLimit: freeLimit, models: MODELS });
+      return json({ name: 'randi-chat', freeDailyLimit: freeLimit, models: MODELS.map((m) => ({ ...m, ready: modelReady(m, env) })) });
     }
     if (request.method === 'POST' && url.pathname === '/api/chat') {
       return handleChat(request, env, freeLimit);
