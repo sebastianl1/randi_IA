@@ -15,6 +15,20 @@ almacena aquí: el contexto vive en el navegador (localStorage).
 | OpenRouter (`:free`) | modelos gratis con límites | `OPENROUTER_API_KEY` opcional |
 | Hugging Face Inference | tier gratuito | `HF_API_KEY` opcional |
 
+> 💡 **Dígitos**: el plan gratuito de Workers AI **borra los números** del stream
+> (probado: `1+1` responde "es __"). Para respuestas con cifras/tablas usá los
+> modelos **OpenRouter `:free`** (`deepseek-v3-free`, `llama-3.3-70b-free`,
+> `qwen-2.5-72b-free`). Carga la key gratis:
+
+```bash
+gh secret set OPENROUTER_API_KEY     # en el repo (disponible para el workflow)
+# y para deploy manual:
+npx wrangler secret put OPENROUTER_API_KEY
+```
+
+`GET /api/models` marca cada modelo con `ready` (los de OpenRouter aparecen
+deshabilitados en la UI hasta que cargues la key).
+
 ## Despliegue automático (GitHub Actions) — opción recomendada
 
 Una vez configurado, **cada push que toque `workers/chat/**` despliega el

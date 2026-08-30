@@ -1,8 +1,83 @@
 // RANDI Chat — cliente del widget "Chatea ahora".
 // Contexto guardado en localStorage (por modelo); exportar/borrar incluidos.
 
-interface DemoModel { id: string; label: string; provider?: string; note?: string }
+interface DemoModel { id: string; label: string; provider?: string; note?: string; ready?: boolean }
 interface Msg { role: 'user' | 'assistant'; content: string }
+
+// ── Renderizador markdown propio (XSS-safe: primero se escapa el HTML) ──
+function mdEsc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function inlineMd(s: string): string {
+  let r = s.replace(/`([^`]+)`/g, '<code class="md-c">$1</code>');
+  r = r.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  r = r.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  r = r.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  return r;
+}
+const MD_KW = /^(def|class|return|if|elif|else|for|while|in|not|and|or|None|True|False|print|import|from|as|function|const|let|var|export|throw|new|async|await|try|catch|finally|switch|case|break|continue|npm|npx|sudo|pkg|apt|git|curl|cd|ls|echo)$/;
+function hlLang(code: string): string {
+  let s = code
+    .replace(/(&quot;.*?&quot;|'[^']*')/g, '<span class="md-str">$1</span>')
+    .replace(/(#.*)$/gm, '<span class="md-com">$1</span>');
+  s = s.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="md-num">$1</span>');
+  s = s.replace(/^(\s*)([A-Za-z_][\w]*)/gm, (_m, sp, w) => (MD_KW.test(w) ? `${sp}<span class="md-kw">${w}</span>` : `${sp}${w}`));
+  return s;
+}
+function tableHtml(rows: string[]): string {
+  const cells = (r: string) => r.replace(/^\||\|$/g, '').split('|');
+  const head = cells(rows[0]);
+  let h = '<div class="md-table-wrap"><table class="md-table"><thead><tr>';
+  h += head.map((c) => `<th>${inlineMd(c.trim())}</th>`).join('');
+  h += '</tr></thead><tbody>';
+  for (const r of rows.slice(2)) {
+    h += '<tr>' + cells(r).slice(0, head.length).map((c) => `<td>${inlineMd(c.trim())}</td>`).join('') + '</tr>';
+  }
+  h += '</tbody></table></div>';
+  return h;
+}
+function renderMd(src: string): string {
+  const lines = mdEsc(src).split('\n');
+  let html = '';
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const fence = /^```(\w*)\s*$/.exec(line);
+    if (fence) {
+      const buf: string[] = [];
+      i += 1;
+      while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i += 1; }
+      i += 1;
+      html += `<pre class="md-pre"><code class="md-code${fence[1] ? ' lang-' + fence[1] : ''}">${hlLang(buf.join('\n'))}</code></pre>`;
+      continue;
+    }
+    if (line.startsWith('|') && lines[i + 1] && /^[\|:\-\s]+$/.test(lines[i + 1]) && lines[i + 1].includes('-')) {
+      const rows: string[] = [];
+      while (i < lines.length && lines[i].startsWith('|')) { rows.push(lines[i]); i += 1; }
+      html += tableHtml(rows);
+      continue;
+    }
+    const h = /^(#{1,3})\s+(.*)$/.exec(line);
+    if (h) { html += `<h${h[1].length} class="md-h${h[1].length}">${inlineMd(h[2])}</h${h[1].length}>`; i += 1; continue; }
+    if (/^---+$/.test(line.trim())) { html += '<hr class="md-hr" />'; i += 1; continue; }
+    if (/^&gt;\s?/.test(line)) { html += `<blockquote class="md-quote">${inlineMd(line.replace(/^&gt;\s?/, ''))}</blockquote>`; i += 1; continue; }
+    if (/^[-*]\s+/.test(line)) {
+      html += '<ul class="md-ul">';
+      while (i < lines.length && /^[-*]\s+/.test(lines[i])) { html += `<li>${inlineMd(lines[i].replace(/^[-*]\s+/, ''))}</li>`; i += 1; }
+      html += '</ul>';
+      continue;
+    }
+    if (/^\d+[.)]\s+/.test(line)) {
+      html += '<ol class="md-ol">';
+      while (i < lines.length && /^\d+[.)]\s+/.test(lines[i])) { html += `<li>${inlineMd(lines[i].replace(/^\d+[.)]\s+/, ''))}</li>`; i += 1; }
+      html += '</ol>';
+      continue;
+    }
+    html += `<p class="md-p">${inlineMd(line) || '&nbsp;'}</p>`;
+    i += 1;
+  }
+  return html;
+}
 
 const LS_NS = 'randi-ctx:';
 const MAX_CTX = 24;
@@ -11,7 +86,7 @@ interface L10n {
   offline: string; sel: string; send: string; stop: string; placeholder: string;
   ctx: string; export: string; clear: string; pro: string; sponsor: string;
   limit: string; reset: string; err: string; hint: string; typing: string;
-  newConv: string; msgsL: string; tokL: string; sugg: string[];
+  newConv: string; msgsL: string; tokL: string; sugg: string[]; empty: string;
 }
 
 const es: L10n = {
@@ -38,6 +113,7 @@ const es: L10n = {
     'Escribí un script de Python para leer un CSV',
     'Dame 3 ideas para presentar un proyecto',
   ],
+  empty: 'El modelo devolvió una respuesta vacía. Probá con otro modelo (los de OpenRouter manejan bien los números).',
 };
 const en: L10n = {
   offline: 'The online chat is not connected yet. Set the Worker URL in /chat-config.json',
@@ -63,6 +139,7 @@ const en: L10n = {
     'Write a Python script to read a CSV',
     'Give me 3 ideas to present a project',
   ],
+  empty: 'The model returned an empty reply. Try another model (the OpenRouter ones handle numbers well).',
 };
 
 export async function mountChat(): Promise<void> {
@@ -99,7 +176,8 @@ export async function mountChat(): Promise<void> {
   function addBubble(role: 'user' | 'assistant', text: string, prepend?: boolean): HTMLElement {
     const d = document.createElement('div');
     d.className = `cd-bubble ${role}`;
-    d.textContent = text;
+    if (role === 'assistant') d.innerHTML = text ? renderMd(text) : '';
+    else d.textContent = text;
     if (prepend && msgs.firstChild) msgs.insertBefore(d, msgs.firstChild); else msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
     return d;
@@ -133,7 +211,9 @@ export async function mountChat(): Promise<void> {
     sel.innerHTML = '';
     for (const m of models) {
       const o = document.createElement('option');
-      o.value = m.id; o.textContent = m.label;
+      o.value = m.id;
+      o.textContent = m.ready === false ? `${m.label} (sin key)` : m.label;
+      o.disabled = m.ready === false;
       sel.appendChild(o);
     }
     current = sel.value;
@@ -254,6 +334,7 @@ export async function mountChat(): Promise<void> {
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
+      let md = '';
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -266,15 +347,19 @@ export async function mountChat(): Promise<void> {
           try {
             const j = JSON.parse(event.slice(5).trim());
             if (j.type === 'delta') {
-              aiEl.textContent += String(j.data);
+              md += String(j.data);
+              aiEl.innerHTML = renderMd(md);
               msgs.scrollTop = msgs.scrollHeight;
             } else if (j.type === 'done') {
               const typing = msgs.querySelector('.cd-typing');
               if (typing) typing.remove();
-              if (aiEl.textContent && aiEl.textContent.trim()) {
-                ctx.push({ role: 'assistant', content: aiEl.textContent });
+              if (md.trim()) {
+                ctx.push({ role: 'assistant', content: md });
                 save();
                 updateStat();
+              } else {
+                aiEl.innerHTML = '';
+                addBubble('assistant', L.empty);
               }
             } else if (j.type === 'error') {
               const typing = msgs.querySelector('.cd-typing');

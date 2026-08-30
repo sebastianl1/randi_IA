@@ -26,7 +26,18 @@ export const MODELS: ModelDef[] = [
   { id: 'llama-3.1-8b', label: 'Llama 3.1 8B', provider: 'workers-ai', ref: '@cf/meta/llama-3.1-8b-instruct-fast', note: 'Generalista y equilibrado' },
   { id: 'llama-3.2-3b', label: 'Llama 3.2 3B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-3b-instruct', note: 'Ligero y veloz' },
   { id: 'llama-3.2-1b', label: 'Llama 3.2 1B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-1b-instruct', note: 'Ultraligero, corre hasta en una papa' },
+  { id: 'deepseek-v3-free', label: 'DeepSeek V3 · Free', provider: 'openrouter', ref: 'deepseek/deepseek-chat-v3-0324:free', note: 'OpenRouter · chat fuerte con cifras' },
+  { id: 'llama-3.3-70b-free', label: 'Llama 3.3 70B · Free', provider: 'openrouter', ref: 'meta-llama/llama-3.3-70b-instruct:free', note: 'OpenRouter · general, sin límite de dígitos' },
+  { id: 'qwen-2.5-72b-free', label: 'Qwen 2.5 72B · Free', provider: 'openrouter', ref: 'qwen/qwen-2.5-72b-instruct:free', note: 'OpenRouter · potente' },
 ];
+
+// Indica si un modelo está listo según las keys configuradas (se expone en /api/models).
+export function modelReady(m: ModelDef, env: Env): boolean {
+  if (m.provider === 'workers-ai') return true;
+  if (m.provider === 'openrouter') return Boolean(env.OPENROUTER_API_KEY);
+  if (m.provider === 'huggingface') return Boolean(env.HF_API_KEY);
+  return false;
+}
 
 // Crosstream compatible OpenAI (OpenRouter y Hugging Face Inference).
 async function* openAICompat(provider: Provider, model: ModelDef, messages: ChatMsg[], env: Env): AsyncGenerator<string> {
