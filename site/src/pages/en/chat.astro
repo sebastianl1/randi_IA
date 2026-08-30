@@ -116,7 +116,7 @@ const modelsOnline = [
     </div>
   </section>
 
-  <style>
+  <style is:global>
     .cd-select {
       width: 100%; appearance: none;
       background: var(--color-bg-soft); color: var(--color-ink);
@@ -158,23 +158,43 @@ const modelsOnline = [
     }
     .cd-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 
-    .md-h1 { font-size: 1.1rem; font-weight: 800; margin: .5rem 0 .25rem; }
-    .md-h2 { font-size: 1rem; font-weight: 700; margin: .45rem 0 .2rem; }
-    .md-h3 { font-size: .92rem; font-weight: 700; margin: .4rem 0 .15rem; }
-    .md-p { margin: .3rem 0; }
-    .md-ul, .md-ol { margin: .35rem 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: .18rem; }
+    .md-h1 { font-size: 1.12rem; font-weight: 800; margin: .7rem 0 .25rem; }
+    .md-h2 { font-size: 1.02rem; font-weight: 700; margin: .6rem 0 .2rem; }
+    .md-h3 { font-size: .94rem; font-weight: 700; margin: .5rem 0 .15rem; }
+    .md-p { margin: .45rem 0; }
+    .md-ul, .md-ol { margin: .5rem 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: .3rem; }
+    .md-ol { list-style: decimal; }
     .md-quote { border-left: 3px solid var(--color-accent); padding: .15rem .65rem; margin: .4rem 0; color: var(--color-muted); background: color-mix(in srgb, var(--color-accent) 8%, transparent); border-radius: 0 .5rem .5rem 0; }
     .md-hr { border: 0; border-top: 1px solid var(--color-line); margin: .6rem 0; }
+    .md-math {
+      font-family: "STIX Two Text", Georgia, Cambria, "Times New Roman", serif;
+      font-style: italic; letter-spacing: .01em;
+      background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-line));
+      border-radius: .3rem; padding: 0 .3rem; margin: 0 .05rem; color: var(--color-ink);
+      white-space: nowrap; overflow-x: auto; display: inline-block; max-width: 100%;
+    }
+    .md-math-block { display: block; margin: .5rem 0; text-align: center; }
     .md-table-wrap { overflow-x: auto; margin: .5rem 0; }
     .md-table { border-collapse: collapse; font-size: .82rem; min-width: 60%; }
     .md-table th, .md-table td { border: 1px solid var(--color-line); padding: .35rem .6rem; text-align: left; }
     .md-table th { background: color-mix(in srgb, var(--color-accent) 14%, transparent); font-weight: 700; }
     .md-table tr:nth-child(even) td { background: color-mix(in srgb, var(--color-line) 8%, transparent); }
-    .md-pre { background: #0b0b0d; border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-line)); border-left: 3px solid var(--color-accent); border-radius: .55rem; padding: .7rem .85rem; overflow-x: auto; margin: .5rem 0; }
+    .md-pre-wrap { position: relative; margin: .5rem 0; }
+    .md-copy {
+      position: absolute; top: .4rem; right: .4rem;
+      background: var(--color-panel); color: var(--color-muted);
+      border: 1px solid var(--color-line); border-radius: .4rem;
+      width: 2rem; height: 1.7rem; font-size: .85rem; cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .md-copy:hover { color: var(--color-accent); border-color: var(--color-accent); }
+    .md-pre { background: #0b0b0d; border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-line)); border-left: 3px solid var(--color-accent); border-radius: .55rem; padding: .7rem .85rem; overflow-x: auto; margin: 0; }
     .md-code { font-family: var(--font-mono); font-size: .8rem; line-height: 1.5; color: #e9e9ea; }
     .md-c { font-family: var(--font-mono); background: color-mix(in srgb, var(--color-accent) 15%, transparent); border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-line)); border-radius: .3rem; padding: 0 .25rem; font-size: .82em; }
     .md-str { color: #f2a65a; }
     .md-kw { color: #ff7b81; font-weight: 600; }
+    .md-fn { color: #7fd4c1; }
     .md-num { color: #8fd4ff; }
     .md-com { color: #5f6368; font-style: italic; }
     .md-bubble a { color: var(--color-accent); text-decoration: underline; }

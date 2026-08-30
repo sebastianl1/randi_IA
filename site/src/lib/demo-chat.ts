@@ -13,6 +13,9 @@ function inlineMd(s: string): string {
   r = r.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   r = r.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   r = r.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  // Matemáticas estilo LaTeX (después de bold/italic para no pisarlos)
+  r = r.replace(/\$\$([^$]+)\$\$/g, '<span class="md-math md-math-block">$$$1$$</span>');
+  r = r.replace(/\$([^$]+)\$/g, '<span class="md-math">$1</span>');
   return r;
 }
 const MD_KW = /^(def|class|return|if|elif|else|for|while|in|not|and|or|None|True|False|print|import|from|as|function|const|let|var|export|throw|new|async|await|try|catch|finally|switch|case|break|continue|npm|npx|sudo|pkg|apt|git|curl|cd|ls|echo)$/;
@@ -22,6 +25,7 @@ function hlLang(code: string): string {
     .replace(/(#.*)$/gm, '<span class="md-com">$1</span>');
   s = s.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="md-num">$1</span>');
   s = s.replace(/^(\s*)([A-Za-z_][\w]*)/gm, (_m, sp, w) => (MD_KW.test(w) ? `${sp}<span class="md-kw">${w}</span>` : `${sp}${w}`));
+  s = s.replace(/([A-Za-z_]\w*)(?=\s*\()/g, '<span class="md-fn">$1</span>');
   return s;
 }
 function tableHtml(rows: string[]): string {
@@ -48,7 +52,8 @@ function renderMd(src: string): string {
       i += 1;
       while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i += 1; }
       i += 1;
-      html += `<pre class="md-pre"><code class="md-code${fence[1] ? ' lang-' + fence[1] : ''}">${hlLang(buf.join('\n'))}</code></pre>`;
+      const enc = encodeURIComponent(buf.join('\n'));
+      html += `<div class="md-pre-wrap"><button type="button" class="md-copy" data-copy="${enc}" aria-label="copiar">⧉</button><pre class="md-pre"><code class="md-code${fence[1] ? ' lang-' + fence[1] : ''}">${hlLang(buf.join('\n'))}</code></pre></div>`;
       continue;
     }
     if (line.startsWith('|') && lines[i + 1] && /^[\|:\-\s]+$/.test(lines[i + 1]) && lines[i + 1].includes('-')) {
@@ -81,6 +86,7 @@ function renderMd(src: string): string {
 
 const LS_NS = 'randi-ctx:';
 const MAX_CTX = 24;
+const DEFAULT_MODEL = 'nemotron-3-free';
 
 interface L10n {
   offline: string; sel: string; send: string; stop: string; placeholder: string;
@@ -216,6 +222,9 @@ export async function mountChat(): Promise<void> {
       o.disabled = m.ready === false;
       sel.appendChild(o);
     }
+    const pref = models.find((m) => m.id === DEFAULT_MODEL && m.ready !== false)
+      || models.find((m) => m.ready !== false) || models[0];
+    if (pref) sel.value = pref.id;
     current = sel.value;
     if (modelLabel) {
       const mm = models.find((x) => x.id === current);
@@ -293,6 +302,30 @@ export async function mountChat(): Promise<void> {
       suggEl.appendChild(c);
     }
   }
+
+  // Copiar bloque de código (delegación: los botones nacen en el markdown)
+  msgs.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const btn = t.closest ? t.closest('.md-copy') : null;
+    if (!btn) return;
+    const code = decodeURIComponent((btn as HTMLElement).dataset.copy || '');
+    const done = () => {
+      const o = btn.textContent;
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = o; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done, done);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* noop */ }
+      ta.remove();
+      done();
+    }
+  });
   exportBtn.addEventListener('click', () => {
     const payload = { model: current, exportedAt: new Date().toISOString(), context: ctx };
     const file = new File([JSON.stringify(payload, null, 2)], `randi-chat-${current}.json`, { type: 'application/json' });
