@@ -1,0 +1,12 @@
+# Exclusiones para el empaquetado npm (ademas de la lista "files")
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+node_modules/
+site/
+web/src/
+web/astro.config.mjs
+web/package*.json
+web/tsconfig.json
+web/public/
+scripts/

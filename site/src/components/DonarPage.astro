@@ -1,0 +1,74 @@
+---
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const es = lang === 'es';
+const L = {
+  eyebrow: es ? 'donaciones' : 'donations',
+  title: es ? 'Apoyá RANDI' : 'Support RANDI',
+  sub: es ? 'RANDI es open source (MIT) y 100% local. Tu apoyo mantiene vivos el catálogo, el chat online gratuito y el desarrollo constante.' :
+          'RANDI is open source (MIT) and 100% local. Your support keeps the catalog, the free online chat and constant development alive.',
+  open: es ? 'Proyecto libre (MIT)' : 'Open source (MIT)',
+  sponsorT: es ? 'GitHub Sponsors' : 'GitHub Sponsors',
+  sponsorD: es ? 'La forma directa de financiar el desarrollo. Podés donar único o mensual.' : 'The direct way to fund development. One-time or monthly.',
+  sponsorCta: es ? 'Ser sponsor →' : 'Become a sponsor →',
+  bmcT: es ? 'Buy Me a Coffee' : 'Buy Me a Coffee',
+  bmcD: es ? 'Donación simple, sin compromiso.' : 'Simple one-off donation, no strings attached.',
+  bmcCta: es ? 'Invitarme un café →' : 'Buy me a coffee →',
+  soonT: es ? 'Cripto y otros métodos' : 'Crypto & other methods',
+  soonD: es ? 'A disposición en las próximas versiones. Escribinos para arreglarlo a medida.' : 'Available in upcoming releases. Reach out to arrange a custom one.',
+  soonTag: es ? 'próximamente' : 'coming soon',
+  thanks: es ? 'Gracias por hacer que la IA local siga siendo libre.' : 'Thank you for keeping local AI free.',
+};
+const base = import.meta.env.BASE_URL;
+const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
+---
+<section class="mx-auto max-w-3xl px-4 pt-14 pb-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.eyebrow}</p>
+  <h1 class="mt-2 text-center text-4xl md:text-5xl font-black tracking-tight">{L.title}</h1>
+  <p class="mx-auto mt-3 max-w-xl text-center text-muted leading-relaxed">{L.sub}</p>
+  <p class="mt-2 text-center text-xs mono text-muted">{L.open} · MIT</p>
+
+  <div class="mt-10 space-y-4">
+    <a href="https://github.com/sponsors/sebastianl1" target="_blank" rel="noreferrer" class="donar-card donar-primary">
+      <div class="flex-1">
+        <h2 class="text-lg font-bold">{L.sponsorT}</h2>
+        <p class="mt-1 text-sm text-muted leading-relaxed">{L.sponsorD}</p>
+      </div>
+      <span class="btn btn-primary pointer-events-none">{L.sponsorCta}</span>
+    </a>
+
+    <a href="https://buymeacoffee.com/sebasbele1c" target="_blank" rel="noreferrer" class="donar-card">
+      <div class="flex-1">
+        <h2 class="text-lg font-bold">{L.bmcT}</h2>
+        <p class="mt-1 text-sm text-muted leading-relaxed">{L.bmcD}</p>
+      </div>
+      <span class="btn pointer-events-none">{L.bmcCta}</span>
+    </a>
+
+    <div class="donar-card opacity-70">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h2 class="text-lg font-bold">{L.soonT}</h2>
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{L.soonTag}</span>
+        </div>
+        <p class="mt-1 text-sm text-muted leading-relaxed">{L.soonD}</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-8 text-center text-muted text-sm">❤ {L.thanks}</p>
+  <div class="mt-6 text-center">
+    <a href={chatUrl} class="btn">← {es ? 'Volver a probar RANDI online' : 'Back to trying RANDI online'}</a>
+  </div>
+</section>
+
+<style>
+  .donar-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.4rem; border: 1px solid var(--color-line); border-radius: .9rem;
+    background: var(--color-panel); transition: border-color .15s, transform .15s;
+  }
+  a.donar-card:hover { border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-line)); transform: translateY(-1px); }
+  a.donar-card:hover .btn { border-color: var(--color-accent); color: var(--color-ink); }
+  .donar-primary { border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-line)); }
+</style>

@@ -1,0 +1,15 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ModelFicha from '../../components/ModelFicha.astro';
+import { allModels } from '../../lib/models.js';
+
+export function getStaticPaths() {
+  return allModels.map((model) => ({ params: { id: model.slug }, props: { model } }));
+}
+const { model } = Astro.props;
+const title = `${model.name} · RANDI`;
+const desc = (model.desc || '') + ` — ${model.paramsBillions}B, ${model.provider}. Hardware requerido, aplicaciones e instalación.`;
+---
+<Layout lang="es" title={title} description={`${desc} ${model.name}`}>
+  <ModelFicha lang="es" model={model} />
+</Layout>

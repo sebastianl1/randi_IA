@@ -1,0 +1,61 @@
+{
+  "name": "randi-ai",
+  "version": "2.1.0",
+  "description": "RANDI — IA local multiplataforma (Termux·Android, Linux, macOS y Windows nativo). Detecta tu hardware, recomienda y ejecuta modelos de texto, imagen y video, e instalación npm o npx en Windows (sin WSL).",
+  "license": "MIT",
+  "type": "module",
+  "author": "Sebastian Laguna <sebasbele11@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sebastianl1/randi_IA.git"
+  },
+  "homepage": "https://sebastianl1.github.io/randi_IA/",
+  "bugs": {
+    "url": "https://github.com/sebastianl1/randi_IA/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "randi": "bin/randi.js"
+  },
+  "files": [
+    "bin/randi.js",
+    "bin/randi.py",
+    "bin/randi",
+    "bin/ollama-chat",
+    "bin/s-ollama",
+    "bin/lib/*.py",
+    "bin/lib/randi_tui/*.py",
+    "web/server.py",
+    "web/models.json",
+    "web/dist",
+    "install-ollama.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepack": "node scripts/prepack.mjs",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "keywords": [
+    "llm",
+    "ollama",
+    "local-ai",
+    "ai",
+    "gemini",
+    "deepseek",
+    "qwen",
+    "llama",
+    "webgpu",
+    "termux",
+    "windows",
+    "linux",
+    "macos",
+    "canirun",
+    "hardware-detection"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

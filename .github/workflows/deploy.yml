@@ -1,0 +1,48 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configurar Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Instalar y construir la landing (Astro)
+        env:
+          PUBLIC_CHAT_ENDPOINT: ${{ secrets.PUBLIC_CHAT_ENDPOINT }}
+        run: |
+          npm --prefix site ci --no-audit --no-fund
+          if [ -n "$PUBLIC_CHAT_ENDPOINT" ]; then
+            sed -i "s#\"endpoint\": \"\"#\"endpoint\": \"$PUBLIC_CHAT_ENDPOINT\"#" site/public/chat-config.json
+          fi
+          node site/node_modules/astro/astro.js build --root site
+
+      - name: Subir artefacto (site/dist)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

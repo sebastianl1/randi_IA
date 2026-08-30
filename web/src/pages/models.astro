@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="RANDI — Catálogo de modelos">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="mono text-xs tracking-widest uppercase text-muted mb-1">Browse</p>
+      <h1 class="text-3xl font-black tracking-tight">Catálogo de modelos</h1>
+    </div>
+    <span id="viewTabs" class="flex gap-1 rounded-lg border border-line p-1"></span>
+  </div>
+  <p class="mt-2 text-muted text-sm max-w-2xl">
+    Explorá, filtrá y evaluá <span data-count="models">los modelos</span> frente a tu hardware. Atajos: <kbd>/</kbd> busca, <kbd>j</kbd>/<kbd>k</kbd> navega, <kbd>Enter</kbd> abre.
+  </p>
+
+  <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <input id="q" type="search" class="input col-span-2" placeholder="Buscar modelo… (/)" />
+    <select id="fUseCase" class="select">
+      <option value="">Caso de uso</option>
+      <option>chat</option><option>code</option><option>reasoning</option><option>vision</option><option>image</option><option>video</option>
+    </select>
+    <select id="fProvider" class="select"><option value="">Proveedor</option></select>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+    <label class="flex items-center gap-1.5"><input type="checkbox" id="fRun" class="accent-[--color-accent]" /> Solo los que corren en tu equipo</label>
+    <label class="flex items-center gap-1.5"><input type="checkbox" id="fML" class="accent-[--color-accent]" /> Con herramientas (tools)</label>
+    <label class="flex items-center gap-1.5"><input type="checkbox" id="fThink" class="accent-[--color-accent]" /> Con razonamiento</label>
+    <label class="flex items-center gap-1.5"><input type="checkbox" id="fMoe" class="accent-[--color-accent]" /> MoE</label>
+    <span class="ml-auto text-xs text-muted" id="fCount"></span>
+  </div>
+
+  <div id="grid" class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+  <p id="empty" class="hidden mt-10 text-center text-muted">Sin resultados para ese filtro.</p>
+</Layout>
+
+<script>
+  import { mount } from '../scripts/models';
+  mount();
+</script>

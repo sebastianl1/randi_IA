@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+*.pyo
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.tgz
+
+# Build web (Astro) — se genera en CI o localmente con `npm run build` en web/
+web/node_modules/
+web/dist/
+web/.astro/
+site/node_modules/
+site/dist/
+site/.astro/
+# build del worker
+dist/
+
+# temporales de build/tests
+.wbuild/

@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DocsPage from '../components/DocsPage.astro';
+const t = {
+  title: 'RANDI — Documentación',
+  desc: 'Documentación de RANDI: instalación por plataforma, comandos de la CLI, arquitectura y preguntas frecuentes.',
+};
+---
+<Layout lang="es" title={t.title} description={t.desc}>
+  <DocsPage lang="es" />
+</Layout>

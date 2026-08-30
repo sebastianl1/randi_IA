@@ -1,0 +1,71 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { llmModels, mediaModels } from '../../lib/catalog.js';
+
+export function getStaticPaths() {
+  return [...llmModels, ...mediaModels].map((m) => ({
+    params: { id: encodeURIComponent(m.id) },
+    props: { model: m },
+  }));
+}
+
+const { model } = Astro.props;
+const isLlm = model.installer === 'ollama';
+---
+<Layout title={`${model.name} · RANDI`}>
+  <a href="/models" class="text-sm text-muted hover:text-ink inline-flex items-center gap-1">← Volver al catálogo</a>
+
+  <section class="mt-4 flex flex-wrap items-start justify-between gap-4">
+    <div class="max-w-2xl">
+      <p class="text-xs text-muted mono uppercase tracking-widest">{model.provider} · {model.category || 'llm'}</p>
+      <h1 class="text-3xl font-black tracking-tight mt-1">{model.name}</h1>
+      <p class="mt-2 text-muted">{model.desc}</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <span class="pill">#{model.paramsBillions}B</span>
+        <span class="pill">{model.architecture}</span>
+        {(model.useCase || []).map((uc) => <span class="pill">{uc}</span>)}
+        <span class="pill">{model.license}</span>
+        {model.thinking && <span class="pill text-accent-2 border-accent-2/40">razonamiento</span>}
+        {model.tools && <span class="pill">tools</span>}
+      </div>
+    </div>
+  </section>
+
+  <div class="mt-6 grid lg:grid-cols-2 gap-5">
+    <section class="card p-4">
+      <h2 class="font-bold text-lg">Instalar</h2>
+      {isLlm ? (
+        <div class="flex flex-col gap-3 mt-3">
+          <code class="block rounded-lg bg-bg-soft border border-line p-3 text-sm mono break-all">randi install {model.ollamaId || model.id}</code>
+          <div class="flex items-center gap-2">
+            <button id="installBtn" class="btn btn-primary">Instalar ahora</button>
+            <span id="installState" class="text-xs text-muted">Requiere el servidor local (randi web)</span>
+          </div>
+        </div>
+      ) : (
+        <p class="mt-3 text-sm text-muted">
+          {model.name} se genera con <strong class="text-ink">ComfyUI</strong> u otro motor de difusión.
+          Descargá los pesos desde el repositorio y cargá el workflow.
+        </p>
+      )}
+<div id="requirements" class="mt-4"></div>
+</section>
+
+    <section class="card p-4 overflow-x-auto">
+      <h2 class="font-bold text-lg mb-2">Compatibilidad por cuantización</h2>
+      <table class="w-full text-sm min-w-105">
+        <thead><tr class="text-left text-muted text-xs uppercase tracking-wide">
+          <th class="py-1 pr-2">Quant</th><th class="p-1">VRAM</th><th class="p-1">Disco</th><th class="p-1">Estado</th><th class="p-1">Nota</th>
+        </tr></thead>
+        <tbody id="quantsBody"><tr><td colspan="5" class="py-6 text-center text-muted">Analizando…</td></tr></tbody>
+      </table>
+    </section>
+  </div>
+</Layout>
+
+<div id="detail" data-model={model.id} hidden></div>
+
+<script>
+  import { mount } from '../../scripts/detail';
+  mount((document.getElementById('detail') as HTMLElement).dataset.model || '');
+</script>

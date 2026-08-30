@@ -1,0 +1,23 @@
+# Fuerza finales de linea LF en codigo (evita CRLF en Windows/Git Bash)
+* text=auto
+
+*.sh   text eol=lf
+*.bash text eol=lf
+*.py   text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.svg  text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.txt  text eol=lf
+*.webmanifest text eol=lf
+
+# Binarios (nunca normalizar)
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.ico  binary
+*.pyc  binary

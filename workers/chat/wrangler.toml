@@ -1,0 +1,13 @@
+name = "randi-chat"
+main = "src/index.ts"
+compatibility_date = "2024-11-06"
+
+# Dispone de URL pública en el deploy automático.
+workers_dev = true
+
+[vars]
+FREE_DAILY_LIMIT = "40"
+
+# Workers AI (plan gratuito). El binding "AI" se crea al desplegar.
+[ai]
+binding = "AI"

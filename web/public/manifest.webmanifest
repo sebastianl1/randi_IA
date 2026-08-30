@@ -1,0 +1,24 @@
+{
+  "name": "RANDI - Asistente de IA local",
+  "short_name": "RANDI",
+  "description": "Asistente de IA 100% local en tu dispositivo. Ollama + WebGPU, sin conexion.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0b10",
+  "theme_color": "#0b0d12",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

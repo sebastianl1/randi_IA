@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="RANDI — IA local en tu dispositivo">
+  <section class="py-10 md:py-16">
+    <p class="mono text-xs tracking-widest uppercase text-muted mb-3">Onboarding · analiza tu equipo</p>
+    <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">
+      Ejecuta IA local en tu <span class="grad-text">dispositivo</span>
+    </h1>
+    <p class="mt-4 max-w-2xl text-muted">
+      Detectamos tu CPU, RAM, GPU y VRAM, y te recomendamos los modelos que realmente corren
+      en tu equipo — clasificados por tipo: <strong class="text-ink">texto</strong>, <strong class="text-ink">imagen</strong> y <strong class="text-ink">video</strong>.
+      Elige uno y lo instalamos y configuramos por ti.
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button id="scanBtn" class="btn btn-primary">⏻ Analizar mi equipo</button>
+      <span id="scanState" class="text-xs text-muted flex items-center gap-2"></span>
+    </div>
+  </section>
+
+  <section id="hwPanel" class="card p-4 mt-2"></section>
+  <section id="basic" class="mt-10"></section>
+  <section id="picks" class="mt-10"></section>
+  <section id="installable" class="mt-10"></section>
+  <section id="requires" class="mt-10"></section>
+</Layout>
+
+<script>
+  import { mount } from '../scripts/home';
+  mount();
+</script>

@@ -1,0 +1,301 @@
+---
+import { content, installSteps } from '../i18n.js';
+import ModelGrid from './ModelGrid.astro';
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const t = content[lang];
+---
+<!-- Hero -->
+<section class="hero-glow relative overflow-hidden px-4 pt-14 pb-12">
+  <div id="heroBg" aria-hidden="true">
+    <span id="rhoBg">Ρ</span>
+  </div>
+  <div class="relative mx-auto max-w-6xl">
+    <div class="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+      <div class="text-center lg:text-left">
+        <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{t.hero.badge}</span>
+        <h1 class="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+          {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
+        </h1>
+        <p class="mx-auto mt-6 max-w-xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
+        <div class="mt-7 flex flex-wrap justify-center lg:justify-start gap-3">
+          <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
+          <a class="btn" href="#modes">{t.hero.cta2}</a>
+        </div>
+      </div>
+
+      <!-- Card quick start + stats -->
+      <div class="glass p-5">
+        <p class="eyebrow mb-3">{lang === 'es' ? 'Inicio rápido' : 'Quick start'}</p>
+        <code class="block">{t.quick}</code>
+        <div class="mt-5 grid grid-cols-3 gap-2 text-center">
+          {t.stats.map((s) => (
+            <div>
+              <div class="text-xl font-black grad-accent">{s.v}</div>
+              <div class="mt-1 text-[10px] leading-tight text-muted">{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Detector de hardware en vivo (client-side) -->
+    <div id="dPanel" class="glass mt-10">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3">
+        <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● {lang === 'es' ? 'detección' : 'detection'}</span>
+        <span class="mono text-xs text-muted" id="dMeta">navegador · 100% local</span>
+        <button id="dBtn" class="btn btn-dark text-xs !px-3 !py-1">⌖ {lang === 'es' ? 'Detectar' : 'Detect'}</button>
+      </div>
+      <div id="dOut" class="grid gap-6 sm:grid-cols-2"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="border-y border-line bg-bg-soft/60">
+  <div class="mx-auto max-w-6xl px-4 py-9 grid grid-cols-2 md:grid-cols-4 gap-5 text-center">
+    {t.stats.map((s) => (
+      <div>
+        <div class="text-3xl font-black grad-accent">{s.v}</div>
+        <div class="mt-1 text-sm text-muted">{s.l}</div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- Catálogo de modelos con scroll infinito (sección adquisición) -->
+<ModelGrid lang={lang} />
+
+<!-- Arquitectura: modelo + harness -->
+<section id="arch" class="mx-auto max-w-6xl px-4 py-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{t.arch.t}</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.arch.d}</h2>
+  <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {t.arch.cards.map((c, i) => (
+      <div class="card p-6 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{c.tag}</span>
+          <span class="mono text-xs text-muted">0{i + 1}</span>
+        </div>
+        <h3 class="text-lg font-bold">{c.t}</h3>
+        <p class="text-sm text-muted leading-relaxed">{c.d}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- Modos -->
+<section id="modes" class="border-y border-line bg-bg-soft/60 py-16">
+  <div class="mx-auto max-w-6xl px-4">
+    <p class="mono text-xs uppercase tracking-widest text-muted text-center">modos</p>
+    <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.modes.t}</h2>
+    <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.modes.d}</p>
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {t.modes.items.map((m) => (
+        <div class="card p-6 flex flex-col gap-3 hover:border-accent/60 transition-colors">
+          <span class="pill self-start" style="border-color:var(--color-accent);color:var(--color-accent)">{m.tag}</span>
+          <h3 class="text-lg font-bold">{m.t}</h3>
+          <p class="text-sm text-muted leading-relaxed">{m.d}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- Quick start / instalación por SO -->
+<section id="install" class="mx-auto max-w-6xl px-4 py-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">quick start</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.install.title}</h2>
+  <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.install.sub}</p>
+
+  <div class="mt-10 flex flex-wrap justify-center gap-2">
+    {t.install.guides.map((g, i) => (
+      <button class:list={{ tab: true, 'tab-active': i === 0 }} data-tab={g.key} aria-controls={`os-${g.key}`}>{g.label}</button>
+    ))}
+  </div>
+
+  {t.install.guides.map((g) => (
+    <div id={`os-${g.key}`} class="card mt-6 p-6 md:p-8" data-pane={g.key} hidden>
+      <p class="text-sm text-muted mb-7">{g.intro}</p>
+      <div class="grid gap-8 md:grid-cols-2">
+        <ol class="space-y-5">
+          {g.steps.map((s, i) => (
+            <li class="flex gap-4">
+              <span class="grade shrink-0" style="--grade-color:var(--color-line)">{i + 1}</span>
+              <div class="space-y-1.5 pt-0.5">
+                <div class="font-semibold">{s.title.replace(/^[\d.]+\.\s*/, '')}</div>
+                {s.body.map((x) => <p class="text-muted text-sm leading-relaxed">{x}</p>)}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div>
+          <h4 class="mono text-[11px] uppercase tracking-widest text-muted mb-3">Terminal</h4>
+          <code class="block">{installSteps[g.key].join('\n')}</code>
+          {g.after.map((a) => <p class="mt-4 text-xs text-muted">💡 {a}</p>)}
+        </div>
+      </div>
+    </div>
+  ))}
+  <p class="mt-6 text-center text-xs text-muted card p-3 mx-auto max-w-2xl">{t.install.note}</p>
+</section>
+
+<!-- Todo queda trazado -->
+<section id="traza" class="border-y border-line bg-bg-soft/60 py-14">
+  <div class="mx-auto max-w-5xl px-4 grid gap-6 md:grid-cols-2">
+    <div>
+      <p class="mono text-xs uppercase tracking-widest text-muted">trazabilidad</p>
+      <h2 class="mt-2 text-3xl font-black tracking-tight">{t.traza.t}</h2>
+      <p class="mt-3 text-muted leading-relaxed">{t.traza.d}</p>
+    </div>
+    <ul class="space-y-2 text-sm">
+      {t.traza.items.map((it) => (
+        <li class="flex items-start gap-2 card p-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="mx-auto max-w-3xl px-4 py-14">
+  <h2 class="text-2xl font-black tracking-tight text-center mb-8">{t.features.title}</h2>
+  <ul class="grid gap-2.5 sm:grid-cols-2 text-sm">
+    {t.features.items.map((it) => (
+      <li class="flex items-start gap-2.5 rounded-xl border border-line bg-panel px-4 py-3"><span class="mt-0.5 text-accent">✓</span>{it}</li>
+    ))}
+  </ul>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="mx-auto max-w-3xl px-4 py-14">
+  <p class="mono text-xs uppercase tracking-widest text-muted">faq</p>
+  <h2 class="mt-2 text-3xl font-black tracking-tight">FAQ</h2>
+  <div class="mt-8 space-y-3">
+    {t.faq.map((f) => (
+      <details class="card p-5">
+        <summary class="font-semibold cursor-pointer flex items-center justify-between gap-3">{f.q}<span class="text-muted mono">+</span></summary>
+        <p class="mt-2.5 text-sm text-muted leading-relaxed">{f.a}</p>
+      </details>
+    ))}
+  </div>
+</section>
+
+<script>
+  import { initRho } from '../components/hero/rho';
+  const BASE = import.meta.env.BASE_URL || '/';
+  const slug = (id: string) => id.replace(/[:/\\]/g, '-');
+  const linkFor = (id: string) =>
+    `${BASE}${document.documentElement.lang === 'en' ? 'en/' : ''}model/${slug(id)}`;
+
+  // ── Tabs de instalacion ──────────────────────────────────────────────
+  const tabs = document.querySelectorAll<HTMLButtonElement>('[data-tab]');
+  let active = tabs[0]?.dataset.tab;
+  const show = () => {
+    document.querySelectorAll<HTMLElement>('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== active; });
+    tabs.forEach((b) => b.classList.toggle('tab-active', b.dataset.tab === active));
+  };
+  tabs.forEach((b) => b.addEventListener('click', () => { active = b.dataset.tab; show(); }));
+  show();
+
+  // ── Detector de hardware (client-side) ───────────────────────────────
+  const isEs = document.documentElement.lang.startsWith('es');
+  const D: any = {
+    title: isEs ? 'Sugerencias para tu equipo' : 'Suggestions for your device',
+    hw: isEs ? 'Tu hardware' : 'Your hardware',
+    mods: isEs ? 'Modelos sugeridos' : 'Suggested models',
+    class: isEs ? 'Clase de equipo' : 'Device class',
+    note: isEs ? 'Haz clic en un modelo para abrir su ficha con todo el detalle.' : 'Click a model to open its full card.',
+    ...(isEs ? { basic: 'Básico / sin GPU', igpu: 'Gráficos integrados', gpu: 'GPU dedicada', pro: 'GPU potente', mobile: 'Móvil' }
+            : { basic: 'Basic / no GPU', igpu: 'Integrated graphics', gpu: 'Dedicated GPU', pro: 'Powerful GPU', mobile: 'Mobile' }),
+    vs: isEs ? 'detectado en' : 'detected in',
+    more: isEs ? 'Se instala con npm en Windows nativo:  npm install -g randi-ai' : 'Native Windows install:  npm install -g randi-ai',
+  };
+  const LITS: Record<string, Array<[string, string, string]>> = {
+    mobile: [['qwen3:0.6b', '0.4GB · Q4', 'chat'], ['qwen2.5-coder:0.5b', '0.4GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
+    basic: [['qwen2.5-coder:1.5b', '0.9GB · Q4', 'código'], ['qwen3:1.7b', '1.3GB · Q4', 'chat'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
+    igpu: [['qwen2.5-coder:3b', '1.9GB · Q4', 'código'], ['qwen3:4b', '2.5GB · Q4', 'chat'], ['llama3.1:8b', '4.6GB · Q4', 'general'], ['qwen2.5-coder:7b', '4.1GB · Q4', 'código']],
+    gpu: [['qwen3:8b', '4.6GB · Q6', 'chat'], ['qwen2.5-coder:7b', '4.1GB · Q6', 'código'], ['deepseek-r1:14b', '8.0GB · Q4', 'razonamiento'], ['gpt-oss:20b', '11.3GB · Q4', 'MoE']],
+    pro: [['qwen3:32b', '17GB · Q4', 'chat'], ['gpt-oss:120b', '60GB · Q4', 'MoE'], ['llama3.3:70b', '37GB · Q4', 'frontier'], ['deepseek-r1:671b', '350GB · Q4', 'MoE']],
+  };
+  function detectPlatform(): string {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad/.test(ua)) return 'ios';
+    if (/Mac OS X/.test(ua)) return 'macos';
+    if (/Windows/.test(ua)) return 'windows';
+    if (/Android/.test(ua)) return 'android';
+    if (/Linux/.test(ua)) return 'linux';
+    return '—';
+  }
+  function gpuInfo() {
+    try {
+      const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+      const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      return gl ? (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : null;
+    } catch { return null; }
+  }
+  function vramOf(r: string | null): number | null {
+    const m = r && (r.match(/\((\d+)\s*GB\)/i) || r.match(/\b(\d+)\s*GB\b/i));
+    return m ? parseInt(m[1], 10) : null;
+  }
+  function classify(p: string, r: string | null, mem: number | null, vram: number | null): string {
+    if (p === 'ios' || p === 'android') return 'mobile';
+    if (p === 'macos' && (r ? /\bm[1-9]\b|apple/i.test(r) : true)) return (mem || 0) >= 32 ? 'pro' : 'gpu';
+    if (vram && vram >= 24) return 'pro';
+    if (vram && vram >= 8) return 'gpu';
+    if (mem && mem >= 12) return 'igpu';
+    return 'basic';
+  }
+  function detect() {
+    const btn = document.getElementById('dBtn') as HTMLButtonElement;
+    const out = document.getElementById('dOut');
+    const meta = document.getElementById('dMeta');
+    if (!out || !btn) return;
+    const start = performance.now();
+    btn.disabled = true;
+    btn.textContent = isEs ? 'Detectando…' : 'Detecting…';
+    const p = detectPlatform();
+    const renderer = gpuInfo();
+    const mem = (navigator as any).deviceMemory ?? null;
+    const cores = navigator.hardwareConcurrency ?? null;
+    const vram = vramOf(renderer);
+    const cls = classify(p, renderer, mem, vram);
+    const ms = Math.round(performance.now() - start);
+    meta!.textContent = `${isEs ? 'navegador' : 'browser'} · 100% ${isEs ? 'local' : 'local'} · ${D.vs} ${ms}ms`;
+    const chips: Array<[string, string]> = [['RAM', mem ? `${mem}GB` : '—'], ['GPU', renderer || (isEs ? 'No detectada' : 'Not detected')]];
+    if (vram) chips.push(['VRAM', `${vram}GB`]);
+    chips.push([isEs ? 'Núcleos' : 'Cores', String(cores ?? '—')]);
+    chips.push([isEs ? 'Plataforma' : 'Platform', p]);
+    const items = LITS[cls] || LITS.basic;
+    out.innerHTML = `
+      <div>
+        <p class="eyebrow mb-2">${D.hw}</p>
+        <dl class="mt-1">
+          ${chips.map(([k, v]) => `<div class="dt-row"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+        </dl>
+        <p class="mono text-xs text-muted mt-3">${D.class}: <span class="text-ink">${D[cls] || cls}</span></p>
+        <p class="text-xs text-muted mt-2">${D.note}</p>
+      </div>
+      <div>
+        <p class="eyebrow mb-2">${D.mods}</p>
+        <div class="space-y-2">
+          ${items.map(([id, quant, why], i) => `
+            <a href="${linkFor(id)}" target="_blank" rel="noreferrer" class="flex items-center gap-3 rounded-xl border border-line bg-bg-soft px-3 py-2.5 hover:border-accent/60 transition-colors">
+              <span class="grade" style="--grade-color:${['#22c55e', '#4ade80', '#a3e635', '#f59e0b'][i] || '#56565f'}">${'SABD'[i] || '?'}</span>
+              <span class="flex flex-col min-w-0">
+                <span class="mono text-sm font-semibold">${id}</span>
+                <span class="mono text-xs text-muted">${why}</span>
+              </span>
+              <span class="ml-auto flex items-center gap-2 mono text-xs text-muted">${quant} <span class="text-accent">↗</span></span>
+            </a>`).join('')}
+        </div>
+        <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>
+      </div>`;
+    btn.disabled = false;
+    btn.textContent = isEs ? '↻ Detectar de nuevo' : '↻ Detect again';
+  }
+  document.getElementById('dBtn')?.addEventListener('click', detect);
+  setTimeout(detect, 700);
+
+  const rho = document.getElementById('rhoBg');
+  if (rho) initRho(rho as HTMLElement);
+</script>

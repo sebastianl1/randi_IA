@@ -1,0 +1,91 @@
+---
+interface Props { lang: 'es' | 'en' }
+const { lang } = Astro.props;
+const es = lang === 'es';
+const base = import.meta.env.BASE_URL;
+const L = {
+  eyebrow: es ? 'catálogo de modelos' : 'model catalog',
+  title: es ? 'Todos los modelos compatibles' : 'Every compatible model',
+  sub: es ? 'Explorá los 72 modelos que RANDI sabe instalar y servir. Hacé clic en uno para abrir su ficha completa en una pestaña nueva.' :
+          'Browse the 72 models RANDI can install and serve. Click one to open its full card in a new tab.',
+  btn: es ? 'Probarlos sin instalar →' : 'Try them without installing →',
+  prev: es ? 'Anterior' : 'Previous',
+  next: es ? 'Siguiente' : 'Next',
+};
+const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
+---
+<section id="models" class="mx-auto max-w-6xl px-4 py-16 scroll-mt-20">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.eyebrow}</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{L.title}</h2>
+  <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{L.sub}</p>
+  <div class="mt-6 text-center">
+    <a href={chatUrl} class="btn btn-primary">{L.btn}</a>
+  </div>
+
+  <div class="mt-10">
+    <div class="flex flex-wrap items-center gap-2.5">
+      <input data-mc-q class="mc-input" type="search" placeholder={L.q} aria-label={L.q} />
+      <span data-mc-status class="mono text-xs text-muted ml-auto"></span>
+    </div>
+    <div data-mc-families class="mt-3 flex flex-wrap gap-2"></div>
+
+    <div class="mt-6 flex items-stretch gap-3">
+      <button data-mc-prev class="mc-arrow" aria-label={L.prev}>‹</button>
+      <div class="flex-1 min-w-0">
+        <div data-mc-list class="grid grid-cols-1 lg:grid-cols-2 gap-2.5"></div>
+        <div data-mc-empty class="mt-4 hidden text-center text-muted text-sm"></div>
+      </div>
+      <button data-mc-next class="mc-arrow" aria-label={L.next}>›</button>
+    </div>
+    <div class="mt-4 text-center">
+      <span data-mc-page class="mono text-xs text-muted"></span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .mc-input {
+    flex: 1 1 16rem; max-width: 26rem;
+    background: var(--color-bg-soft); color: var(--color-ink);
+    border: 1px solid var(--color-line); border-radius: .5rem;
+    padding: .55rem .8rem; font-size: .875rem;
+  }
+  .mc-input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+  .mc-chip {
+    font-size: .75rem; padding: .3rem .7rem; border-radius: 99px;
+    border: 1px solid var(--color-line); color: var(--color-muted);
+    background: transparent; cursor: pointer; transition: color .15s, border-color .15s, background .15s;
+  }
+  .mc-chip:hover { color: var(--color-ink); border-color: var(--color-accent); }
+  .mc-chip.on { color: var(--color-accent); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+  .mc-arrow {
+    flex: none; width: 2.75rem; border: 1px solid transparent; border-radius: .75rem;
+    background: transparent; color: var(--color-muted); font-size: 1.4rem; line-height: 1;
+    cursor: pointer; transition: color .15s, border-color .15s, box-shadow .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mc-arrow:hover:not(:disabled) {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .mc-arrow:disabled { opacity: .3; cursor: default; }
+  .mc-row {
+    display: flex; align-items: center; gap: .8rem;
+    padding: .7rem .9rem;
+    border: 1px solid var(--color-line); border-radius: .8rem;
+    background: var(--color-panel); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .mc-row:hover { border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-line)); background: color-mix(in srgb, var(--color-accent) 6%, var(--color-panel)); transform: translateY(-1px); }
+  .mc-mid { display: flex; flex-direction: column; min-width: 0; }
+  .mc-name { font-family: var(--font-mono); font-weight: 600; font-size: .875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc-sub { font-family: var(--font-mono); font-size: .72rem; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc-right { margin-left: auto; display: flex; align-items: center; gap: .5rem; flex: none; }
+  .mc-size { font-family: var(--font-mono); font-size: .72rem; color: var(--color-muted); }
+  .mc-go { color: var(--color-accent); font-weight: 700; }
+</style>
+
+<script>
+  import { mountCatalog } from '../lib/model-catalog.js';
+  void mountCatalog(document.documentElement.lang.startsWith('es') ? 'es' : 'en');
+</script>

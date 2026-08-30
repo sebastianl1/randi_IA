@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Landing from '../components/Landing.astro';
+const t = {
+  title: 'RANDI — IA local para tu equipo',
+  desc: 'Asistente de IA 100% local multiplataforma (Termux, Linux, macOS, Windows). Detecta tu hardware, recomienda y ejecuta modelos de texto, imagen y video sin nube.',
+};
+---
+<Layout lang="es" title={t.title} description={t.desc}>
+  <Landing lang="es" />
+</Layout>

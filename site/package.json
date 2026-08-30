@@ -1,0 +1,23 @@
+{
+  "name": "randi-site",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "astro": "^5.1.0",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "esbuild@0.27.7": true
+  }
+}

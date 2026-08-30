@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { webgpuModels } from '../lib/catalog.js';
+const wgOpts = webgpuModels.map((m) => `<option value="${m.id}">${m.name} · ${m.size}</option>`).join('');
+---
+<Layout title="RANDI — Chat local">
+  <div id="workspace" class="flex gap-4 h-full">
+    <!-- Rail izquierdo: sesiones -->
+    <aside id="rail" class="card w-56 shrink-0 flex flex-col overflow-hidden">
+      <div class="px-3 py-2 border-b border-line flex items-center justify-between">
+        <span class="font-bold text-sm">Sesiones</span>
+        <button id="railNew" class="btn btn-ghost text-xs !px-2 !py-1">＋</button>
+      </div>
+      <div id="railList" class="flex-1 overflow-y-auto p-2 space-y-1 text-sm"></div>
+      <div class="p-2 border-t border-line">
+        <span id="conn" class="status-dot sd-cannot-run"></span>
+        <span class="text-xs text-muted ml-1" id="connTxt">—</span>
+      </div>
+    </aside>
+
+    <!-- Chat principal -->
+    <main id="chatPane" class="flex-1 flex flex-col min-w-0">
+      <div class="flex flex-wrap items-center gap-3">
+        <div>
+          <p class="mono text-xs tracking-widest uppercase text-muted mb-1">Playground</p>
+          <h1 class="text-2xl font-black tracking-tight">Chat local</h1>
+        </div>
+        <div class="ml-auto flex flex-wrap items-center gap-2 text-sm">
+          <select id="backend" class="select">
+            <option value="ollama">Ollama</option>
+            <option value="webgpu">WebGPU</option>
+          </select>
+          <select id="modelSel" class="select lg:col-span-2"><option>Cargando modelos…</option></select>
+          <label class="flex items-center gap-1.5"><input type="checkbox" id="eco" class="accent-[--color-accent]" /> Eco</label>
+          <label class="flex items-center gap-1.5"><input type="checkbox" id="code" class="accent-[--color-accent]" /> Código</label>
+        </div>
+      </div>
+
+      <div class="card mt-4 flex h-[58vh] min-h-96 flex-col overflow-hidden">
+        <div id="msgs" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm"></div>
+        <div class="border-t border-line p-3 flex flex-col gap-2">
+          <div class="flex gap-2 flex-wrap">
+            <button id="imgBtn" class="btn btn-ghost text-xs" title="Adjuntar imagen (vision)">📎</button>
+            <button id="ttsBtn" class="btn btn-ghost text-xs" title="Leer última respuesta">🔊</button>
+            <button id="sttBtn" class="btn btn-ghost text-xs" title="Dictar (whisper.cpp)">🎤</button>
+            <input type="file" id="fileIn" accept="image/*" class="hidden" />
+          </div>
+          <div class="flex items-end gap-2">
+            <textarea id="input" rows="2" class="input flex-1 min-h-16 resize-y" placeholder="Escribe… (Enter envía, Shift+Enter salto, / para comandos)"></textarea>
+            <button id="sendBtn" class="btn btn-primary px-4">➤</button>
+            <button id="stopBtn" class="btn px-3 hidden">■</button>
+          </div>
+          <p id="stat" class="text-[11px] text-muted">Conectando…</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Panel contexto -->
+    <aside id="context" class="card w-60 shrink-0 flex flex-col overflow-hidden">
+      <div class="px-3 py-2 border-b border-line font-bold text-sm">Contexto / Actividad</div>
+      <div id="ctxBody" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-muted">Modelo</div>
+          <div id="ctxModel" class="text-sm font-semibold">—</div>
+          <div id="ctxMeta" class="text-muted">—</div>
+        </div>
+        <div class="hairline"></div>
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-muted">Contexto</div>
+          <div id="ctxBar" class="h-2 rounded bg-bg-soft border border-line mt-1"><div id="ctxFill" class="h-full rounded bg-accent" style="width:0%"></div></div>
+          <div id="ctxTok" class="text-muted mt-1">0 tokens</div>
+        </div>
+        <div class="hairline"></div>
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-muted">Actividad / fases</div>
+          <ul id="ctxActs" class="space-y-1 text-muted"></ul>
+        </div>
+        <div class="hairline"></div>
+        <div>
+          <div class="text-[10px] uppercase tracking-wide text-muted">Atajos</div>
+          <ul class="space-y-1 text-muted">
+            <li><kbd>Enter</kbd> enviar · <kbd>/</kbd> comandos</li>
+            <li><kbd>Shift+Enter</kbd> salto</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <select id="wgSel" class="hidden" set:html={wgOpts}></select>
+</Layout>
+
+<script>
+  import { mount } from '../scripts/chat';
+  mount();
+</script>
