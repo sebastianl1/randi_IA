@@ -43,3 +43,12 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
           workingDirectory: workers/chat
+
+      - name: Configurar secret OpenRouter (si existe)
+        if: steps.check.outputs.skip == 'false' && ${{ secrets.OPENROUTER_API_KEY != '' }}
+        working-directory: workers/chat
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: echo "$OPENROUTER_KEY" | npx wrangler@latest secret put OPENROUTER_API_KEY --name randi-chat
