@@ -45,7 +45,7 @@ jobs:
           workingDirectory: workers/chat
 
       - name: Configurar secret OpenRouter (si existe)
-        if: steps.check.outputs.skip == 'false' && ${{ secrets.OPENROUTER_API_KEY != '' }}
+        if: steps.check.outputs.skip == 'false' && secrets.OPENROUTER_API_KEY != ''
         working-directory: workers/chat
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
