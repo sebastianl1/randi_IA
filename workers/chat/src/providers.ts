@@ -46,18 +46,29 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
   const url = provider === 'openrouter'
     ? 'https://openrouter.ai/api/v1/chat/completions'
     : `${env.HF_BASE || 'https://api-inference.huggingface.co'}/v1/chat/completions`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      ...(provider === 'openrouter' ? { 'HTTP-Referer': 'https://github.com/sebastianl1/randi_IA', 'X-Title': 'RANDI Chat' } : {}),
-    },
-    body: JSON.stringify({ model: model.ref, messages, stream: true, max_tokens: 720 }),
-  });
-  if (!res.ok || !res.body) {
+  const body = { model: model.ref, messages, stream: true, max_tokens: 720 };
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let res: Response | null = null;
+  let lastErr = '';
+  for (let attempt = 0; attempt < 4; attempt++) {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        ...(provider === 'openrouter' ? { 'HTTP-Referer': 'https://github.com/sebastianl1/randi_IA', 'X-Title': 'RANDI Chat' } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) break;
+    if (res.status !== 429 && res.status < 500) break; // 4xx no recuperables
     const txt = await res.text().catch(() => '');
-    throw new Error(`${provider}: HTTP ${res.status} ${txt.slice(0, 200)}`);
+    lastErr = `${provider}: HTTP ${res.status} ${txt.slice(0, 160)}`;
+    await sleep(1200 * (attempt + 1));
+  }
+  if (!res || !res.ok || !res.body) {
+    const txt = res ? await res.text().catch(() => '') : '';
+    throw new Error(lastErr || `${provider}: HTTP ${res ? res.status : '?'} ${txt.slice(0, 200)}`);
   }
   const reader = res.body.getReader();
   const dec = new TextDecoder();
