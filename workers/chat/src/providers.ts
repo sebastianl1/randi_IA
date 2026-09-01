@@ -72,6 +72,7 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
   const reader = res.body.getReader();
   const dec = new TextDecoder();
   let buf = '';
+  let produced = false;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -82,17 +83,20 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
       buf = buf.slice(nl + 1);
       if (!line.startsWith('data:')) continue;
       const payload = line.slice(5).trim();
-      if (payload === '[DONE]') return;
+      if (payload === '[DONE]') break;
       try {
         const j = JSON.parse(payload);
         const d = j?.choices?.[0]?.delta;
-        if (typeof d?.content === 'string' && d.content) yield { kind: 'text', value: d.content };
-        else if (typeof d?.reasoning === 'string' && d.reasoning) yield { kind: 'reason', value: d.reasoning };
-        else if (typeof d?.reasoning_content === 'string' && d.reasoning_content) yield { kind: 'reason', value: d.reasoning_content };
+        if (typeof d?.content === 'string' && d.content) { produced = true; yield { kind: 'text', value: d.content }; }
+        else if (typeof d?.reasoning === 'string' && d.reasoning) { produced = true; yield { kind: 'reason', value: d.reasoning }; }
+        else if (typeof d?.reasoning_content === 'string' && d.reasoning_content) { produced = true; yield { kind: 'reason', value: d.reasoning_content }; }
       } catch {
         /* fragmento parcial */
       }
     }
+  }
+  if (!produced) {
+    throw new Error('El modelo de uso libre está saturado (respuesta vacía). Probá de nuevo o elegí otro modelo de la lista.');
   }
 }
 
