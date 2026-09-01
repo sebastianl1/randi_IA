@@ -192,6 +192,10 @@ export async function mountChat(): Promise<void> {
   const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
   const modelsListEl = root.querySelector<HTMLElement>('[data-cd-models-list]');
+  const mModelsList = root.querySelector<HTMLElement>('[data-cd-models-list-m]');
+  const mTasksList = root.querySelector<HTMLElement>('[data-cd-tasks-list-m]');
+  const mTaskBar = root.querySelector<HTMLElement>('[data-cd-task-bar-m]');
+  const mTaskNums = root.querySelector<HTMLElement>('[data-cd-task-nums-m]');
   const copyAllBtn = root.querySelector<HTMLButtonElement>('[data-cd-copyall]');
   const limitEl = root.querySelector<HTMLElement>('[data-cd-limit]');
   const tasksListEl = root.querySelector<HTMLElement>('[data-cd-tasks-list]');
@@ -244,21 +248,26 @@ export async function mountChat(): Promise<void> {
     if (s) { s.model = id; persistSessions(); }
     setModelLabel(); renderSessions();
   }
+  function buildModelItem(m: DemoModel): HTMLButtonElement {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'model-list-item' + (m.id === current ? ' active' : '');
+    if (m.ready === false) b.disabled = true;
+    const dot = document.createElement('span'); dot.className = 'ml-dot' + (m.ready === false ? ' off' : '');
+    const name = document.createElement('span'); name.className = 'ml-name'; name.textContent = m.label;
+    const note = document.createElement('span'); note.className = 'ml-note'; note.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
+    b.appendChild(dot); b.appendChild(name); b.appendChild(note);
+    b.addEventListener('click', () => selectModel(m.id));
+    return b;
+  }
+  function renderModelsListInto(container: HTMLElement | null): void {
+    if (!container || !models.length) return;
+    container.innerHTML = '';
+    for (const m of models) container.appendChild(buildModelItem(m));
+  }
   function renderModelsList(): void {
-    if (!modelsListEl || !models.length) return;
-    modelsListEl.innerHTML = '';
-    for (const m of models) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'model-list-item' + (m.id === current ? ' active' : '');
-      if (m.ready === false) b.disabled = true;
-      const dot = document.createElement('span'); dot.className = 'ml-dot' + (m.ready === false ? ' off' : '');
-      const name = document.createElement('span'); name.className = 'ml-name'; name.textContent = m.label;
-      const note = document.createElement('span'); note.className = 'ml-note'; note.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
-      b.appendChild(dot); b.appendChild(name); b.appendChild(note);
-      b.addEventListener('click', () => selectModel(m.id));
-      modelsListEl.appendChild(b);
-    }
+    renderModelsListInto(modelsListEl);
+    renderModelsListInto(mModelsList);
   }
 
   // ── Panel derecho: tareas del agente (auto, progreso en vivo) ──────
@@ -276,19 +285,23 @@ export async function mountChat(): Promise<void> {
     }
     return out;
   }
-  function renderAgentTasks(items: string[], done: number): void {
-    if (!tasksListEl) return;
-    tasksListEl.innerHTML = '';
+  function renderAgentTasksInto(container: HTMLElement | null, bar: HTMLElement | null, nums: HTMLElement | null, items: string[], done: number): void {
+    if (!container) return;
+    container.innerHTML = '';
     for (let i = 0; i < items.length; i++) {
       const row = document.createElement('div'); row.className = 'task-item' + (i < done ? ' done' : '');
       const sq = document.createElement('span'); sq.className = 'tsq'; sq.textContent = i < done ? '✓' : '◻';
       const tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = items[i];
       row.appendChild(sq); row.appendChild(tt);
-      tasksListEl.appendChild(row);
+      container.appendChild(row);
     }
     const total = items.length;
-    if (taskBar) taskBar.style.width = total ? `${Math.round((done / total) * 100)}%` : '0%';
-    if (taskNums) taskNums.textContent = `${done}/${total}`;
+    if (bar) bar.style.width = total ? `${Math.round((done / total) * 100)}%` : '0%';
+    if (nums) nums.textContent = `${done}/${total}`;
+  }
+  function renderAgentTasks(items: string[], done: number): void {
+    renderAgentTasksInto(tasksListEl, taskBar, taskNums, items, done);
+    renderAgentTasksInto(mTasksList, mTaskBar, mTaskNums, items, done);
   }
 
   // ── Sesiones ────────────────────────────────────────────────────────
@@ -427,6 +440,17 @@ export async function mountChat(): Promise<void> {
     const md = ctx.map((m) => `**${m.role === 'user' ? L.you : L.assistant}**:\n${m.content}`).join('\n\n---\n\n');
     copyText(md, copyAllBtn);
   });
+
+  // ── Tab bar móvil (Chat / Modelos / Tareas) ─────────────────────────
+  const mtabBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-mtab]'));
+  const cols = root.querySelector<HTMLElement>('.chat-cols');
+  function setMtab(tab: string): void {
+    mtabBtns.forEach((b) => b.classList.toggle('on', b.dataset.mtab === tab));
+    if (cols) cols.classList.toggle('m-hidden', tab !== 'chat');
+    root.querySelectorAll<HTMLElement>('.m-tab').forEach((v) => v.classList.toggle('active', v.dataset.mtab === tab));
+  }
+  mtabBtns.forEach((b) => b.addEventListener('click', () => setMtab(b.dataset.mtab || 'chat')));
+  setMtab('chat');
 
   // ── Atajos de teclado ───────────────────────────────────────────────
   window.addEventListener('keydown', (e) => {

@@ -225,23 +225,48 @@ body > header, body > footer { display: none; }
 .cd-check { color: var(--color-accent); font-weight: 800; flex: none; }
 .sp { opacity: .5; }
 
+/* ── Separación de UI: móvil vs desktop ─────────────────────────────── */
+.side-open-btn { display: none; }
+.m-views, .tabbar { display: none; }
+.side-scrim { display: none; }
+
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .chat-cols { grid-template-columns: 1fr; grid-template-areas: "canvas" "right"; }
   .chat-right { border-left: 0; border-top: 1px solid var(--line-strong); }
 }
 @media (max-width: 880px) {
+  /* chat: solo canvas como vista; sidebar -> sheet */
   .chat-cols { grid-template-areas: "canvas"; }
   .chat-right { display: none; }
   .chat-sidebar {
     grid-area: canvas;
-    position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: min(78vw, 18rem);
+    position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: min(80vw, 19rem);
     transform: translateX(-100%); transition: transform .22s ease;
     border-right: 1px solid var(--line-strong); background: #0a0a0c;
   }
   .chat-sidebar.open { transform: translateX(0); }
-  .side-scrim { display: none; }
+  .side-open-btn { display: inline-flex; }
   .chat-sidebar.open ~ .side-scrim { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0,0,0,.5); }
+
+  /* vistas móviles (Modelos / Tareas) y tab bar */
+  .m-views { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+  .m-tab { display: none; flex: 1; min-height: 0; overflow-y: auto; padding: .9rem 1rem 2rem; }
+  .m-tab.active { display: flex; flex-direction: column; }
+  .chat-cols.m-hidden { display: none; }
+  .tabbar {
+    display: flex; flex: none; border-top: 1px solid var(--line-strong);
+    background: rgba(9, 9, 10, .95); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: .12rem;
+    padding: .45rem 0 .5rem; font-size: 10px; color: var(--color-muted);
+    background: none; border: 0; cursor: pointer; min-height: 3.25rem;
+  }
+  .tabbar button.on { color: var(--color-accent); }
+  .tabbar button .ic { font-size: 1.15rem; line-height: 1; }
+  .chat-header { padding-top: env(safe-area-inset-top); }
+
   .msg-block.user .msg-main { max-width: 92%; }
   .msg-main { max-width: 92%; }
 }
