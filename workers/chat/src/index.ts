@@ -69,7 +69,7 @@ async function handleChat(request: Request, env: Env, freeLimit: number): Promis
         if (model.provider === 'workers-ai') {
           const ai = env.AI;
           if (!ai) { send('error', { message: 'Workers AI no está vinculado a este Worker (binding "AI").' }); controller.close(); return; }
-          const out = await ai.run(model.ref, { messages, stream: true });
+          const out = await ai.run(model.ref, { messages, stream: true, max_tokens: 4096 });
           const s = out instanceof ReadableStream ? out : out?.response instanceof ReadableStream ? out.response : null;
           if (!s) { send('error', { message: 'El modelo no devolvió un stream válido.' }); controller.close(); return; }
           const reader = s.getReader();

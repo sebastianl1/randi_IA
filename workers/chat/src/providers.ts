@@ -45,7 +45,7 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
   const url = provider === 'openrouter'
     ? 'https://openrouter.ai/api/v1/chat/completions'
     : `${env.HF_BASE || 'https://api-inference.huggingface.co'}/v1/chat/completions`;
-  const body = { model: model.ref, messages, stream: true, max_tokens: 720 };
+  const body = { model: model.ref, messages, stream: true, max_tokens: 4096 };
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   let res: Response | null = null;
   let lastErr = '';
