@@ -6,10 +6,12 @@
 interface DemoModel { id: string; label: string; provider?: string; note?: string; ready?: boolean }
 interface Msg { role: 'user' | 'assistant'; content: string; reason?: string }
 interface Session { id: string; title: string; model: string; ts: number }
+interface Task { id: string; text: string; done: boolean }
 
 const LS_SESS = 'randi-sessions';
 const LS_ACTIVE = 'randi-active';
 const LS_NS = 'randi-sess:';
+const TASKS_KEY = 'randi-tasks';
 const MAX_CTX = 24;
 const DEFAULT_MODEL = 'nemotron-3-free';
 
@@ -187,6 +189,12 @@ export async function mountChat(): Promise<void> {
   const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
   const suggEl = root.querySelector<HTMLElement>('[data-cd-sugg]');
+  const modelsListEl = root.querySelector<HTMLElement>('[data-cd-models-list]');
+  const taskInput = root.querySelector<HTMLInputElement>('[data-cd-task-input]');
+  const taskAdd = root.querySelector<HTMLButtonElement>('[data-cd-task-add]');
+  const tasksListEl = root.querySelector<HTMLElement>('[data-cd-tasks-list]');
+  const taskBar = root.querySelector<HTMLElement>('[data-cd-task-bar]');
+  const taskNums = root.querySelector<HTMLElement>('[data-cd-task-nums]');
   if (!modelBtn || !modelMenu || !sessionsEl || !newBtn || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
 
   let endpoint = '';
@@ -240,6 +248,54 @@ export async function mountChat(): Promise<void> {
   }
   modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelMenu.classList.toggle('visible'); });
   document.addEventListener('click', (e) => { if (!modelMenu.contains(e.target as Node)) modelMenu.classList.remove('visible'); });
+
+  // ── Panel derecho: listado de modelos ──────────────────────────────
+  function renderModelsList(): void {
+    if (!modelsListEl || !models.length) return;
+    modelsListEl.innerHTML = '';
+    for (const m of models) {
+      const row = document.createElement('div'); row.className = 'model-list-item';
+      const dot = document.createElement('span'); dot.className = 'ml-dot' + (m.ready === false ? ' off' : '');
+      const name = document.createElement('span'); name.className = 'ml-name'; name.textContent = m.label;
+      const note = document.createElement('span'); note.className = 'ml-note'; note.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
+      row.appendChild(dot); row.appendChild(name); row.appendChild(note);
+      modelsListEl.appendChild(row);
+    }
+  }
+
+  // ── Panel derecho: tareas con progreso en vivo ─────────────────────
+  function readTasks(): Task[] {
+    try { const r = localStorage.getItem(TASKS_KEY); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) return a; } } catch { /* noop */ }
+    return [];
+  }
+  function saveTasks(ts: Task[]): void { try { localStorage.setItem(TASKS_KEY, JSON.stringify(ts)); } catch { /* lleno */ } }
+  function renderTasks(): void {
+    if (!tasksListEl) return;
+    const ts = readTasks();
+    tasksListEl.innerHTML = '';
+    for (const t of ts) {
+      const row = document.createElement('div'); row.className = 'task-item' + (t.done ? ' done' : '');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.done;
+      cb.addEventListener('change', () => { const all = readTasks(); const it = all.find((x) => x.id === t.id); if (it) it.done = cb.checked; saveTasks(all); renderTasks(); });
+      const span = document.createElement('span'); span.className = 'tt'; span.textContent = t.text;
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'tdel'; del.textContent = '✕'; del.title = L.del;
+      del.addEventListener('click', () => { saveTasks(readTasks().filter((x) => x.id !== t.id)); renderTasks(); });
+      row.appendChild(cb); row.appendChild(span); row.appendChild(del);
+      tasksListEl.appendChild(row);
+    }
+    const total = ts.length; const doneCount = ts.filter((t) => t.done).length;
+    if (taskBar) taskBar.style.width = total ? `${Math.round((doneCount / total) * 100)}%` : '0%';
+    if (taskNums) taskNums.textContent = `${doneCount}/${total}`;
+  }
+  function addTask(): void {
+    const v = (taskInput?.value || '').trim();
+    if (!v) return;
+    const ts = readTasks(); ts.unshift({ id: sid(), text: v, done: false }); saveTasks(ts);
+    if (taskInput) taskInput.value = '';
+    renderTasks();
+  }
+  taskAdd?.addEventListener('click', addTask);
+  taskInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
 
   // ── Sesiones ────────────────────────────────────────────────────────
   function renderSessions(): void {
@@ -366,6 +422,7 @@ export async function mountChat(): Promise<void> {
       if (endpoint) {
         try { const m = await (await fetch(`${endpoint}/api/models`, { cache: 'no-store' })).json(); models = m.models?.length ? m.models : models; } catch { /* fallback */ }
       }
+      renderModelsList();
       if (!endpoint) { await offline(); return; }
       if (!models.length) { await offline(L.offline); return; }
 
@@ -503,5 +560,6 @@ export async function mountChat(): Promise<void> {
   function addTyping(body: HTMLElement): void { body.classList.add('typing'); body.textContent = L.typing + '…'; }
   function removeTyping(body: HTMLElement): void { body.classList.remove('typing'); }
 
+  renderTasks();
   await loadCfg();
 }
