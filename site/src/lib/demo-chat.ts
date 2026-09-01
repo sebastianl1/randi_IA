@@ -442,14 +442,19 @@ export async function mountChat(): Promise<void> {
   });
 
   // ── Tab bar móvil (Chat / Modelos / Tareas) ─────────────────────────
-  const mtabBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-mtab]'));
+const mtabBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-mtab]'));
   const cols = root.querySelector<HTMLElement>('.chat-cols');
+  const mViews = root.querySelector<HTMLElement>('.m-views');
   function setMtab(tab: string): void {
     mtabBtns.forEach((b) => b.classList.toggle('on', b.dataset.mtab === tab));
     if (cols) cols.classList.toggle('m-hidden', tab !== 'chat');
+    if (mViews) mViews.classList.toggle('active', tab !== 'chat');
     root.querySelectorAll<HTMLElement>('.m-tab').forEach((v) => v.classList.toggle('active', v.dataset.mtab === tab));
   }
   mtabBtns.forEach((b) => b.addEventListener('click', () => setMtab(b.dataset.mtab || 'chat')));
+  (root.querySelector('[data-goto-models]') as HTMLElement | null)?.addEventListener('click', () => {
+    if (window.matchMedia('(max-width: 880px)').matches) setMtab('models');
+  });
   setMtab('chat');
 
   // ── Atajos de teclado ───────────────────────────────────────────────

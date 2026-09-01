@@ -38,7 +38,7 @@ const t = { title: L.title, desc: L.desc };
       <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5 side-open-btn" aria-label="Menú">☰</button>
       <div class="grow"></div>
       <div class="chat-header-actions">
-        <span class="model-active" data-cd-model-label></span>
+        <button type="button" class="model-active" data-cd-model-label data-goto-models></button>
         <span class="limit-pill" data-cd-limit></span>
         <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
         <a href={donarUrl} class="btn btn-dark text-xs !px-3 !py-1.5">{L.sponsor}</a>

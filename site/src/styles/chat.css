@@ -237,7 +237,12 @@ body > header, body > footer { display: none; }
 }
 @media (max-width: 880px) {
   /* chat: solo canvas como vista; sidebar -> sheet */
-  .chat-cols { grid-template-areas: "canvas"; }
+  .chat-cols {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "canvas";
+  }
+  .chat-cols.m-hidden { display: none; }
   .chat-right { display: none; }
   .chat-sidebar {
     grid-area: canvas;
@@ -249,11 +254,11 @@ body > header, body > footer { display: none; }
   .side-open-btn { display: inline-flex; }
   .chat-sidebar.open ~ .side-scrim { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0,0,0,.5); }
 
-  /* vistas móviles (Modelos / Tareas) y tab bar */
-  .m-views { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+  /* vistas móviles: ocultas salvo la activa */
+  .m-views { display: none; }
+  .m-views.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
   .m-tab { display: none; flex: 1; min-height: 0; overflow-y: auto; padding: .9rem 1rem 2rem; }
   .m-tab.active { display: flex; flex-direction: column; }
-  .chat-cols.m-hidden { display: none; }
   .tabbar {
     display: flex; flex: none; border-top: 1px solid var(--line-strong);
     background: rgba(9, 9, 10, .95); padding-bottom: env(safe-area-inset-bottom);
@@ -265,13 +270,23 @@ body > header, body > footer { display: none; }
   }
   .tabbar button.on { color: var(--color-accent); }
   .tabbar button .ic { font-size: 1.15rem; line-height: 1; }
-  .chat-header { padding-top: env(safe-area-inset-top); flex-wrap: nowrap; gap: .5rem; }
-  .chat-header .model-active { display: none; }
+
+  /* header móvil: solo lo importante, sin marca larga */
+  .chat-header { padding-top: env(safe-area-inset-top); flex-wrap: nowrap; gap: .45rem; min-width: 0; }
+  .chat-header .chat-brand { min-width: 0; }
+  .chat-header .chat-brand > span:last-child { display: none; }
   .chat-header a.btn { display: none; }
-  .chat-brand { min-width: 0; }
-  .chat-brand > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat-header .model-active {
+    font-size: .68rem; padding: .2rem .5rem; cursor: pointer; border-radius: 99px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--line-strong));
+    color: var(--color-ink); background: none; white-space: nowrap;
+  }
+  .chat-header .limit-pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
+  .chat-header .pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
+
   .composer-box .btn-send { padding: .55rem .9rem; }
   .composer-foot .status-row { flex-wrap: wrap; }
+  .chat-watermark { display: none; }
 
   .msg-block.user .msg-main { max-width: 92%; }
   .msg-main { max-width: 92%; }
