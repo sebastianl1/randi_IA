@@ -105,7 +105,6 @@ export async function mountCatalog(lang: 'es' | 'en'): Promise<void> {
     prev.disabled = page <= 0;
     next.disabled = page >= tp - 1;
     status.textContent = `${filtered.length} ${L.shown}`;
-    list.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   function row(m: CatModel): HTMLElement {
