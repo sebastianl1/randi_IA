@@ -21,3 +21,5 @@ dist/
 
 # temporales de build/tests
 .wbuild/
+docs/roadmap-negocio.md
+docs/roadmap-modelo-propio.md

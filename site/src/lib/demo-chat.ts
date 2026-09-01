@@ -1,10 +1,90 @@
-// RANDI Chat — cliente del widget "Chatea ahora".
-// Contexto guardado en localStorage (por modelo); exportar/borrar incluidos.
+// RANDI Chat — cliente del "Chatea con nosotros".
+// UI tipo harness: sesiones en sidebar, mensajes como bloques con rol,
+// composer inferior, markdown rico, reasoning colapsable y copiar código.
+// Todo el contexto es local (localStorage).
 
 interface DemoModel { id: string; label: string; provider?: string; note?: string; ready?: boolean }
-interface Msg { role: 'user' | 'assistant'; content: string }
+interface Msg { role: 'user' | 'assistant'; content: string; reason?: string }
+interface Session { id: string; title: string; model: string; ts: number }
 
-// ── Renderizador markdown propio (XSS-safe: primero se escapa el HTML) ──
+const LS_SESS = 'randi-sessions';
+const LS_ACTIVE = 'randi-active';
+const LS_NS = 'randi-sess:';
+const MAX_CTX = 24;
+const DEFAULT_MODEL = 'nemotron-3-free';
+
+interface L10n {
+  offline: string; send: string; stop: string; placeholder: string; ctx: string;
+  export: string; clear: string; pro: string; sponsor: string; limit: string; reset: string;
+  err: string; hint: string; typing: string; newConv: string; sessions: string; del: string;
+  emptySessions: string; regenerate: string; assistant: string; you: string; msgsL: string;
+  tokL: string; sugg: string[]; empty: string; soon: string; priv1: string; priv2: string; priv3: string;
+}
+
+const es: L10n = {
+  offline: 'El chat online aún no está conectado.',
+  send: 'Enviar',
+  stop: 'Detener',
+  placeholder: 'Escribí tu mensaje…',
+  ctx: 'Contexto',
+  export: 'Exportar',
+  clear: 'Borrar',
+  pro: 'Pro — sin límites',
+  sponsor: 'Patrocina RANDI',
+  limit: 'Llegaste al límite gratuito de hoy. Probá Pro (sin límites) o volvé mañana.',
+  reset: 'El límite gratuito se reinicia cada día.',
+  err: 'Ups, algo falló al chatear. Intentá de nuevo.',
+  hint: 'Enter enviar · Shift+Enter salto de línea',
+  typing: 'Pensando…',
+  newConv: 'Nueva conversación',
+  sessions: 'Conversaciones',
+  del: 'Eliminar',
+  emptySessions: 'Sin conversaciones aún.',
+  regenerate: 'Regenerar respuesta',
+  assistant: 'Asistente',
+  you: 'Tú',
+  msgsL: 'mensajes',
+  tokL: '≈ tokens',
+  sugg: ['Explicame qué es un LLM en términos simples', 'Escribí un script de Python para leer un CSV', 'Dame 3 ideas para presentar un proyecto'],
+  empty: 'El modelo devolvió una respuesta vacía. Probá con otro modelo.',
+  soon: 'Próximamente',
+  priv1: 'Cero cookies y cero rastreo.',
+  priv2: 'Sin cuenta y sin tarjeta.',
+  priv3: '40 mensajes gratis por IP y por día (se reinicia).',
+};
+const en: L10n = {
+  offline: 'The online chat is not connected yet.',
+  send: 'Send',
+  stop: 'Stop',
+  placeholder: 'Type your message…',
+  ctx: 'Context',
+  export: 'Export',
+  clear: 'Clear',
+  pro: 'Pro — no limits',
+  sponsor: 'Sponsor RANDI',
+  limit: 'You reached today\'s free limit. Try Pro (no limits) or come back tomorrow.',
+  reset: 'The free limit resets every day.',
+  err: 'Something went wrong while chatting. Try again.',
+  hint: 'Enter to send · Shift+Enter for newline',
+  typing: 'Thinking…',
+  newConv: 'New conversation',
+  sessions: 'Conversations',
+  del: 'Delete',
+  emptySessions: 'No conversations yet.',
+  regenerate: 'Regenerate reply',
+  assistant: 'Assistant',
+  you: 'You',
+  msgsL: 'messages',
+  tokL: '≈ tokens',
+  sugg: ['Explain what an LLM is in simple terms', 'Write a Python script to read a CSV', 'Give me 3 ideas to present a project'],
+  empty: 'The model returned an empty reply. Try another model.',
+  soon: 'Coming soon',
+  priv1: 'Zero cookies and zero tracking.',
+  priv2: 'No account and no card.',
+  priv3: '40 free messages per IP and day (resets).',
+};
+
+// ── Renderizador markdown propio (XSS-safe) ────────────────────────────
 function mdEsc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -12,17 +92,14 @@ function inlineMd(s: string): string {
   let r = s.replace(/`([^`]+)`/g, '<code class="md-c">$1</code>');
   r = r.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   r = r.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  r = r.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
-  // Matemáticas estilo LaTeX (después de bold/italic para no pisarlos)
+  r = r.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a class="md-msg-link" href="$2" target="_blank" rel="noreferrer">$1</a>');
   r = r.replace(/\$\$([^$]+)\$\$/g, '<span class="md-math md-math-block">$$$1$$</span>');
   r = r.replace(/\$([^$]+)\$/g, '<span class="md-math">$1</span>');
   return r;
 }
 const MD_KW = /^(def|class|return|if|elif|else|for|while|in|not|and|or|None|True|False|print|import|from|as|function|const|let|var|export|throw|new|async|await|try|catch|finally|switch|case|break|continue|npm|npx|sudo|pkg|apt|git|curl|cd|ls|echo)$/;
 function hlLang(code: string): string {
-  let s = code
-    .replace(/(&quot;.*?&quot;|'[^']*')/g, '<span class="md-str">$1</span>')
-    .replace(/(#.*)$/gm, '<span class="md-com">$1</span>');
+  let s = code.replace(/(&quot;.*?&quot;|'[^']*')/g, '<span class="md-str">$1</span>').replace(/(#.*)$/gm, '<span class="md-com">$1</span>');
   s = s.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="md-num">$1</span>');
   s = s.replace(/^(\s*)([A-Za-z_][\w]*)/gm, (_m, sp, w) => (MD_KW.test(w) ? `${sp}<span class="md-kw">${w}</span>` : `${sp}${w}`));
   s = s.replace(/([A-Za-z_]\w*)(?=\s*\()/g, '<span class="md-fn">$1</span>');
@@ -39,6 +116,9 @@ function tableHtml(rows: string[]): string {
   }
   h += '</tbody></table></div>';
   return h;
+}
+function thinkHtml(reason: string): string {
+  return `<details class="md-think"><summary>💭 ${reason.length > 60 ? reason.slice(0, 60) + '…' : reason}</summary><div class="md-think-body">${mdEsc(reason)}</div></details>`;
 }
 function renderMd(src: string): string {
   const lines = mdEsc(src).split('\n');
@@ -84,76 +164,19 @@ function renderMd(src: string): string {
   return html;
 }
 
-const LS_NS = 'randi-ctx:';
-const MAX_CTX = 24;
-const DEFAULT_MODEL = 'nemotron-3-free';
-
-interface L10n {
-  offline: string; sel: string; send: string; stop: string; placeholder: string;
-  ctx: string; export: string; clear: string; pro: string; sponsor: string;
-  limit: string; reset: string; err: string; hint: string; typing: string;
-  newConv: string; msgsL: string; tokL: string; sugg: string[]; empty: string;
-}
-
-const es: L10n = {
-  offline: 'El chat online aún no está conectado. Configurá la URL del Worker en /chat-config.json',
-  sel: 'Modelo',
-  send: 'Enviar',
-  stop: 'Detener',
-  placeholder: 'Escribí tu mensaje…',
-  ctx: 'Tu contexto vive en tu navegador (localStorage)',
-  export: 'Exportar',
-  clear: 'Borrar',
-  pro: 'Pro — sin límites',
-  sponsor: 'Patrocina RANDI',
-  limit: 'Llegaste al límite gratuito de hoy. Probá Pro (sin límites) o volvé mañana.',
-  reset: 'El límite gratuito se reinicia cada día.',
-  err: 'Ups, algo falló al chatear. Intentá de nuevo.',
-  hint: 'Enter enviar · Shift+Enter salto de línea',
-  typing: 'Pensando…',
-  newConv: 'Nueva conversación',
-  msgsL: 'mensajes',
-  tokL: '≈ tokens',
-  sugg: [
-    'Explicame qué es un LLM en términos simples',
-    'Escribí un script de Python para leer un CSV',
-    'Dame 3 ideas para presentar un proyecto',
-  ],
-  empty: 'El modelo devolvió una respuesta vacía. Probá con otro modelo (los de OpenRouter manejan bien los números).',
-};
-const en: L10n = {
-  offline: 'The online chat is not connected yet. Set the Worker URL in /chat-config.json',
-  sel: 'Model',
-  send: 'Send',
-  stop: 'Stop',
-  placeholder: 'Type your message…',
-  ctx: 'Your context stays in your browser (localStorage)',
-  export: 'Export',
-  clear: 'Clear',
-  pro: 'Pro — no limits',
-  sponsor: 'Sponsor RANDI',
-  limit: 'You reached today\'s free limit. Try Pro (no limits) or come back tomorrow.',
-  reset: 'The free limit resets every day.',
-  err: 'Something went wrong while chatting. Try again.',
-  hint: 'Enter to send · Shift+Enter for newline',
-  typing: 'Thinking…',
-  newConv: 'New conversation',
-  msgsL: 'messages',
-  tokL: '≈ tokens',
-  sugg: [
-    'Explain what an LLM is in simple terms',
-    'Write a Python script to read a CSV',
-    'Give me 3 ideas to present a project',
-  ],
-  empty: 'The model returned an empty reply. Try another model (the OpenRouter ones handle numbers well).',
-};
-
+// ── Arranque del chat ──────────────────────────────────────────────────
 export async function mountChat(): Promise<void> {
   const L: L10n = document.documentElement.lang.startsWith('es') ? es : en;
   const root = document.getElementById('chat-online');
   if (!root) return;
   const base = import.meta.env.BASE_URL || '/';
-  const sel = root.querySelector<HTMLSelectElement>('[data-cd-model]');
+
+  const modelBtn = root.querySelector<HTMLButtonElement>('[data-cd-model]');
+  const modelMenu = root.querySelector<HTMLElement>('[data-cd-models]');
+  const sessionsEl = root.querySelector<HTMLElement>('[data-cd-sessions]');
+  const newBtn = root.querySelector<HTMLButtonElement>('[data-cd-new]');
+  const sideOpen = root.querySelector<HTMLButtonElement>('[data-cd-open-side]');
+  const scrim = root.querySelector<HTMLElement>('[data-cd-scrim]');
   const msgs = root.querySelector<HTMLElement>('[data-cd-msgs]');
   const input = root.querySelector<HTMLTextAreaElement>('[data-cd-input]');
   const send = root.querySelector<HTMLButtonElement>('[data-cd-send]');
@@ -161,196 +184,265 @@ export async function mountChat(): Promise<void> {
   const status = root.querySelector<HTMLElement>('[data-cd-status]');
   const exportBtn = root.querySelector<HTMLButtonElement>('[data-cd-export]');
   const clearBtn = root.querySelector<HTMLButtonElement>('[data-cd-clear]');
-  const newBtn = root.querySelector<HTMLButtonElement>('[data-cd-new]');
   const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
-  const modelLabel = root.querySelector<HTMLElement>('[data-cd-model-label]');
   const suggEl = root.querySelector<HTMLElement>('[data-cd-sugg]');
-  if (!sel || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
+  if (!modelBtn || !modelMenu || !sessionsEl || !newBtn || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
 
   let endpoint = '';
   let models: DemoModel[] = [];
+  let sessions: Session[] = [];
+  let activeId = '';
   let ctx: Msg[] = [];
   let current = '';
   let abort: AbortController | null = null;
   let busy = false;
+  let lastUserText = '';
 
-  function save(): void { try { localStorage.setItem(LS_NS + current, JSON.stringify(ctx)); } catch { /* lleno */ } }
-  function load(): Msg[] {
-    try { const raw = localStorage.getItem(LS_NS + (sel.value || '')); return raw ? JSON.parse(raw) : []; } catch { return []; }
+  function readSessions(): Session[] {
+    try { const r = localStorage.getItem(LS_SESS); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) return a; } } catch { /* noop */ }
+    return [];
   }
-  function addBubble(role: 'user' | 'assistant', text: string, prepend?: boolean): HTMLElement {
-    const d = document.createElement('div');
-    d.className = `cd-bubble ${role}`;
-    if (role === 'assistant') d.innerHTML = text ? renderMd(text) : '';
-    else d.textContent = text;
-    if (prepend && msgs.firstChild) msgs.insertBefore(d, msgs.firstChild); else msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-    return d;
+  function persistSessions(): void { try { localStorage.setItem(LS_SESS, JSON.stringify(sessions)); } catch { /* lleno */ } }
+  function saveCtx(): void { try { localStorage.setItem(LS_NS + activeId, JSON.stringify(ctx)); } catch { /* lleno */ } }
+  function loadCtx(id: string): Msg[] {
+    try { const r = localStorage.getItem(LS_NS + id); return r ? JSON.parse(r) : []; } catch { /* noop */ }
+    return [];
   }
-  function esc(s: string): string { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
   function estTokens(list: Msg[]): number {
-    let chars = 0;
-    for (const m of list) chars += m.content.length;
-    return Math.round(chars / 4);
+    let chars = 0; for (const m of list) chars += m.content.length; return Math.round(chars / 4);
   }
   function updateStat(): void {
-    const c = `${ctx.length} ${L.msgsL}`;
-    const t = `${L.tokL} ${estTokens(ctx).toLocaleString()}`;
-    countEls.forEach((el) => { el.textContent = c; });
-    tokEls.forEach((el) => { el.textContent = t; });
+    const c = `${ctx.length} ${L.msgsL}`; const t = `${L.tokL} ${estTokens(ctx).toLocaleString()}`;
+    countEls.forEach((el) => { el.textContent = c; }); tokEls.forEach((el) => { el.textContent = t; });
   }
-  function refresh(): void {
+  function sid(): string { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function shortTitle(text: string): string { const t = text.trim().replace(/\s+/g, ' '); return t.length > 32 ? t.slice(0, 32) + '…' : t || '…'; }
+
+  // ── Selector de modelo (popover) ────────────────────────────────────
+  function setModelLabel(): void {
+    const m = models.find((x) => x.id === current);
+    modelBtn.textContent = (m ? m.label : current) + ' ▾';
+  }
+  function renderModelMenu(): void {
+    modelMenu.innerHTML = '';
+    for (const m of models) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'model-opt' + (m.id === current ? ' on' : '') + (m.ready === false ? ' disabled' : '');
+      if (m.ready !== false) b.addEventListener('click', () => { current = m.id; setModelLabel(); renderModelMenu(); const s = sessions.find((x) => x.id === activeId); if (s) { s.model = m.id; persistSessions(); } renderSessions(); });
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = m.label;
+      const hint = document.createElement('span'); hint.className = 'hint';
+      hint.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
+      b.appendChild(n); b.appendChild(hint);
+      modelMenu.appendChild(b);
+    }
+  }
+  modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelMenu.classList.toggle('visible'); });
+  document.addEventListener('click', (e) => { if (!modelMenu.contains(e.target as Node)) modelMenu.classList.remove('visible'); });
+
+  // ── Sesiones ────────────────────────────────────────────────────────
+  function renderSessions(): void {
+    sessionsEl.innerHTML = '';
+    if (!sessions.length) {
+      const p = document.createElement('p'); p.className = 'side-label'; p.textContent = L.emptySessions;
+      sessionsEl.appendChild(p); return;
+    }
+    for (const s of sessions) {
+      const row = document.createElement('div');
+      row.className = 'sess-item' + (s.id === activeId ? ' active' : '');
+      const t = document.createElement('span'); t.className = 'sess-title'; t.textContent = s.title;
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'sess-del'; del.title = L.del; del.setAttribute('aria-label', L.del); del.textContent = '✕';
+      del.addEventListener('click', (e) => { e.stopPropagation(); deleteSession(s.id); });
+      row.appendChild(t); row.appendChild(del);
+      row.addEventListener('click', () => switchSession(s.id));
+      sessionsEl.appendChild(row);
+    }
+  }
+  function switchSession(id: string): void {
+    if (busy) return;
+    activeId = id; ctx = loadCtx(id);
+    const s = sessions.find((x) => x.id === id);
+    if (s) { current = s.model; setModelLabel(); renderModelMenu(); }
+    renderBubbles(); renderSessions(); updateStat();
+    try { localStorage.setItem(LS_ACTIVE, id); } catch { /* noop */ }
+  }
+  function newSession(): void {
+    if (busy) return;
+    const s: Session = { id: sid(), title: '—', model: current, ts: Date.now() };
+    sessions.unshift(s); persistSessions();
+    activeId = s.id; ctx = [];
+    try { localStorage.setItem(LS_ACTIVE, s.id); } catch { /* noop */ }
+    renderSessions(); renderBubbles(); updateStat(); input.focus();
+  }
+  function deleteSession(id: string): void {
+    try { localStorage.removeItem(LS_NS + id); } catch { /* noop */ }
+    sessions = sessions.filter((x) => x.id !== id); persistSessions();
+    if (activeId === id) {
+      if (sessions.length) switchSession(sessions[0].id); else { activeId = ''; ctx = []; renderBubbles(); updateStat(); }
+    } else renderSessions();
+  }
+  function setSessionTitle(id: string, text: string): void {
+    const s = sessions.find((x) => x.id === id);
+    if (s && (s.title === '—' || s.title === '…')) { s.title = shortTitle(text); persistSessions(); renderSessions(); }
+  }
+
+  // ── Bloques de mensaje ──────────────────────────────────────────────
+  function addMsgBlock(role: 'user' | 'assistant', opts?: { reason?: string; streaming?: boolean; regen?: boolean }): { elt: HTMLElement; body: HTMLElement } {
+    const block = document.createElement('div');
+    block.className = 'msg-block ' + role;
+    const ava = document.createElement('div'); ava.className = 'msg-ava';
+    ava.textContent = role === 'assistant' ? 'Ρ' : 'Tú'.charAt(0);
+    const main = document.createElement('div'); main.className = 'msg-main';
+    const head = document.createElement('div'); head.className = 'msg-head';
+    const roleLbl = document.createElement('span'); roleLbl.className = 'msg-role'; roleLbl.textContent = role === 'assistant' ? L.assistant : L.you;
+    head.appendChild(roleLbl);
+    const sep = document.createElement('span'); sep.textContent = '·'; sep.className = 'sp';
+    head.appendChild(sep);
+    const stamp = document.createElement('span'); stamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    head.appendChild(stamp);
+    if (role === 'assistant' && opts?.regen && !opts.streaming) {
+      const reg = document.createElement('button'); reg.type = 'button'; reg.className = 'btn-icon'; reg.title = L.regenerate; reg.setAttribute('aria-label', L.regenerate); reg.textContent = '↻';
+      reg.setAttribute('data-regen', '');
+      head.appendChild(reg);
+    }
+    const actions = document.createElement('span'); actions.className = 'msg-actions';
+    if (role === 'assistant') {
+      const cp = document.createElement('button'); cp.type = 'button'; cp.className = 'btn-icon'; cp.title = 'copy'; cp.textContent = '⧉';
+      cp.setAttribute('data-copy-msg', '');
+      actions.appendChild(cp);
+      head.appendChild(actions);
+    }
+    const body = document.createElement('div'); body.className = 'msg-body';
+    if (opts?.streaming) block.classList.add('msg-streaming');
+    main.appendChild(head); main.appendChild(body);
+    block.appendChild(ava); block.appendChild(main);
+    msgs.appendChild(block);
+    msgs.scrollTop = msgs.scrollHeight;
+    return { elt: block, body };
+  }
+  function bubbleInner(role: 'user' | 'assistant', msg: Msg): void {
+    const b = addMsgBlock(role, msg.role === 'assistant' ? { reason: msg.reason, regen: true } : undefined);
+    if (role === 'user') b.body.textContent = msg.content;
+    else b.body.innerHTML = (msg.reason ? thinkHtml(msg.reason) : '') + renderMd(msg.content);
+    if (msg.role === 'assistant' && msg.reason) { /* think ya incluido */ }
+  }
+  function renderBubbles(): void {
     msgs.innerHTML = '';
-    for (const m2 of ctx) addBubble(m2.role, m2.content);
+    for (const m of ctx) bubbleInner(m.role, m);
     updateStat();
   }
-  function nuevaConversacion(): void {
-    try { localStorage.removeItem(LS_NS + current); } catch { /* noop */ }
-    ctx = [];
-    refresh();
-    input.focus();
-  }
 
-  function renderModels(): void {
-    sel.innerHTML = '';
-    for (const m of models) {
-      const o = document.createElement('option');
-      o.value = m.id;
-      o.textContent = m.ready === false ? `${m.label} (sin key)` : m.label;
-      o.disabled = m.ready === false;
-      sel.appendChild(o);
-    }
-    const pref = models.find((m) => m.id === DEFAULT_MODEL && m.ready !== false)
-      || models.find((m) => m.ready !== false) || models[0];
-    if (pref) sel.value = pref.id;
-    current = sel.value;
-    if (modelLabel) {
-      const mm = models.find((x) => x.id === current);
-      modelLabel.textContent = mm ? mm.label : current;
-    }
-    if (status) status.textContent = `${L.ctx} · ${L.reset}`;
-  }
+  // ── Responsive: abrir/cerrar sidebar ────────────────────────────────
+  const sidebar = document.querySelector('.chat-sidebar');
+  function openSide(mm: boolean): void { if (sidebar) sidebar.classList.toggle('open', mm); else void mm; }
+  sideOpen?.addEventListener('click', () => openSide(true));
+  scrim?.addEventListener('click', () => openSide(false));
 
-  function setModelLabel(): void {
-    if (modelLabel) {
-      const mm = models.find((x) => x.id === sel.value);
-      modelLabel.textContent = mm ? mm.label : sel.value;
-    }
-  }
-
-  async function offline(msg?: string): Promise<void> {
-    msgs.innerHTML = `<div class="cd-note">${esc(msg || L.offline)}</div>`;
+  // ── Config/offline ──────────────────────────────────────────────────
+  async function offline(): Promise<void> {
+    msgs.innerHTML = `<p class="md-p">${L.offline}</p>`;
     send.disabled = true;
   }
   function setBusy(b: boolean): void {
     busy = b;
-    send.disabled = b || !endpoint;
+    send.disabled = b || !endpoint || !activeId;
     stop.hidden = !b;
     input.disabled = b;
   }
 
   async function loadCfg(): Promise<void> {
     try {
-      endpoint = String(import.meta.env.PUBLIC_CHAT_ENDPOINT || '').replace(/\/+$/, '');
-      if (!endpoint) {
+      let cfgEndpoint = String(import.meta.env.PUBLIC_CHAT_ENDPOINT || '').replace(/\/+$/, '');
+      if (!cfgEndpoint) {
         const res = await fetch(`${base}chat-config.json`, { cache: 'no-store' });
         const cfg = await res.json();
-        endpoint = String(cfg.endpoint || '').replace(/\/+$/, '');
+        cfgEndpoint = String(cfg.endpoint || '').replace(/\/+$/, '');
       }
+      endpoint = cfgEndpoint;
+      const cfgRes = await fetch(`${base}chat-config.json`, { cache: 'no-store' });
+      const cfg = await cfgRes.json();
       models = cfg.models || [];
       if (endpoint) {
-        try {
-          const m = await (await fetch(`${endpoint}/api/models`, { cache: 'no-store' })).json();
-          models = m.models?.length ? m.models : models;
-        } catch { /* usa el fallback local */ }
+        try { const m = await (await fetch(`${endpoint}/api/models`, { cache: 'no-store' })).json(); models = m.models?.length ? m.models : models; } catch { /* fallback */ }
       }
       if (!endpoint) { await offline(); return; }
       if (!models.length) { await offline(L.offline); return; }
-      renderModels();
-      ctx = load();
-      refresh();
-    } catch {
-      await offline();
-    }
+
+      current = models.find((m) => m.id === DEFAULT_MODEL && m.ready !== false)?.id
+        || models.find((m) => m.ready !== false)?.id || models[0]?.id || '';
+
+      sessions = readSessions();
+      let last: string | null = null;
+      try { last = localStorage.getItem(LS_ACTIVE); } catch { /* noop */ }
+      if (!sessions.length) {
+        newSession();
+      } else {
+        activeId = last && sessions.some((x) => x.id === last) ? last : sessions[0].id;
+        const s = sessions.find((x) => x.id === activeId);
+        if (s) { if (s.model) current = s.model; else { s.model = current; persistSessions(); } }
+      }
+      setModelLabel(); renderModelMenu();
+      ctx = loadCtx(activeId);
+      renderBubbles(); renderSessions();
+      if (status) status.textContent = `${L.reset} · ${L.ctx}`;
+    } catch { await offline(); }
   }
 
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void sendMessage(); }
+  // ── Acciones ────────────────────────────────────────────────────────
+  newBtn.addEventListener('click', () => newSession());
+  exportBtn.addEventListener('click', () => {
+    const payload = { sessionId: activeId, exportedAt: new Date().toISOString(), model: current, context: ctx };
+    const file = new File([JSON.stringify(payload, null, 2)], `randi-chat.json`, { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+    URL.revokeObjectURL(a.href);
   });
+  clearBtn.addEventListener('click', () => { ctx = []; saveCtx(); renderBubbles(); input.focus(); });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void sendMessage(); } });
   send.addEventListener('click', () => void sendMessage());
   stop.addEventListener('click', () => abort?.abort());
-  sel.addEventListener('change', () => {
-    current = sel.value;
-    ctx = load();
-    setModelLabel();
-    refresh();
-  });
-  if (newBtn) newBtn.addEventListener('click', () => nuevaConversacion());
-  clearBtn.addEventListener('click', () => {
-    try { localStorage.removeItem(LS_NS + current); } catch { /* noop */ }
-    ctx = [];
-    refresh();
-  });
+
   if (suggEl) {
     for (const s of L.sugg) {
-      const c = document.createElement('button');
-      c.className = 'cd-sugg';
-      c.textContent = s;
-      c.addEventListener('click', () => {
-        input.value = s;
-        input.focus();
-      });
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'cd-sugg'; c.textContent = s;
+      c.addEventListener('click', () => { input.value = s; input.focus(); });
       suggEl.appendChild(c);
     }
   }
 
-  // Copiar bloque de código (delegación: los botones nacen en el markdown)
+  // Delegación: copiar código, copiar mensaje, regenerar
   msgs.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
-    const btn = t.closest ? t.closest('.md-copy') : null;
-    if (!btn) return;
-    const code = decodeURIComponent((btn as HTMLElement).dataset.copy || '');
-    const done = () => {
-      const o = btn.textContent;
-      btn.textContent = '✓';
-      setTimeout(() => { btn.textContent = o; }, 1200);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(done, done);
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = code;
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch { /* noop */ }
-      ta.remove();
-      done();
-    }
-  });
-  exportBtn.addEventListener('click', () => {
-    const payload = { model: current, exportedAt: new Date().toISOString(), context: ctx };
-    const file = new File([JSON.stringify(payload, null, 2)], `randi-chat-${current}.json`, { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const copyBtn = t.closest ? t.closest('.md-copy') : null;
+    if (copyBtn) { copyText(decodeURIComponent((copyBtn as HTMLElement).dataset.copy || ''), copyBtn); return; }
+    const copyMsg = t.closest ? t.closest('[data-copy-msg]') : null;
+    if (copyMsg) { const blk = copyMsg.closest('.msg-block'); if (blk) copyText(blk.textContent || '', copyMsg); return; }
+    const reg = t.closest ? t.closest('[data-regen]') : null;
+    if (reg) { const blk = reg.closest('.msg-block'); if (blk) blk.remove(); if (lastUserText) void call(lastUserText); }
   });
 
-  async function sendMessage(): Promise<void> {
-    const text = input.value.trim();
-    if (!text || busy || !endpoint) return;
-    input.value = '';
+  function copyText(text: string, btn: Element): void {
+    const done = () => { const o = btn.textContent; btn.textContent = '✓'; setTimeout(() => { btn.textContent = o; }, 1200); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done);
+    else { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch { /* noop */ } ta.remove(); done(); }
+  }
+
+  // ── Envío/streaming ─────────────────────────────────────────────────
+  async function call(text: string): Promise<void> {
+    if (!text || busy || !endpoint || !activeId) return;
+    lastUserText = text;
     ctx.push({ role: 'user', content: text });
-    save();
-    addBubble('user', text);
+    saveCtx();
+    setSessionTitle(activeId, text);
     updateStat();
-    const aiEl = addBubble('assistant', '');
-    addBubble('typing' as 'assistant', L.typing);
+    const ub = addMsgBlock('user');
+    ub.body.textContent = text;
+    const ab = addMsgBlock('assistant', { streaming: true });
+    addTyping(ab.body);
     setBusy(true);
     abort = new AbortController();
+    let md = '';
+    let reason = '';
     try {
       const res = await fetch(`${endpoint}/api/chat`, {
         method: 'POST',
@@ -360,17 +452,15 @@ export async function mountChat(): Promise<void> {
       });
       if (!res.ok || !res.body) {
         let code: string, msg: string;
-        try { const e = await res.json(); code = e?.error?.code || ''; msg = e?.error?.message || ''; } catch { code = ''; msg = ''; }
-        const typing = msgs.querySelector('.cd-typing');
-        if (typing) typing.remove();
-        if (code === 'limit') addBubble('assistant', `${L.limit}`);
-        else addBubble('assistant', `${L.err}${msg ? ' — ' + msg : ''}`);
+        try { const er = await res.json(); code = er?.error?.code || ''; msg = er?.error?.message || ''; } catch { code = ''; msg = ''; }
+        removeTyping(ab.body);
+        if (code === 'limit') { ab.body.textContent = L.limit; }
+        else { ab.body.textContent = `${L.err}${msg ? ' — ' + msg : ''}`; }
         return;
       }
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
-      let md = '';
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -382,39 +472,36 @@ export async function mountChat(): Promise<void> {
           if (!event.startsWith('data:')) continue;
           try {
             const j = JSON.parse(event.slice(5).trim());
-            if (j.type === 'delta') {
-              md += String(j.data);
-              aiEl.innerHTML = renderMd(md);
-              msgs.scrollTop = msgs.scrollHeight;
-            } else if (j.type === 'done') {
-              const typing = msgs.querySelector('.cd-typing');
-              if (typing) typing.remove();
+            if (j.type === 'delta') { md += String(j.data); ab.body.innerHTML = (reason ? thinkHtml(reason) : '') + renderMd(md); ab.body.classList.remove('typing'); msgs.scrollTop = msgs.scrollHeight; }
+            else if (j.type === 'reason') { reason += String(j.data); }
+            else if (j.type === 'done') {
+              removeTyping(ab.body);
+              ab.body.classList.remove('msg-streaming');
               if (md.trim()) {
-                ctx.push({ role: 'assistant', content: md });
-                save();
-                updateStat();
-              } else {
-                aiEl.innerHTML = '';
-                addBubble('assistant', L.empty);
-              }
+                ab.body.innerHTML = (reason ? thinkHtml(reason) : '') + renderMd(md);
+                ctx.push({ role: 'assistant', content: md, reason: reason || undefined });
+                saveCtx(); updateStat();
+              } else { ab.body.textContent = L.empty; }
             } else if (j.type === 'error') {
-              const typing = msgs.querySelector('.cd-typing');
-              if (typing) typing.remove();
-              addBubble('assistant', `${L.err} — ${String(j.data?.message || '')}`);
+              removeTyping(ab.body);
+              ab.body.classList.remove('msg-streaming');
+              ab.body.textContent = `${L.err} — ${String(j.data?.message || '')}`;
             }
           } catch { /* fragmento */ }
         }
       }
     } catch (e) {
-      const typing = msgs.querySelector('.cd-typing');
-      if (typing) typing.remove();
-      if ((e as Error)?.name !== 'AbortError') addBubble('assistant', L.err);
+      removeTyping(ab.body);
+      ab.body.classList.remove('msg-streaming');
+      if ((e as Error)?.name !== 'AbortError') ab.body.textContent = L.err;
     } finally {
       setBusy(false);
+      ab.body.classList.remove('msg-streaming');
     }
   }
+  function sendMessage(): Promise<void> { const txt = input.value.trim(); if (!txt) return Promise.resolve(); input.value = ''; return call(txt); }
+  function addTyping(body: HTMLElement): void { body.classList.add('typing'); body.textContent = L.typing + '…'; }
+  function removeTyping(body: HTMLElement): void { body.classList.remove('typing'); }
 
-  const proBtn = root.querySelector<HTMLAnchorElement>('[data-cd-pro]');
-  void proBtn;
   await loadCfg();
 }

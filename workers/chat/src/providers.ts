@@ -38,7 +38,8 @@ export function modelReady(m: ModelDef, env: Env): boolean {
 }
 
 // Crosstream compatible OpenAI (OpenRouter y Hugging Face Inference).
-async function* openAICompat(provider: Provider, model: ModelDef, messages: ChatMsg[], env: Env): AsyncGenerator<string> {
+export interface StreamPiece { kind: 'text' | 'reason'; value: string }
+async function* openAICompat(provider: Provider, model: ModelDef, messages: ChatMsg[], env: Env): AsyncGenerator<StreamPiece> {
   const apiKey = provider === 'openrouter' ? env.OPENROUTER_API_KEY : env.HF_API_KEY;
   if (!apiKey) throw new Error(`${provider}: falta la API key`);
   const url = provider === 'openrouter'
@@ -84,8 +85,10 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
       if (payload === '[DONE]') return;
       try {
         const j = JSON.parse(payload);
-        const delta = j?.choices?.[0]?.delta?.content;
-        if (typeof delta === 'string' && delta) yield delta;
+        const d = j?.choices?.[0]?.delta;
+        if (typeof d?.content === 'string' && d.content) yield { kind: 'text', value: d.content };
+        else if (typeof d?.reasoning === 'string' && d.reasoning) yield { kind: 'reason', value: d.reasoning };
+        else if (typeof d?.reasoning_content === 'string' && d.reasoning_content) yield { kind: 'reason', value: d.reasoning_content };
       } catch {
         /* fragmento parcial */
       }
@@ -93,7 +96,7 @@ async function* openAICompat(provider: Provider, model: ModelDef, messages: Chat
   }
 }
 
-export async function* streamModel(model: ModelDef, messages: ChatMsg[], env: Env): AsyncGenerator<string> {
+export async function* streamModel(model: ModelDef, messages: ChatMsg[], env: Env): AsyncGenerator<StreamPiece> {
   if (model.provider === 'openrouter' || model.provider === 'huggingface') {
     yield* openAICompat(model.provider, model, messages, env);
     return;
