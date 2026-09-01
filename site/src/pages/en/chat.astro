@@ -40,9 +40,10 @@ const t = { title: L.title, desc: L.desc };
       <div class="chat-header-actions">
         <button type="button" class="model-active" data-cd-model-label data-goto-models></button>
         <span class="limit-pill" data-cd-limit></span>
-        <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
+        <span class="chat-online" title="online"><span class="dot-online"></span></span>
         <a href={donarUrl} class="btn btn-dark text-xs !px-3 !py-1.5">{L.sponsor}</a>
       </div>
+      <div data-cd-models-pick class="model-pick"></div>
     </header>
 
     <div class="chat-cols">
@@ -63,6 +64,18 @@ const t = { title: L.title, desc: L.desc };
             <button type="button" data-cd-export class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.exportB}</button>
             <button type="button" data-cd-copyall class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.copyAll}</button>
             <button type="button" data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5">{L.clearB}</button>
+          </div>
+        </div>
+        <div class="side-models">
+          <p class="side-label mb-1">Available models</p>
+          <div data-cd-side-models class="model-list"></div>
+        </div>
+        <div class="side-tasks">
+          <p class="side-label mb-1">Agent tasks</p>
+          <div data-cd-side-tasks class="task-list"></div>
+          <div class="task-meter">
+            <div class="task-bar"><span data-cd-side-bar></span></div>
+            <span class="task-nums" data-cd-side-nums></span>
           </div>
         </div>
         <div class="mt-auto space-y-3">
@@ -121,25 +134,8 @@ const t = { title: L.title, desc: L.desc };
     import { mountChat } from '../../lib/demo-chat.js';
     void mountChat();
   </script>
-    <section class="m-views">
-        <div class="m-tab" data-mtab="models">
-          <p class="r-label">{L.modelsL}</p>
-          <div data-cd-models-list-m class="model-list"></div>
-        </div>
-        <div class="m-tab" data-mtab="tasks">
-          <p class="r-label">{L.tasksL}</p>
-          <div data-cd-tasks-list-m class="task-list"></div>
-          <div class="task-meter">
-            <div class="task-bar"><span data-cd-task-bar-m></span></div>
-            <span class="task-nums" data-cd-task-nums-m></span>
-          </div>
-        </div>
-      </section>
-      <nav class="tabbar">
-        <button type="button" data-mtab="chat" class="on"><span class="ic">💬</span>Chat</button>
-        <button type="button" data-mtab="models"><span class="ic">🤖</span>Models</button>
-        <button type="button" data-mtab="tasks"><span class="ic">✓</span>Tasks</button>
-      </nav>
+    
+      
     <p class="chat-watermark">RANDI — by Sebastián Laguna</p>
   </div>
 </Layout>
