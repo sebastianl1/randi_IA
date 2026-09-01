@@ -62,7 +62,7 @@ const t = { title: L.title, desc: L.desc };
           <div class="flex gap-2 mt-2">
             <button type="button" data-cd-export class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.exportB}</button>
             <button type="button" data-cd-copyall class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.copyAll}</button>
-            <button type="button" data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
+            <button type="button" data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5">{L.clearB}</button>
           </div>
         </div>
         <div class="mt-auto space-y-3">
@@ -121,4 +121,6 @@ const t = { title: L.title, desc: L.desc };
     import { mountChat } from '../../lib/demo-chat.js';
     void mountChat();
   </script>
+    <p class="chat-watermark">RANDI — by Sebastián Laguna</p>
+  </div>
 </Layout>
