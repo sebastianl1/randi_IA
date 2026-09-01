@@ -32,10 +32,11 @@ const t = { title: L.title, desc: L.desc };
 <Layout lang="es" title={t.title} description={t.desc}>
   <div id="chat-online" class="chat-app">
     <header class="chat-header">
+      <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5 side-open-btn" aria-label="Menú">☰</button>
       <a href={base} class="chat-brand">
         <span class="greek-glyph nav">Ρ</span><span>{L.brand}</span>
       </a>
-      <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5 side-open-btn" aria-label="Menú">☰</button>
+      
       <div class="grow"></div>
       <div class="chat-header-actions">
         <button type="button" class="model-active" data-cd-model-label data-goto-models></button>

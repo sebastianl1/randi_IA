@@ -246,11 +246,14 @@ body > header, body > footer { display: none; }
   .chat-right { display: none; }
   .chat-sidebar {
     grid-area: canvas;
-    position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: min(80vw, 19rem);
-    transform: translateX(-100%); transition: transform .22s ease;
-    border-right: 1px solid var(--line-strong); background: #0a0a0c;
+    position: fixed; z-index: 50; left: 0; right: 0; bottom: 0; top: auto;
+    max-height: 76vh; width: auto;
+    border-top: 1px solid var(--line-strong); border-right: none;
+    background: #0a0a0c; border-radius: 1rem 1rem 0 0;
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    transform: translateY(105%); transition: transform .22s ease;
   }
-  .chat-sidebar.open { transform: translateX(0); }
+  .chat-sidebar.open { transform: translateY(0); }
   .side-open-btn { display: inline-flex; }
   .chat-sidebar.open ~ .side-scrim { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0,0,0,.5); }
 
@@ -280,6 +283,7 @@ body > header, body > footer { display: none; }
     font-size: .68rem; padding: .2rem .5rem; cursor: pointer; border-radius: 99px;
     border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--line-strong));
     color: var(--color-ink); background: none; white-space: nowrap;
+    max-width: 38vw; overflow: hidden; text-overflow: ellipsis;
   }
   .chat-header .limit-pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
   .chat-header .pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
