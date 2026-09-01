@@ -93,7 +93,7 @@ async function handleChat(request: Request, env: Env, freeLimit: number): Promis
           }
         } else {
           const it = streamModel(model, messages, env);
-          for await (const chunk of it) send('delta', chunk);
+          for await (const piece of it) send(piece.kind === 'reason' ? 'reason' : 'delta', piece.value);
         }
         send('done', {});
       } catch (e: unknown) {
