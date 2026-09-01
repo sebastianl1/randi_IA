@@ -35,7 +35,7 @@ const t = { title: L.title, desc: L.desc };
       <a href={base} class="chat-brand">
         <span class="greek-glyph nav">Ρ</span><span>{L.brand}</span>
       </a>
-      <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5" aria-label="Menú">☰</button>
+      <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5 side-open-btn" aria-label="Menú">☰</button>
       <div class="grow"></div>
       <div class="chat-header-actions">
         <span class="model-active" data-cd-model-label></span>
@@ -121,6 +121,25 @@ const t = { title: L.title, desc: L.desc };
     import { mountChat } from '../lib/demo-chat.js';
     void mountChat();
   </script>
+    <section class="m-views">
+        <div class="m-tab" data-mtab="models">
+          <p class="r-label">{L.modelsL}</p>
+          <div data-cd-models-list-m class="model-list"></div>
+        </div>
+        <div class="m-tab" data-mtab="tasks">
+          <p class="r-label">{L.tasksL}</p>
+          <div data-cd-tasks-list-m class="task-list"></div>
+          <div class="task-meter">
+            <div class="task-bar"><span data-cd-task-bar-m></span></div>
+            <span class="task-nums" data-cd-task-nums-m></span>
+          </div>
+        </div>
+      </section>
+      <nav class="tabbar">
+        <button type="button" data-mtab="chat" class="on"><span class="ic">💬</span>Chat</button>
+        <button type="button" data-mtab="models"><span class="ic">🤖</span>Modelos</button>
+        <button type="button" data-mtab="tasks"><span class="ic">✓</span>Tareas</button>
+      </nav>
     <p class="chat-watermark">RANDI — hecho por Sebastián Laguna</p>
   </div>
 </Layout>
