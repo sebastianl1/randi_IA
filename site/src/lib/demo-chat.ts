@@ -441,23 +441,17 @@ export async function mountChat(): Promise<void> {
     copyText(md, copyAllBtn);
   });
 
-  // ── Tab bar móvil (Chat / Modelos / Tareas) ─────────────────────────
-const mtabBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-mtab]'));
-  const cols = root.querySelector<HTMLElement>('.chat-cols');
-  const mViews = root.querySelector<HTMLElement>('.m-views');
-  function setMtab(tab: string): void {
-    mtabBtns.forEach((b) => b.classList.toggle('on', b.dataset.mtab === tab));
-    if (cols) cols.classList.toggle('m-hidden', tab !== 'chat');
-    if (mViews) mViews.classList.toggle('active', tab !== 'chat');
-    root.querySelectorAll<HTMLElement>('.m-tab').forEach((v) => v.classList.toggle('active', v.dataset.mtab === tab));
-  }
-  mtabBtns.forEach((b) => b.addEventListener('click', () => setMtab(b.dataset.mtab || 'chat')));
-  (root.querySelector('[data-goto-models]') as HTMLElement | null)?.addEventListener('click', () => {
-    if (window.matchMedia('(max-width: 880px)').matches) setMtab('models');
+  // ── Chip de modelo → listado para escoger (popover, solo móvil) ─────
+  modelLabelEl.addEventListener('click', (e) => {
+    if (!window.matchMedia('(max-width: 880px)').matches || !pickEl) return;
+    e.stopPropagation();
+    pickEl.classList.toggle('open');
   });
-  setMtab('chat');
+  document.addEventListener('click', (e) => {
+    if (pickEl && !pickEl.contains(e.target as Node) && e.target !== modelLabelEl) pickEl.classList.remove('open');
+  });
 
-  // ── Atajos de teclado ───────────────────────────────────────────────
+// ── Atajos de teclado ───────────────────────────────────────────────
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && busy) { abort?.abort(); return; }
     if (e.key === '/' && !(document.activeElement instanceof HTMLInputElement) && !(document.activeElement instanceof HTMLTextAreaElement)) { e.preventDefault(); input.focus(); return; }

@@ -227,7 +227,8 @@ body > header, body > footer { display: none; }
 
 /* ── Separación de UI: móvil vs desktop ─────────────────────────────── */
 .side-open-btn { display: none; }
-.m-views, .tabbar { display: none; }
+.model-pick { display: none; }
+.side-models, .side-tasks { display: none; }
 .side-scrim { display: none; }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */
@@ -242,7 +243,6 @@ body > header, body > footer { display: none; }
     grid-template-rows: 1fr;
     grid-template-areas: "canvas";
   }
-  .chat-cols.m-hidden { display: none; }
   .chat-right { display: none; }
   .chat-sidebar {
     grid-area: canvas;
@@ -257,22 +257,19 @@ body > header, body > footer { display: none; }
   .side-open-btn { display: inline-flex; }
   .chat-sidebar.open ~ .side-scrim { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(0,0,0,.5); }
 
-  /* vistas móviles: ocultas salvo la activa */
-  .m-views { display: none; }
-  .m-views.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
-  .m-tab { display: none; flex: 1; min-height: 0; overflow-y: auto; padding: .9rem 1rem 2rem; }
-  .m-tab.active { display: flex; flex-direction: column; }
-  .tabbar {
-    display: flex; flex: none; border-top: 1px solid var(--line-strong);
-    background: rgba(9, 9, 10, .95); padding-bottom: env(safe-area-inset-bottom);
+  /* menu ☰: secciones extra (Modelos/Tareas) dentro del sheet */
+  .side-models, .side-tasks { display: flex; flex-direction: column; }
+  .side-models .model-list { gap: .2rem; }
+
+  /* popover de modelo (chip del header) */
+  .model-pick {
+    position: absolute; right: .25rem; top: calc(100% + .35rem); z-index: 70;
+    width: min(90vw, 20rem); max-height: 55vh; overflow-y: auto;
+    display: none; flex-direction: column; gap: .2rem; padding: .45rem;
+    border: 1px solid var(--line-strong); border-radius: .8rem;
+    background: #101014; box-shadow: 0 14px 40px rgba(0,0,0,.6);
   }
-  .tabbar button {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: .12rem;
-    padding: .45rem 0 .5rem; font-size: 10px; color: var(--color-muted);
-    background: none; border: 0; cursor: pointer; min-height: 3.25rem;
-  }
-  .tabbar button.on { color: var(--color-accent); }
-  .tabbar button .ic { font-size: 1.15rem; line-height: 1; }
+  .model-pick.open { display: flex; }
 
   /* header móvil: solo lo importante, sin marca larga */
   .chat-header { padding-top: env(safe-area-inset-top); flex-wrap: nowrap; gap: .45rem; min-width: 0; }
@@ -286,7 +283,7 @@ body > header, body > footer { display: none; }
     max-width: 38vw; overflow: hidden; text-overflow: ellipsis;
   }
   .chat-header .limit-pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
-  .chat-header .pill { font-size: .62rem; padding: .16rem .4rem; white-space: nowrap; }
+  .chat-online { display: inline-flex; align-items: center; flex: none; }
 
   .composer-box .btn-send { padding: .55rem .9rem; }
   .composer-foot .status-row { flex-wrap: wrap; }
