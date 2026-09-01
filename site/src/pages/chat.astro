@@ -18,6 +18,9 @@ const L = {
   priv2: 'Sin cuenta · 40 msgs/día por IP (se reinicia)',
   soon: 'Próximamente: imágenes, más modelos, voz',
   sponsor: 'Patrocina RANDI',
+  modelsL: 'Modelos disponibles',
+  tasksL: 'Progreso (tiempo real)',
+  taskPh: 'Agregá una tarea…',
   placeholder: 'Escribí tu mensaje…  (Enter envía · Shift+Enter salto de línea)',
   send: 'Enviar',
   stop: 'Detener',
@@ -98,6 +101,25 @@ const t = { title: L.title, desc: L.desc };
           </div>
         </section>
       </main>
+
+      <aside class="chat-right">
+        <section>
+          <p class="r-label">{L.modelsL}</p>
+          <div data-cd-models-list class="model-list"></div>
+        </section>
+        <section class="mt-auto">
+          <p class="r-label">{L.tasksL}</p>
+          <div class="task-add">
+            <input data-cd-task-input type="text" placeholder={L.taskPh} />
+            <button type="button" data-cd-task-add class="btn btn-dark text-xs !px-3 !py-1.5">+</button>
+          </div>
+          <div data-cd-tasks-list class="task-list mt-2"></div>
+          <div class="task-meter">
+            <div class="task-bar"><span data-cd-task-bar></span></div>
+            <span class="task-nums" data-cd-task-nums></span>
+          </div>
+        </section>
+      </aside>
     </div>
   </div>
 
