@@ -18,7 +18,7 @@ interface L10n {
   export: string; clear: string; pro: string; sponsor: string; limit: string; reset: string;
   err: string; hint: string; typing: string; newConv: string; sessions: string; del: string;
   emptySessions: string; regenerate: string; assistant: string; you: string; msgsL: string;
-  tokL: string; sugg: string[]; empty: string; soon: string; priv1: string; priv2: string; priv3: string;
+  tokL: string; sugg: string[]; suggTitle: string; copyAll: string; today: string; empty: string; soon: string; priv1: string; priv2: string; priv3: string;
 }
 
 const es: L10n = {
@@ -45,7 +45,10 @@ const es: L10n = {
   you: 'Tú',
   msgsL: 'mensajes',
   tokL: '≈ tokens',
-  sugg: ['Explicame qué es un LLM en términos simples', 'Escribí un script de Python para leer un CSV', 'Dame 3 ideas para presentar un proyecto'],
+  sugg: ['Explicame qué es un LLM en términos simples', 'Escribí un script de Python para leer un CSV', 'Dame 3 ideas para presentar un proyecto', 'Resumime qué es Ollama', 'Compará Qwen y Llama', '¿Cómo uso RANDI en Android?', 'Explicame qué es el contexto de un modelo', 'Generá un cuento corto'],
+  suggTitle: '¿Sobre qué querés hablar?',
+  copyAll: 'Copiar chat',
+  today: 'hoy',
   empty: 'El modelo devolvió una respuesta vacía. Probá con otro modelo.',
   soon: 'Próximamente',
   priv1: 'Cero cookies y cero rastreo.',
@@ -76,7 +79,10 @@ const en: L10n = {
   you: 'You',
   msgsL: 'messages',
   tokL: '≈ tokens',
-  sugg: ['Explain what an LLM is in simple terms', 'Write a Python script to read a CSV', 'Give me 3 ideas to present a project'],
+  sugg: ['Explain what an LLM is in simple terms', 'Write a Python script to read a CSV', 'Give me 3 ideas to present a project', 'Summarize what Ollama is', 'Compare Qwen vs Llama', 'How do I use RANDI on Android?', 'Explain model context', 'Tell me a short story'],
+  suggTitle: 'What would you like to talk about?',
+  copyAll: 'Copy chat',
+  today: 'today',
   empty: 'The model returned an empty reply. Try another model.',
   soon: 'Coming soon',
   priv1: 'Zero cookies and zero tracking.',
@@ -185,8 +191,9 @@ export async function mountChat(): Promise<void> {
   const clearBtn = root.querySelector<HTMLButtonElement>('[data-cd-clear]');
   const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
-  const suggEl = root.querySelector<HTMLElement>('[data-cd-sugg]');
   const modelsListEl = root.querySelector<HTMLElement>('[data-cd-models-list]');
+  const copyAllBtn = root.querySelector<HTMLButtonElement>('[data-cd-copyall]');
+  const limitEl = root.querySelector<HTMLElement>('[data-cd-limit]');
   const tasksListEl = root.querySelector<HTMLElement>('[data-cd-tasks-list]');
   const taskBar = root.querySelector<HTMLElement>('[data-cd-task-bar]');
   const taskNums = root.querySelector<HTMLElement>('[data-cd-task-nums]');
@@ -371,11 +378,62 @@ export async function mountChat(): Promise<void> {
     else b.body.innerHTML = (msg.reason ? thinkHtml(msg.reason) : '') + renderMd(msg.content);
     if (msg.role === 'assistant' && msg.reason) { /* think ya incluido */ }
   }
+  let suggBlock: HTMLElement | null = null;
+  function pickSuggestions(k: number): string[] { const pool = L.sugg.slice(); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; } return pool.slice(0, k); }
+  function renderSuggBubble(): void {
+    if (suggBlock || !msgs || ctx.length) { if (suggBlock) { suggBlock.remove(); suggBlock = null; } }
+    if (ctx.length) return;
+    const block = document.createElement('div'); block.className = 'msg-block assistant sugg-bubble';
+    const ava = document.createElement('div'); ava.className = 'msg-ava'; ava.textContent = 'Ρ';
+    const main = document.createElement('div'); main.className = 'msg-main';
+    const body = document.createElement('div'); body.className = 'msg-body';
+    const line = document.createElement('p'); line.className = 'sugg-line'; line.textContent = L.suggTitle;
+    const set = document.createElement('div'); set.className = 'sugg-set';
+    for (const t of pickSuggestions(3)) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'cd-sugg'; b.textContent = t;
+      b.addEventListener('click', () => { if (suggBlock) { suggBlock.remove(); suggBlock = null; } void call(t); });
+      set.appendChild(b);
+    }
+    body.appendChild(line); body.appendChild(set);
+    main.appendChild(body); block.appendChild(ava); block.appendChild(main);
+    msgs.appendChild(block); suggBlock = block;
+  }
   function renderBubbles(): void {
     msgs.innerHTML = '';
+    if (suggBlock) { suggBlock = null; }
     for (const m of ctx) bubbleInner(m.role, m);
     updateStat();
+    if (!ctx.length) renderSuggBubble();
   }
+
+  // ── Límite visible (estimado local por día) ────────────────────────
+  const FREE_DAY = 40;
+  function dayKey(): string { return new Date().toISOString().slice(0, 10); }
+  function todayUsed(): number {
+    try { const raw = localStorage.getItem('randi-usage'); if (raw) { const o = JSON.parse(raw); if (o.day === dayKey()) return Number(o.n) || 0; } } catch { /* noop */ }
+    return 0;
+  }
+  function updateLimit(): void {
+    if (!limitEl) return;
+    const n = todayUsed();
+    limitEl.textContent = `${n}/${FREE_DAY} ${L.today}`;
+    limitEl.classList.toggle('warn', n >= FREE_DAY - 5);
+  }
+  function bumpUsage(): void { try { localStorage.setItem('randi-usage', JSON.stringify({ day: dayKey(), n: todayUsed() + 1 })); updateLimit(); } catch { /* noop */ } }
+
+  // ── Copiar conversación (Markdown) ──────────────────────────────────
+  copyAllBtn?.addEventListener('click', () => {
+    if (!ctx.length) return;
+    const md = ctx.map((m) => `**${m.role === 'user' ? L.you : L.assistant}**:\n${m.content}`).join('\n\n---\n\n');
+    copyText(md, copyAllBtn);
+  });
+
+  // ── Atajos de teclado ───────────────────────────────────────────────
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && busy) { abort?.abort(); return; }
+    if (e.key === '/' && !(document.activeElement instanceof HTMLInputElement) && !(document.activeElement instanceof HTMLTextAreaElement)) { e.preventDefault(); input.focus(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); newSession(); }
+  });
 
   // ── Responsive: abrir/cerrar sidebar ────────────────────────────────
   const sidebar = document.querySelector('.chat-sidebar');
@@ -447,15 +505,7 @@ export async function mountChat(): Promise<void> {
   send.addEventListener('click', () => void sendMessage());
   stop.addEventListener('click', () => abort?.abort());
 
-  if (suggEl) {
-    for (const s of L.sugg) {
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'cd-sugg'; c.textContent = s;
-      c.addEventListener('click', () => { input.value = s; input.focus(); });
-      suggEl.appendChild(c);
-    }
-  }
-
-  // Delegación: copiar código, copiar mensaje, regenerar
+    // Delegación: copiar código, copiar mensaje, regenerar
   msgs.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
     const copyBtn = t.closest ? t.closest('.md-copy') : null;
@@ -475,10 +525,12 @@ export async function mountChat(): Promise<void> {
   // ── Envío/streaming ─────────────────────────────────────────────────
   async function call(text: string): Promise<void> {
     if (!text || busy || !endpoint || !activeId) return;
+    if (suggBlock) { suggBlock.remove(); suggBlock = null; }
     lastUserText = text;
     ctx.push({ role: 'user', content: text });
     saveCtx();
     setSessionTitle(activeId, text);
+    bumpUsage();
     updateStat();
     const ub = addMsgBlock('user');
     ub.body.textContent = text;
@@ -548,7 +600,7 @@ export async function mountChat(): Promise<void> {
     }
   }
   function sendMessage(): Promise<void> { const txt = input.value.trim(); if (!txt) return Promise.resolve(); input.value = ''; return call(txt); }
-  function addTyping(body: HTMLElement): void { body.classList.add('typing'); body.textContent = L.typing + '…'; }
+  function addTyping(body: HTMLElement): void { body.classList.add('typing'); body.innerHTML = '<span class="thinking"><span></span><span></span><span></span></span>'; }
   function removeTyping(body: HTMLElement): void { body.classList.remove('typing'); }
 
   await loadCfg();

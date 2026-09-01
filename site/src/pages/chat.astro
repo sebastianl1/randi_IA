@@ -13,6 +13,7 @@ const L = {
   newConv: 'Nueva conversación',
   exportB: 'Exportar',
   clearB: 'Borrar',
+  copyAll: 'Copiar chat',
   priv: 'Privacidad y límite',
   priv1: 'Cero cookies · contexto en tu dispositivo',
   priv2: 'Sin cuenta · 40 msgs/día por IP (se reinicia)',
@@ -38,6 +39,7 @@ const t = { title: L.title, desc: L.desc };
       <div class="grow"></div>
       <div class="chat-header-actions">
         <span class="model-active" data-cd-model-label></span>
+        <span class="limit-pill" data-cd-limit></span>
         <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
         <a href={donarUrl} class="btn btn-dark text-xs !px-3 !py-1.5">{L.sponsor}</a>
       </div>
@@ -59,6 +61,7 @@ const t = { title: L.title, desc: L.desc };
           </div>
           <div class="flex gap-2 mt-2">
             <button type="button" data-cd-export class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.exportB}</button>
+            <button type="button" data-cd-copyall class="btn btn-dark text-xs !px-3 !py-1.5 flex-1">{L.copyAll}</button>
             <button type="button" data-cd-clear class="btn btn-dark text-xs !px-3 !py-1.5" style="color:var(--color-bad)">{L.clearB}</button>
           </div>
         </div>
@@ -81,7 +84,6 @@ const t = { title: L.title, desc: L.desc };
         </div>
         <section class="chat-composer">
           <div class="composer">
-            <div data-cd-sugg class="sugg-row"></div>
             <div class="composer-box">
               <textarea data-cd-input rows="1" placeholder={L.placeholder}></textarea>
               <button type="button" data-cd-send class="btn-send" aria-label={L.send}>{L.send} →</button>
