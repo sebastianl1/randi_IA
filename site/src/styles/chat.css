@@ -265,7 +265,13 @@ body > header, body > footer { display: none; }
   }
   .tabbar button.on { color: var(--color-accent); }
   .tabbar button .ic { font-size: 1.15rem; line-height: 1; }
-  .chat-header { padding-top: env(safe-area-inset-top); }
+  .chat-header { padding-top: env(safe-area-inset-top); flex-wrap: nowrap; gap: .5rem; }
+  .chat-header .model-active { display: none; }
+  .chat-header a.btn { display: none; }
+  .chat-brand { min-width: 0; }
+  .chat-brand > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .composer-box .btn-send { padding: .55rem .9rem; }
+  .composer-foot .status-row { flex-wrap: wrap; }
 
   .msg-block.user .msg-main { max-width: 92%; }
   .msg-main { max-width: 92%; }
