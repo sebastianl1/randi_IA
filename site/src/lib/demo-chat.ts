@@ -6,12 +6,10 @@
 interface DemoModel { id: string; label: string; provider?: string; note?: string; ready?: boolean }
 interface Msg { role: 'user' | 'assistant'; content: string; reason?: string }
 interface Session { id: string; title: string; model: string; ts: number }
-interface Task { id: string; text: string; done: boolean }
 
 const LS_SESS = 'randi-sessions';
 const LS_ACTIVE = 'randi-active';
 const LS_NS = 'randi-sess:';
-const TASKS_KEY = 'randi-tasks';
 const MAX_CTX = 24;
 const DEFAULT_MODEL = 'nemotron-3-free';
 
@@ -173,8 +171,7 @@ export async function mountChat(): Promise<void> {
   if (!root) return;
   const base = import.meta.env.BASE_URL || '/';
 
-  const modelBtn = root.querySelector<HTMLButtonElement>('[data-cd-model]');
-  const modelMenu = root.querySelector<HTMLElement>('[data-cd-models]');
+  const modelLabelEl = root.querySelector<HTMLElement>('[data-cd-model-label]');
   const sessionsEl = root.querySelector<HTMLElement>('[data-cd-sessions]');
   const newBtn = root.querySelector<HTMLButtonElement>('[data-cd-new]');
   const sideOpen = root.querySelector<HTMLButtonElement>('[data-cd-open-side]');
@@ -190,12 +187,10 @@ export async function mountChat(): Promise<void> {
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
   const suggEl = root.querySelector<HTMLElement>('[data-cd-sugg]');
   const modelsListEl = root.querySelector<HTMLElement>('[data-cd-models-list]');
-  const taskInput = root.querySelector<HTMLInputElement>('[data-cd-task-input]');
-  const taskAdd = root.querySelector<HTMLButtonElement>('[data-cd-task-add]');
   const tasksListEl = root.querySelector<HTMLElement>('[data-cd-tasks-list]');
   const taskBar = root.querySelector<HTMLElement>('[data-cd-task-bar]');
   const taskNums = root.querySelector<HTMLElement>('[data-cd-task-nums]');
-  if (!modelBtn || !modelMenu || !sessionsEl || !newBtn || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
+  if (!modelLabelEl || !sessionsEl || !newBtn || !msgs || !input || !send || !stop || !exportBtn || !clearBtn) return;
 
   let endpoint = '';
   let models: DemoModel[] = [];
@@ -227,75 +222,67 @@ export async function mountChat(): Promise<void> {
   function sid(): string { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
   function shortTitle(text: string): string { const t = text.trim().replace(/\s+/g, ' '); return t.length > 32 ? t.slice(0, 32) + '…' : t || '…'; }
 
-  // ── Selector de modelo (popover) ────────────────────────────────────
+  // ── Modelo: indicador en header + selección en el panel → ────────────
   function setModelLabel(): void {
     const m = models.find((x) => x.id === current);
-    modelBtn.textContent = (m ? m.label : current) + ' ▾';
+    modelLabelEl.textContent = (m ? m.label : current) || '—';
+    renderModelsList();
   }
-  function renderModelMenu(): void {
-    modelMenu.innerHTML = '';
-    for (const m of models) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'model-opt' + (m.id === current ? ' on' : '') + (m.ready === false ? ' disabled' : '');
-      if (m.ready !== false) b.addEventListener('click', () => { current = m.id; setModelLabel(); renderModelMenu(); const s = sessions.find((x) => x.id === activeId); if (s) { s.model = m.id; persistSessions(); } renderSessions(); });
-      const n = document.createElement('span'); n.className = 'n'; n.textContent = m.label;
-      const hint = document.createElement('span'); hint.className = 'hint';
-      hint.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
-      b.appendChild(n); b.appendChild(hint);
-      modelMenu.appendChild(b);
-    }
-  }
-  modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelMenu.classList.toggle('visible'); });
-  document.addEventListener('click', (e) => { if (!modelMenu.contains(e.target as Node)) modelMenu.classList.remove('visible'); });
 
-  // ── Panel derecho: listado de modelos ──────────────────────────────
+  // ── Panel derecho: listado de modelos (seleccionable) ──────────────
+  function selectModel(id: string): void {
+    if (current === id) return;
+    current = id;
+    const s = sessions.find((x) => x.id === activeId);
+    if (s) { s.model = id; persistSessions(); }
+    setModelLabel(); renderSessions();
+  }
   function renderModelsList(): void {
     if (!modelsListEl || !models.length) return;
     modelsListEl.innerHTML = '';
     for (const m of models) {
-      const row = document.createElement('div'); row.className = 'model-list-item';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'model-list-item' + (m.id === current ? ' active' : '');
+      if (m.ready === false) b.disabled = true;
       const dot = document.createElement('span'); dot.className = 'ml-dot' + (m.ready === false ? ' off' : '');
       const name = document.createElement('span'); name.className = 'ml-name'; name.textContent = m.label;
       const note = document.createElement('span'); note.className = 'ml-note'; note.textContent = (m.ready === false ? '(sin key)' : m.note) || '';
-      row.appendChild(dot); row.appendChild(name); row.appendChild(note);
-      modelsListEl.appendChild(row);
+      b.appendChild(dot); b.appendChild(name); b.appendChild(note);
+      b.addEventListener('click', () => selectModel(m.id));
+      modelsListEl.appendChild(b);
     }
   }
 
-  // ── Panel derecho: tareas con progreso en vivo ─────────────────────
-  function readTasks(): Task[] {
-    try { const r = localStorage.getItem(TASKS_KEY); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) return a; } } catch { /* noop */ }
-    return [];
+  // ── Panel derecho: tareas del agente (auto, progreso en vivo) ──────
+  function parseTaskLines(md: string): string[] {
+    const out: string[] = [];
+    let inCode = false;
+    for (const raw of md.split('\n')) {
+      const line = raw.trim();
+      if (/^```/.test(line)) { inCode = !inCode; continue; }
+      if (inCode || !line || /^#/.test(line) || /^\|/.test(line)) continue;
+      const m = /^(?:[-*]\s+|(?:\d+[.)]\s+)|\[[ xX]\]\s*)(.*)$/.exec(line);
+      if (!m) continue;
+      const text = m[1].replace(/[*`\[\]()]/g, '').trim();
+      if (text) out.push(text);
+    }
+    return out;
   }
-  function saveTasks(ts: Task[]): void { try { localStorage.setItem(TASKS_KEY, JSON.stringify(ts)); } catch { /* lleno */ } }
-  function renderTasks(): void {
+  function renderAgentTasks(items: string[], done: number): void {
     if (!tasksListEl) return;
-    const ts = readTasks();
     tasksListEl.innerHTML = '';
-    for (const t of ts) {
-      const row = document.createElement('div'); row.className = 'task-item' + (t.done ? ' done' : '');
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.done;
-      cb.addEventListener('change', () => { const all = readTasks(); const it = all.find((x) => x.id === t.id); if (it) it.done = cb.checked; saveTasks(all); renderTasks(); });
-      const span = document.createElement('span'); span.className = 'tt'; span.textContent = t.text;
-      const del = document.createElement('button'); del.type = 'button'; del.className = 'tdel'; del.textContent = '✕'; del.title = L.del;
-      del.addEventListener('click', () => { saveTasks(readTasks().filter((x) => x.id !== t.id)); renderTasks(); });
-      row.appendChild(cb); row.appendChild(span); row.appendChild(del);
+    for (let i = 0; i < items.length; i++) {
+      const row = document.createElement('div'); row.className = 'task-item' + (i < done ? ' done' : '');
+      const sq = document.createElement('span'); sq.className = 'tsq'; sq.textContent = i < done ? '✓' : '◻';
+      const tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = items[i];
+      row.appendChild(sq); row.appendChild(tt);
       tasksListEl.appendChild(row);
     }
-    const total = ts.length; const doneCount = ts.filter((t) => t.done).length;
-    if (taskBar) taskBar.style.width = total ? `${Math.round((doneCount / total) * 100)}%` : '0%';
-    if (taskNums) taskNums.textContent = `${doneCount}/${total}`;
+    const total = items.length;
+    if (taskBar) taskBar.style.width = total ? `${Math.round((done / total) * 100)}%` : '0%';
+    if (taskNums) taskNums.textContent = `${done}/${total}`;
   }
-  function addTask(): void {
-    const v = (taskInput?.value || '').trim();
-    if (!v) return;
-    const ts = readTasks(); ts.unshift({ id: sid(), text: v, done: false }); saveTasks(ts);
-    if (taskInput) taskInput.value = '';
-    renderTasks();
-  }
-  taskAdd?.addEventListener('click', addTask);
-  taskInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
 
   // ── Sesiones ────────────────────────────────────────────────────────
   function renderSessions(): void {
@@ -319,8 +306,9 @@ export async function mountChat(): Promise<void> {
     if (busy) return;
     activeId = id; ctx = loadCtx(id);
     const s = sessions.find((x) => x.id === id);
-    if (s) { current = s.model; setModelLabel(); renderModelMenu(); }
+    if (s) { current = s.model; setModelLabel(); }
     renderBubbles(); renderSessions(); updateStat();
+    renderAgentTasks([], 0);
     try { localStorage.setItem(LS_ACTIVE, id); } catch { /* noop */ }
   }
   function newSession(): void {
@@ -329,7 +317,7 @@ export async function mountChat(): Promise<void> {
     sessions.unshift(s); persistSessions();
     activeId = s.id; ctx = [];
     try { localStorage.setItem(LS_ACTIVE, s.id); } catch { /* noop */ }
-    renderSessions(); renderBubbles(); updateStat(); input.focus();
+    renderSessions(); renderBubbles(); updateStat(); renderAgentTasks([], 0); input.focus();
   }
   function deleteSession(id: string): void {
     try { localStorage.removeItem(LS_NS + id); } catch { /* noop */ }
@@ -439,7 +427,7 @@ export async function mountChat(): Promise<void> {
         const s = sessions.find((x) => x.id === activeId);
         if (s) { if (s.model) current = s.model; else { s.model = current; persistSessions(); } }
       }
-      setModelLabel(); renderModelMenu();
+      setModelLabel();
       ctx = loadCtx(activeId);
       renderBubbles(); renderSessions();
       if (status) status.textContent = `${L.reset} · ${L.ctx}`;
@@ -454,7 +442,7 @@ export async function mountChat(): Promise<void> {
     const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
     URL.revokeObjectURL(a.href);
   });
-  clearBtn.addEventListener('click', () => { ctx = []; saveCtx(); renderBubbles(); input.focus(); });
+  clearBtn.addEventListener('click', () => { ctx = []; saveCtx(); renderBubbles(); renderAgentTasks([], 0); input.focus(); });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void sendMessage(); } });
   send.addEventListener('click', () => void sendMessage());
   stop.addEventListener('click', () => abort?.abort());
@@ -498,6 +486,7 @@ export async function mountChat(): Promise<void> {
     addTyping(ab.body);
     setBusy(true);
     abort = new AbortController();
+    renderAgentTasks([], 0);
     let md = '';
     let reason = '';
     try {
@@ -529,7 +518,7 @@ export async function mountChat(): Promise<void> {
           if (!event.startsWith('data:')) continue;
           try {
             const j = JSON.parse(event.slice(5).trim());
-            if (j.type === 'delta') { md += String(j.data); ab.body.innerHTML = (reason ? thinkHtml(reason) : '') + renderMd(md); ab.body.classList.remove('typing'); msgs.scrollTop = msgs.scrollHeight; }
+            if (j.type === 'delta') { md += String(j.data); ab.body.innerHTML = (reason ? thinkHtml(reason) : '') + renderMd(md); ab.body.classList.remove('typing'); msgs.scrollTop = msgs.scrollHeight; const items = parseTaskLines(md); renderAgentTasks(items, Math.max(0, items.length - 1)); }
             else if (j.type === 'reason') { reason += String(j.data); }
             else if (j.type === 'done') {
               removeTyping(ab.body);
@@ -538,6 +527,8 @@ export async function mountChat(): Promise<void> {
                 ab.body.innerHTML = (reason ? thinkHtml(reason) : '') + renderMd(md);
                 ctx.push({ role: 'assistant', content: md, reason: reason || undefined });
                 saveCtx(); updateStat();
+                const items = parseTaskLines(md);
+                renderAgentTasks(items, items.length);
               } else { ab.body.textContent = L.empty; }
             } else if (j.type === 'error') {
               removeTyping(ab.body);
@@ -560,6 +551,5 @@ export async function mountChat(): Promise<void> {
   function addTyping(body: HTMLElement): void { body.classList.add('typing'); body.textContent = L.typing + '…'; }
   function removeTyping(body: HTMLElement): void { body.classList.remove('typing'); }
 
-  renderTasks();
   await loadCfg();
 }
