@@ -19,8 +19,7 @@ const L = {
   soon: 'Coming soon: images, more models, voice',
   sponsor: 'Sponsor RANDI',
   modelsL: 'Available models',
-  tasksL: 'Progress (live)',
-  taskPh: 'Add a task…',
+  tasksL: 'Agent tasks',
   placeholder: 'Type your message…  (Enter sends · Shift+Enter newline)',
   send: 'Send',
   stop: 'Stop',
@@ -38,10 +37,7 @@ const t = { title: L.title, desc: L.desc };
       <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5" aria-label="Menu">☰</button>
       <div class="grow"></div>
       <div class="chat-header-actions">
-        <div class="model-wrap">
-          <button type="button" data-cd-model class="model-chip"><span class="dot" />{L.tagline}</button>
-          <div data-cd-models class="model-menu"></div>
-        </div>
+        <span class="model-active" data-cd-model-label></span>
         <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">● online</span>
         <a href={donarUrl} class="btn btn-dark text-xs !px-3 !py-1.5">{L.sponsor}</a>
       </div>
@@ -109,11 +105,7 @@ const t = { title: L.title, desc: L.desc };
         </section>
         <section class="mt-auto">
           <p class="r-label">{L.tasksL}</p>
-          <div class="task-add">
-            <input data-cd-task-input type="text" placeholder={L.taskPh} />
-            <button type="button" data-cd-task-add class="btn btn-dark text-xs !px-3 !py-1.5">+</button>
-          </div>
-          <div data-cd-tasks-list class="task-list mt-2"></div>
+          <div data-cd-tasks-list class="task-list"></div>
           <div class="task-meter">
             <div class="task-bar"><span data-cd-task-bar></span></div>
             <span class="task-nums" data-cd-task-nums></span>
