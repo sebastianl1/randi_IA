@@ -1,6 +1,6 @@
 // Glifo griego "Ρ" interactivo: sigue/brilla con el cursor (listener global,
 // porque la capa de fondo tiene pointer-events:none).
-const ACCENT = '229, 72, 77';
+const ACCENT = '255, 59, 77';
 
 export function initRho(el: HTMLElement, zone?: HTMLElement): void {
   const area = zone || document;

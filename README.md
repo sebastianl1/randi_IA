@@ -7,10 +7,10 @@
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square)]()
 [![Web](https://img.shields.io/badge/Web-sebastianl1.github.io/randi_IA-6c8cff?style=flat-square)](https://sebastianl1.github.io/randi_IA/)
 
-**RANDI Workspace** — tu espacio de trabajo con IA en el centro, **online u offline**. Multiplataforma: Android (Termux), Linux, macOS y **Windows nativo** (npm, sin WSL).
+**RANDI Workspace** — un **ecosistema de trabajo impulsado por IA**, **online u offline**. Multiplataforma: Android (Termux), Linux, macOS y **Windows nativo** (npm, sin WSL).
 Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, deteccion de hardware con recomendacion automatica, vision, voz, texto a voz y generacion de imagenes.
 
-> 💬 **Probá el chat online de RANDI** desde la landing:
+> 💬 **Prueba el chat online de RANDI** desde la landing:
 > [Chatear](https://sebastianl1.github.io/randi_IA/chat/) ·
 > [Modelos](https://sebastianl1.github.io/randi_IA/#models) ·
 > [Documentación](https://sebastianl1.github.io/randi_IA/docs/) ·

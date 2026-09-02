@@ -2,8 +2,8 @@
 // líneas rectas (carta estelar) y estrellas sueltas, en rojo RANDI.
 // Movimiento aleatorio real sin tirones: cada elemento cambia de rumbo cada
 // unos segundos y rebota suave en los bordes; nada se teletransporta.
-const RED = '229, 72, 77';
-const REDD = '122, 31, 35';
+const RED = '255, 59, 77';
+const REDD = '193, 18, 31';
 const REDF = '255, 205, 207';
 
 interface Star { x: number; y: number; vx: number; vy: number; retarget: number; phase: number; size: number; op: number; color: string }
@@ -139,9 +139,9 @@ export function initGalaxy(canvas: HTMLCanvasElement): void {
     const n = pts.length;
     const conn = clampV(g.r * 0.34, 26, 62);
     const t1 = conn * 0.45, t2 = conn * 0.7, t3 = conn;
-    const c1 = 'rgba(229, 72, 77, 0.16)';
+    const c1 = 'rgba(255, 59, 77, 0.16)';
     const c2 = 'rgba(169, 56, 61, 0.12)';
-    const c3 = 'rgba(122, 31, 35, 0.09)';
+    const c3 = 'rgba(193, 18, 31, 0.09)';
     const cos = Math.cos(g.rot), sin = Math.sin(g.rot);
     ctx!.lineWidth = 1;
     const buckets: number[][] = [[], [], []]; // flat: ax, ay, bx, by

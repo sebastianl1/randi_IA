@@ -27,7 +27,7 @@ export function mountWorkspace(): void {
     emptyS: es ? 'Crea tu primer espacio.' : 'Create your first space.',
     chat: es ? 'Asistentes' : 'Assistants',
     docs: es ? 'Documentos' : 'Documents',
-    docPh: es ? 'Pegá o escribí tu documento… (se guarda automático en este espacio)' : 'Paste or type your document… (auto-saved to this space)',
+    docPh: es ? 'Pegá o escribe tu documento… (se guarda automático en este espacio)' : 'Paste or type your document… (auto-saved to this space)',
     export: es ? 'Exportar .txt' : 'Export .txt',
     clear: es ? 'Limpiar' : 'Clear',
     sum: es ? 'Resumir con IA' : 'Summarize with AI',
