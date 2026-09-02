@@ -48,6 +48,7 @@ const schema = {
         </a>
         <nav class="hidden md:flex items-center gap-4 text-sm text-muted">
           <a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="btn btn-primary text-xs !px-3.5 !py-1.5 font-semibold">{t.nav.chat}</a>
+          <a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="hover:text-ink transition-colors">{t.nav.workspace}</a>
           <a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="hover:text-ink transition-colors">{t.nav.docs}</a>
           <a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="hover:text-ink transition-colors">{t.nav.models}</a>
           <a href={lang === 'es' ? `${base}redes/` : `${base}en/redes/`} class="hover:text-ink transition-colors">{t.nav.redes}</a>
@@ -70,6 +71,7 @@ const schema = {
       <div id="mobileMenu" class="md:hidden glass border-t border-line">
         <div class="mx-auto max-w-6xl px-4 py-2 flex flex-col gap-1 text-sm">
           <a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="py-2 font-semibold" style="color:var(--color-accent)">{t.nav.chat}</a>
+          <a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="py-2 hover:text-ink">{t.nav.workspace}</a>
           <a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="py-2 hover:text-ink">{t.nav.docs}</a>
           <a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="py-2 hover:text-ink">{t.nav.models}</a>
           <a href={lang === 'es' ? `${base}redes/` : `${base}en/redes/`} class="py-2 hover:text-ink">{t.nav.redes}</a>
@@ -109,6 +111,7 @@ const schema = {
               <li><a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="hover:text-ink">{t.nav.chat}</a></li>
               <li><a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="hover:text-ink">{t.nav.docs}</a></li>
               <li><a href={lang === 'es' ? `${base}redes/` : `${base}en/redes/`} class="hover:text-ink">{t.nav.redes}</a></li>
+              <li><a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="hover:text-ink">{t.nav.workspace}</a></li>
               <li><a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="hover:text-ink">{t.nav.models}</a></li>
               <li><a href={lang === 'es' ? `${base}donar/` : `${base}en/donar/`} class="hover:text-ink">{t.nav.donar}</a></li>
               <li><a href="#install" class="hover:text-ink">{t.nav.install}</a></li>
