@@ -192,10 +192,10 @@ export async function mountChat(): Promise<void> {
   const countEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-count]'));
   const tokEls = Array.from(root.querySelectorAll<HTMLElement>('[data-cd-tokens]'));
   const modelsListEl = root.querySelector<HTMLElement>('[data-cd-models-list]');
-  const mModelsList = root.querySelector<HTMLElement>('[data-cd-models-list-m]');
-  const mTasksList = root.querySelector<HTMLElement>('[data-cd-tasks-list-m]');
-  const mTaskBar = root.querySelector<HTMLElement>('[data-cd-task-bar-m]');
-  const mTaskNums = root.querySelector<HTMLElement>('[data-cd-task-nums-m]');
+  const sideModels = root.querySelector<HTMLElement>('[data-cd-side-models]');
+  const sideTasks = root.querySelector<HTMLElement>('[data-cd-side-tasks]');
+  const sideBar = root.querySelector<HTMLElement>('[data-cd-side-bar]');
+  const sideNums = root.querySelector<HTMLElement>('[data-cd-side-nums]');
   const copyAllBtn = root.querySelector<HTMLButtonElement>('[data-cd-copyall]');
   const limitEl = root.querySelector<HTMLElement>('[data-cd-limit]');
   const tasksListEl = root.querySelector<HTMLElement>('[data-cd-tasks-list]');
@@ -267,7 +267,7 @@ export async function mountChat(): Promise<void> {
   }
   function renderModelsList(): void {
     renderModelsListInto(modelsListEl);
-    renderModelsListInto(mModelsList);
+    renderModelsListInto(sideModels);
   }
 
   // ── Panel derecho: tareas del agente (auto, progreso en vivo) ──────
@@ -301,7 +301,7 @@ export async function mountChat(): Promise<void> {
   }
   function renderAgentTasks(items: string[], done: number): void {
     renderAgentTasksInto(tasksListEl, taskBar, taskNums, items, done);
-    renderAgentTasksInto(mTasksList, mTaskBar, mTaskNums, items, done);
+    renderAgentTasksInto(sideTasks, sideBar, sideNums, items, done);
   }
 
   // ── Sesiones ────────────────────────────────────────────────────────
