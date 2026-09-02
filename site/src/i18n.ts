@@ -11,7 +11,7 @@ export interface OSGuide {
 }
 
 export interface Landing {
-  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string };
+  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; redes: string };
   arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
   modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
@@ -150,10 +150,10 @@ const guidesEn: OSGuide[] = [
 
 export const content: Record<'es' | 'en', Landing> = {
   es: {
-    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar' },
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', redes: 'Redes' },
     hero: {
-      badge: 'Ρ RANDI · IA local multiplataforma · Termux · Linux · macOS · Windows nativo',
-      title: ['IA local para tu', 'equipo real'],
+      badge: 'Ρ RANDI Workspace · tu espacio de trabajo con IA en el centro',
+      title: ['Tu espacio de trabajo', 'con IA en el centro'],
       sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. En Windows se instala nativo (npm), sin WSL.',
       cta1: 'Instalar ahora',
       cta2: 'Ver la instalación',
@@ -217,9 +217,9 @@ export const content: Record<'es' | 'en', Landing> = {
     footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
-    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate' },
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', redes: 'Networks' },
     hero: {
-      badge: 'Ρ RANDI · 100% local cross-platform AI · Termux, Linux, macOS, native Windows',
+      badge: 'Ρ RANDI Workspace · your AI-first workspace',
       title: ['Local AI for your', 'actual device'],
       sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. On Windows it installs natively (npm), no WSL.',
       cta1: 'Install now',

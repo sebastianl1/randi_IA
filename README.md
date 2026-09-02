@@ -7,7 +7,7 @@
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square)]()
 [![Web](https://img.shields.io/badge/Web-sebastianl1.github.io/randi_IA-6c8cff?style=flat-square)](https://sebastianl1.github.io/randi_IA/)
 
-**RANDI** — Asistente de IA local **multiplataforma**: Android (Termux), Linux, macOS y **Windows nativo** (se instala desde npm, sin WSL).
+**RANDI Workspace** — tu espacio de trabajo con IA en el centro, **online u offline**. Multiplataforma: Android (Termux), Linux, macOS y **Windows nativo** (npm, sin WSL).
 Ejecuta modelos de lenguaje (LLMs) como DeepSeek, Qwen, Gemma y otros directamente en tu dispositivo, sin conexion a internet ni consumo de tokens. Incluye chat TUI, interfaz web con WebGPU, deteccion de hardware con recomendacion automatica, vision, voz, texto a voz y generacion de imagenes.
 
 > 💬 **Probá el chat online de RANDI** desde la landing:
