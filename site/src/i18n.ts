@@ -11,7 +11,7 @@ export interface OSGuide {
 }
 
 export interface Landing {
-  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; redes: string; workspace: string };
+  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; agentes: string; workspace: string };
   arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
   modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
@@ -21,6 +21,7 @@ export interface Landing {
   what: { title: string; sub: string; cards: Array<{ t: string; d: string; tag: string }> };
   how: { title: string; sub: string; steps: Array<{ t: string; d: string }> };
   install: { title: string; sub: string; guides: OSGuide[]; note: string };
+  ecosys: { t: string; d: string; items: Array<{ t: string; d: string; soon: boolean }> };
   features: { title: string; items: string[] };
   faq: Array<{ q: string; a: string }>;
   footer: string;
@@ -150,7 +151,7 @@ const guidesEn: OSGuide[] = [
 
 export const content: Record<'es' | 'en', Landing> = {
   es: {
-    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', redes: 'Redes', workspace: 'Workspace' },
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', agentes: 'Agentes', workspace: 'Workspace' },
     hero: {
       badge: 'Ρ RANDI Workspace · un ecosistema de trabajo impulsado por IA',
       title: ['Un ecosistema de trabajo', 'impulsado por IA'],
@@ -194,6 +195,21 @@ export const content: Record<'es' | 'en', Landing> = {
       guides: guidesEs,
       note: 'En Windows se instala nativo con npm (sin WSL); en el resto, el instalador configura shell y Ollama. Requisitos: 4GB RAM (8GB+ recomendado), 3GB libres.',
     },
+    ecosys: {
+      t: 'Un ecosistema de trabajo con IA',
+      d: 'Módulos conectados que se van sumando al workspace: la consola de IA, documentos, agentes y más por venir.',
+      items: [
+        { t: 'IA · Consola', d: 'Chat de bloques con streaming, contexto por espacio.', soon: false },
+        { t: 'Documentos', d: 'App de documentos con resumen con IA en tu espacio.', soon: false },
+        { t: 'Agentes IA', d: 'Agentes especializados a medida, instalados en tu workspace.', soon: false },
+        { t: 'Ingeniería', d: 'Herramientas técnicas (P&ID, HMI, instrumentación).', soon: true },
+        { t: 'Energía Solar', d: 'Diseño, costos y cotizaciones fotovoltaicas.', soon: true },
+        { t: 'CAD', d: 'Planos y diseño técnico asistido.', soon: true },
+        { t: 'Educación', d: 'Tutores y cursos con IA.', soon: true },
+        { t: 'Ciencia', d: 'Simulaciones y análisis de datos.', soon: true },
+        { t: 'Arte', d: 'Imágenes, video y diseño.', soon: true },
+      ],
+    },
     features: {
       title: 'Funcionalidades',
       items: [
@@ -217,7 +233,7 @@ export const content: Record<'es' | 'en', Landing> = {
     footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
-    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', redes: 'Networks', workspace: 'Workspace' },
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', agentes: 'Agents', workspace: 'Workspace' },
     hero: {
       badge: 'Ρ RANDI Workspace · an AI-first ecosystem',
       title: ['Local AI for your', 'actual device'],
@@ -261,7 +277,21 @@ export const content: Record<'es' | 'en', Landing> = {
       guides: guidesEn,
       note: 'On Windows it installs natively via npm (no WSL); elsewhere the installer configures shell and Ollama. Requirements: 4GB RAM (8GB+ recommended), 3GB free.',
     },
-    features: {
+    ecosys: {
+      t: 'An AI-first ecosystem for work',
+      d: 'Connected modules added to the workspace over time: the AI console, documents, agents and more to come.',
+      items: [
+        { t: 'AI · Console', d: 'Block chat with streaming, context per space.', soon: false },
+        { t: 'Documents', d: 'Docs app with AI summarization in your space.', soon: false },
+        { t: 'AI Agents', d: 'Custom specialized agents installed into your workspace.', soon: false },
+        { t: 'Engineering', d: 'Technical tools (P&ID, HMI, instrumentation).', soon: true },
+        { t: 'Solar Energy', d: 'PV design, costs and solar quotes.', soon: true },
+        { t: 'CAD', d: 'Plans and technical design.', soon: true },
+        { t: 'Education', d: 'AI tutors and courses.', soon: true },
+        { t: 'Science', d: 'Simulations and data analysis.', soon: true },
+        { t: 'Art', d: 'Images, video and design.', soon: true },
+      ],
+    },features: {
       title: 'Features',
       items: [
         'Cross-platform: Android (Termux), Linux, macOS and native Windows (npm, no WSL)',
