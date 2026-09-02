@@ -11,7 +11,7 @@ export interface OSGuide {
 }
 
 export interface Landing {
-  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; redes: string };
+  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; redes: string; workspace: string };
   arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
   modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
@@ -150,7 +150,7 @@ const guidesEn: OSGuide[] = [
 
 export const content: Record<'es' | 'en', Landing> = {
   es: {
-    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', redes: 'Redes' },
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', redes: 'Redes', workspace: 'Workspace' },
     hero: {
       badge: 'Ρ RANDI Workspace · tu espacio de trabajo con IA en el centro',
       title: ['Tu espacio de trabajo', 'con IA en el centro'],
@@ -217,7 +217,7 @@ export const content: Record<'es' | 'en', Landing> = {
     footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
-    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', redes: 'Networks' },
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', redes: 'Networks', workspace: 'Workspace' },
     hero: {
       badge: 'Ρ RANDI Workspace · your AI-first workspace',
       title: ['Local AI for your', 'actual device'],
