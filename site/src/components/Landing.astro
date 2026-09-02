@@ -4,7 +4,13 @@ import ModelGrid from './ModelGrid.astro';
 interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const t = content[lang];
+const base2 = import.meta.env.BASE_URL;
+const chatU = `${base2}${lang === 'en' ? 'en/' : ''}chat/`;
+const wsU = `${base2}${lang === 'en' ? 'en/' : ''}workspace/`;
+const agU = `${base2}${lang === 'en' ? 'en/' : ''}agentes/`;
+const hrefMap: Record<string, string> = { 'IA · Consola': chatU, 'AI · Console': chatU, 'Documentos': wsU, 'Documents': wsU, 'Agentes IA': agU, 'AI Agents': agU };
 ---
+
 <!-- Hero -->
 <section class="hero-glow relative overflow-hidden px-4 pt-14 pb-12">
   <div id="heroBg" aria-hidden="true">
@@ -60,6 +66,33 @@ const t = content[lang];
         <div class="mt-1 text-sm text-muted">{s.l}</div>
       </div>
     ))}
+  </div>
+</section>
+
+<!-- Ecosistema / Módulos del workspace -->
+<section id="ecosistema" class="mx-auto max-w-6xl px-4 py-16">
+  <p class="mono text-xs uppercase tracking-widest text-muted text-center">{t.ecosys.t === 'Un ecosistema de trabajo con IA' ? 'ecosistema' : 'ecosystem'}</p>
+  <h2 class="mt-2 text-3xl md:text-4xl font-black tracking-tight text-center">{t.ecosys.t}</h2>
+  <p class="mt-3 text-center text-muted max-w-2xl mx-auto">{t.ecosys.d}</p>
+  <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    {t.ecosys.items.map((m) => (
+      m.soon ? (
+        <div class="card p-5 flex flex-col gap-2 opacity-80">
+          <span class="pill self-start" style="border-color:var(--color-line);color:var(--color-muted)">próximamente</span>
+          <h3 class="font-bold">{m.t}</h3>
+          <p class="text-sm text-muted leading-relaxed">{m.d}</p>
+        </div>
+      ) : (
+        <a href={hrefMap[m.t]} class="card p-5 flex flex-col gap-2 hover:border-accent/60 transition-colors">
+          <span class="pill self-start" style="border-color:var(--color-accent);color:var(--color-accent)">abrir</span>
+          <h3 class="font-bold">{m.t}</h3>
+          <p class="text-sm text-muted leading-relaxed">{m.d}</p>
+        </a>
+      )
+    ))}
+  </div>
+  <div class="mt-7 text-center">
+    <a href={agU} class="btn btn-primary">{lang === 'es' ? 'Explorar agentes →' : 'Explore agents →'}</a>
   </div>
 </section>
 

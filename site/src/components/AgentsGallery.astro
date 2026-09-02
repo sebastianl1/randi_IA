@@ -1,27 +1,28 @@
 ---
-import { networks, categoriaLabelEs, categoriaLabelEn, type NetworkCategory } from '../lib/networks.js';
+import { agents, categoriaLabelEs, categoriaLabelEn, versionLabelEs, versionLabelEn, type AgentCategory } from '../lib/agents.js';
 interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const es = lang === 'es';
-const lab = es ? categoriaLabelEs : categoriaLabelEn;
+const catL = es ? categoriaLabelEs : categoriaLabelEn;
+const verL = es ? versionLabelEs : versionLabelEn;
 const base = import.meta.env.BASE_URL;
 const WHATSAPP = 'https://wa.me/573106197255';
 const L = {
-  eyebrow: es ? 'redes neuronales a medida' : 'custom neural networks',
-  title: es ? 'Redes neuronales a medida' : 'Custom neural networks on demand',
-  sub: es ? 'Agentes de IA entrenados para tu tarea (una red a medida). Acá se muestran ejemplos; la versión completa se vende con cotización, instalación y mantenimiento.' :
-          'AI agents trained for your task (a custom network). Public examples live here; the full version is sold with a quote, installation and maintenance.',
+  eyebrow: es ? 'marketplace de agentes' : 'agent marketplace',
+  title: es ? 'Agentes IA para tu trabajo' : 'AI agents for your work',
+  sub: es ? 'Parte del ecosistema RANDI Workspace. Cada agente es un asistente especializado entrenado para tu tarea; acá se muestran ejemplos y la versión completa se vende con cotización, instalación y mantenimiento.' :
+          'Part of the RANDI Workspace ecosystem. Each agent is a specialized assistant trained for your task; public examples live here and the full version is sold with quote, installation and maintenance.',
   cats: es ? 'Categorías' : 'Categories',
-  all: es ? 'Todas' : 'All',
-  ejemplo: es ? 'Ejemplo público' : 'Public example',
+  all: es ? 'Todos' : 'All',
+  ejemplo: es ? 'Ejemplo' : 'Example',
   solicitar: es ? 'Solicitar este agente' : 'Request this agent',
-  general: es ? 'Solicitar una red a medida' : 'Request a custom network',
+  general: es ? 'Solicitar un agente a medida' : 'Request a custom agent',
   procesoT: es ? '¿Cómo funciona?' : 'How it works?',
   proceso: es ? 'cotización → producción → instalación + mantenimiento' : 'quote → production → installation + maintenance',
-  paso: es ? 'Contanos qué necesitás, te cotizamos y la desarrollamos para tu caso.' : 'Tell us what you need, we quote it and build it for your case.',
-  stock: es ? 'Cada red es un agente IA especializado. Solo se exponen ejemplos; la versión completa se vende por cliente.' : 'Each network is a specialized AI agent. Only examples are shown; the full version is sold per client.',
+  paso: es ? 'Contanos qué necesitás, te cotizamos y lo desarrollamos para tu caso.' : 'Tell us what you need, we quote it and build it for your case.',
+  stock: es ? 'Solo se exponen ejemplos; la versión completa se vende por cliente.' : 'Only examples are shown; the full version is sold per client.',
 };
-const cats: NetworkCategory[] = ['imagen', 'documentos', 'cad', 'codigo', 'educacion', 'otros'];
+const cats: AgentCategory[] = ['imagen', 'documentos', 'cad', 'codigo', 'educacion', 'otros'];
 const wa = (txt: string) => `${WHATSAPP}?text=${encodeURIComponent(txt)}`;
 ---
 <section class="mx-auto max-w-6xl px-4 pt-14 pb-16">
@@ -30,30 +31,30 @@ const wa = (txt: string) => `${WHATSAPP}?text=${encodeURIComponent(txt)}`;
   <p class="mx-auto mt-3 max-w-2xl text-center text-muted leading-relaxed">{L.sub}</p>
 
   <div class="mt-8 text-center">
-    <a href={wa(L.paso + '')} class="btn btn-primary">{L.general} →</a>
+    <a href={wa(L.paso)} class="btn btn-primary">{L.general} →</a>
   </div>
 
   <div class="mt-10">
     <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.cats}</p>
     <div class="mt-3 flex flex-wrap justify-center gap-2">
       <button type="button" class="net-chip on" data-net-cat="">{L.all}</button>
-      {cats.filter((c) => networks.some((n) => n.categoria === c)).map((c) => (
-        <button type="button" class="net-chip" data-net-cat={c}>{lab[c]}</button>
+      {cats.filter((c) => agents.some((a) => a.categoria === c)).map((c) => (
+        <button type="button" class="net-chip" data-net-cat={c}>{catL[c]}</button>
       ))}
     </div>
     <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-net-list>
-      {networks.map((n) => (
-        <div class="card p-5 flex flex-col gap-3" data-net-card={n.categoria}>
+      {agents.map((a) => (
+        <div class="card p-5 flex flex-col gap-3" data-net-card={a.categoria}>
           <div class="flex items-center justify-between gap-2 flex-wrap">
-            <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{lab[n.categoria]}</span>
-            <span class="mono text-[10px] text-muted">{L.ejemplo}</span>
+            <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{catL[a.categoria]}</span>
+            <span class="pill" style="border-color:var(--color-line);color:var(--color-muted)">{verL[a.version]}</span>
           </div>
-          <h2 class="text-lg font-bold">{n.nombre}</h2>
-          <p class="text-sm text-muted leading-relaxed flex-1">{n.desc}</p>
+          <h2 class="text-lg font-bold">{a.nombre}</h2>
+          <p class="text-sm text-muted leading-relaxed flex-1">{a.desc}</p>
           <div class="flex gap-1.5 flex-wrap">
-            {n.tags.map((t) => <span class="mono text-[10px] text-muted border border-line rounded-full px-2 py-0.5">{t}</span>)}
+            {a.tags.map((t) => <span class="mono text-[10px] text-muted border border-line rounded-full px-2 py-0.5">{t}</span>)}
           </div>
-          <a href={wa(`${es ? 'Hola, quiero la red «' : 'Hi, I want the network "'}${n.nombre}${es ? '» por favor.' : '" please.'}`)} class="btn btn-dark justify-center text-xs !py-2">{L.solicitar}</a>
+          <a href={wa(`${es ? 'Hola, quiero el agente «' : 'Hi, I want the agent "'}${a.nombre}${es ? '» por favor.' : '" please.'}`)} class="btn btn-dark justify-center text-xs !py-2">{L.solicitar}</a>
         </div>
       ))}
     </div>
@@ -63,8 +64,8 @@ const wa = (txt: string) => `${WHATSAPP}?text=${encodeURIComponent(txt)}`;
     <p class="mono text-xs uppercase tracking-widest text-muted">{L.procesoT}</p>
     <p class="mt-3 text-muted text-sm leading-relaxed">{L.paso}</p>
     <p class="mt-2 text-xs text-muted">{L.stock}</p>
-    <div class="mt-4 flex justify-center gap-2 flex-wrap">
-      <code class="block max-w-full overflow-x-auto">{L.proceso}</code>
+    <div class="mt-4 flex justify-center">
+      <code class="block max-w-full overflow-x-auto text-xs">{L.proceso}</code>
     </div>
   </div>
 </section>

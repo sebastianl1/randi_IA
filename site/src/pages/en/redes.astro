@@ -1,11 +1,4 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import NetworksGallery from '../../components/NetworksGallery.astro';
-const t = {
-  title: 'RANDI Workspace — Custom neural networks',
-  desc: 'Custom-trained neural networks for your company or studio. Public examples; the full version is sold with quote, installation and maintenance.',
-};
+const base = import.meta.env.BASE_URL;
 ---
-<Layout lang="en" title={t.title} description={t.desc}>
-  <NetworksGallery lang="en" />
-</Layout>
+<html lang="en"><head><meta charset="utf-8" /><meta http-equiv="refresh" content={`0; url=${base}en/agentes/`} /><link rel="canonical" href={`${base}en/agentes/`} /><title>AI Agents — RANDI Workspace</title></head><body /></html>
