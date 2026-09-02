@@ -11,7 +11,7 @@ export interface OSGuide {
 }
 
 export interface Landing {
-  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; agentes: string; workspace: string };
+  nav: { models: string; install: string; github: string; chat: string; docs: string; donar: string; marketplace: string; workspace: string };
   arch: { t: string; d: string; cards: Array<{ t: string; d: string; tag: string }> };
   modes: { t: string; d: string; items: Array<{ t: string; d: string; tag: string }> };
   hero: { badge: string; title: string[]; sub: string; cta1: string; cta2: string; stats: string };
@@ -151,10 +151,10 @@ const guidesEn: OSGuide[] = [
 
 export const content: Record<'es' | 'en', Landing> = {
   es: {
-    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', agentes: 'Agentes', workspace: 'Workspace' },
+    nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', marketplace: 'Marketplace', workspace: 'Workspace' },
     hero: {
       badge: 'Ρ RANDI Workspace · un ecosistema de trabajo impulsado por IA',
-      title: ['Un ecosistema de trabajo', 'impulsado por IA'],
+      title: ['Un ecosistema de trabajo', 'impulsado por agentes'],
       sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. En Windows se instala nativo (npm), sin WSL.',
       cta1: 'Instalar ahora',
       cta2: 'Ver la instalación',
@@ -196,7 +196,7 @@ export const content: Record<'es' | 'en', Landing> = {
       note: 'En Windows se instala nativo con npm (sin WSL); en el resto, el instalador configura shell y Ollama. Requisitos: 4GB RAM (8GB+ recomendado), 3GB libres.',
     },
     ecosys: {
-      t: 'Un ecosistema de trabajo con IA',
+      t: 'Un ecosistema de trabajo impulsado por agentes',
       d: 'Módulos conectados que se van sumando al workspace: la consola de IA, documentos, agentes y más por venir.',
       items: [
         { t: 'IA · Consola', d: 'Chat de bloques con streaming, contexto por espacio.', soon: false },
@@ -233,10 +233,10 @@ export const content: Record<'es' | 'en', Landing> = {
     footer: 'RANDI © 2026 — IA local multiplataforma y open source. Licencia MIT.',
   },
   en: {
-    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', agentes: 'Agents', workspace: 'Workspace' },
+    nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', marketplace: 'Marketplace', workspace: 'Workspace' },
     hero: {
-      badge: 'Ρ RANDI Workspace · an AI-first ecosystem',
-      title: ['Local AI for your', 'actual device'],
+      badge: 'Ρ RANDI Workspace · an AI-first, agent-driven ecosystem',
+      title: ['An AI-first', 'agent-driven ecosystem'],
       sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. On Windows it installs natively (npm), no WSL.',
       cta1: 'Install now',
       cta2: 'See installation',
@@ -278,7 +278,7 @@ export const content: Record<'es' | 'en', Landing> = {
       note: 'On Windows it installs natively via npm (no WSL); elsewhere the installer configures shell and Ollama. Requirements: 4GB RAM (8GB+ recommended), 3GB free.',
     },
     ecosys: {
-      t: 'An AI-first ecosystem for work',
+      t: 'An AI-first, agent-driven ecosystem',
       d: 'Connected modules added to the workspace over time: the AI console, documents, agents and more to come.',
       items: [
         { t: 'AI · Console', d: 'Block chat with streaming, context per space.', soon: false },

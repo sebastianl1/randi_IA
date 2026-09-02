@@ -39,9 +39,11 @@ export function mountWorkspace(): void {
   };
   const root = document.getElementById('randi-workspace');
   if (!root) return;
-  const listEl = root.querySelector<HTMLElement>('[data-ws-list]');
+  const selEl = root.querySelector<HTMLSelectElement>('[data-ws-select]');
+  const delBtn = root.querySelector<HTMLButtonElement>('[data-ws-del]');
   const newBtn = root.querySelector<HTMLButtonElement>('[data-ws-new]');
   const titleEl = root.querySelector<HTMLElement>('[data-ws-title]');
+  const titleDocEl = root.querySelector<HTMLElement>('[data-ws-title-doc]');
   const docEl = root.querySelector<HTMLTextAreaElement>('[data-ws-doc]');
   const exportBtn = root.querySelector<HTMLButtonElement>('[data-ws-export]');
   const clearBtn = root.querySelector<HTMLButtonElement>('[data-ws-clear]');
@@ -56,29 +58,25 @@ export function mountWorkspace(): void {
   function saveDocText(id: string, text: string): void { try { localStorage.setItem(docKey(id), text); } catch { /* lleno */ } }
 
   function renderList(): void {
-    if (!listEl) return;
-    listEl.innerHTML = '';
+    if (!selEl) return;
     const spaces = readSpaces();
+    selEl.innerHTML = '';
     if (!spaces.length) {
-      const p = document.createElement('p'); p.className = 'text-xs text-muted'; p.textContent = L.emptyS;
-      listEl.appendChild(p);
+      const o = document.createElement('option'); o.value = ''; o.textContent = L.emptyS;
+      selEl.appendChild(o);
       return;
     }
-    for (const s of spaces) {
-      const row = document.createElement('div');
-      row.className = 'ws-space' + (s.id === activeId ? ' active' : '');
-      const t = document.createElement('span'); t.className = 'ws-space-title'; t.textContent = s.title;
-      const del = document.createElement('button'); del.type = 'button'; del.className = 'ws-space-del'; del.textContent = '✕'; del.title = L.del;
-      del.addEventListener('click', (e) => { e.stopPropagation(); deleteSpace(s.id); });
-      row.appendChild(t); row.appendChild(del);
-      row.addEventListener('click', () => switchSpace(s.id));
-      listEl.appendChild(row);
+    for (const sp of spaces) {
+      const o = document.createElement('option'); o.value = sp.id; o.textContent = sp.title;
+      selEl.appendChild(o);
     }
+    selEl.value = activeId;
   }
   function switchSpace(id: string): void {
     activeId = id; persistActive();
-    const s = active();
-    if (titleEl) titleEl.textContent = (s ? s.title : '') ;
+    const sp = active();
+    if (titleEl) titleEl.textContent = sp ? sp.title : '';
+    if (titleDocEl) titleDocEl.textContent = sp ? ` / ${sp.title}` : '';
     if (docEl) docEl.value = loadDoc(id);
     if (outEl) outEl.innerHTML = '';
     renderList();
@@ -96,7 +94,7 @@ export function mountWorkspace(): void {
     try { localStorage.removeItem(LS_MSG + id); } catch { /* noop */ }
     try { localStorage.removeItem(docKey(id)); } catch { /* noop */ }
     if (activeId === id) {
-      if (all.length) switchSpace(all[0].id); else { activeId = ''; if (titleEl) titleEl.textContent = ''; if (docEl) docEl.value = ''; renderList(); }
+      if (all.length) switchSpace(all[0].id); else { activeId = ''; if (titleEl) titleEl.textContent = ''; if (docEl) docEl.value = ''; if (selEl) selEl.value = ''; renderList(); }
     } else renderList();
   }
 
@@ -107,6 +105,8 @@ export function mountWorkspace(): void {
   activeId = last && stored.some((s) => s.id === last) ? last : stored.length ? stored[0].id : '';
   if (!activeId) newSpace(); else switchSpace(activeId);
 
+  selEl?.addEventListener('change', () => { if (selEl.value) switchSpace(selEl.value); });
+  delBtn?.addEventListener('click', () => { if (activeId) deleteSpace(activeId); });
   newBtn?.addEventListener('click', newSpace);
   docEl?.addEventListener('input', () => { if (activeId) { saveDocText(activeId, docEl.value); if (statusEl) statusEl.textContent = L.saved + ' ' + new Date().toLocaleTimeString(); } });
   exportBtn?.addEventListener('click', () => {

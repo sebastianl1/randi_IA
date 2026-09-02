@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ModelosAll from '../../components/ModelosAll.astro';
+const t = { title: 'RANDI Workspace — All models', desc: 'The full catalog of compatible models, graded by resource level (S-F).' };
+---
+<Layout lang="en" title={t.title} description={t.desc}>
+  <ModelosAll lang="en" />
+</Layout>
