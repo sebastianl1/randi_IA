@@ -91,6 +91,32 @@ async function handleChat(request: Request, env: Env, freeLimit: number): Promis
               } catch { /* fragmento parcial */ }
             }
           }
+        } else if (model.provider === 'openrouter') {
+          // Fallback: si el modelo :free falla antes de producir texto, se
+          // prueba el siguiente :free disponible (nemotron → gemma → glm).
+          const queue = MODELS.filter((m) => m.provider === 'openrouter' && m.id !== model.id);
+          const ordered = [model, ...queue].filter((m) => modelReady(m, env));
+          let lastErr = '';
+          let started = false;
+          for (const cand of ordered) {
+            const err = await (async () => {
+              try {
+                const it = streamModel(cand, messages, env);
+                const first = await it.next();
+                if (first.done) throw new Error('respuesta vacía del proveedor');
+                started = true;
+                send(first.value.kind === 'reason' ? 'reason' : 'delta', first.value.value);
+                for await (const piece of it) send(piece.kind === 'reason' ? 'reason' : 'delta', piece.value);
+                return null;
+              } catch (e2) {
+                return e2 instanceof Error ? e2.message : String(e2);
+              }
+            })();
+            if (err === null) break;
+            lastErr = err;
+            if (started) { send('error', { message: err }); break; }
+          }
+          if (!started) send('error', { message: lastErr || 'El modelo gratuito está saturado. Probá de nuevo o elegí otro modelo.' });
         } else {
           const it = streamModel(model, messages, env);
           for await (const piece of it) send(piece.kind === 'reason' ? 'reason' : 'delta', piece.value);

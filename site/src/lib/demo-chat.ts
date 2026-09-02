@@ -441,14 +441,11 @@ export async function mountChat(): Promise<void> {
     copyText(md, copyAllBtn);
   });
 
-  // ── Chip de modelo → listado para escoger (popover, solo móvil) ─────
+  // ── Chip de modelo → abre el menú (modelos dentro), solo móvil ─────
   modelLabelEl.addEventListener('click', (e) => {
-    if (!window.matchMedia('(max-width: 880px)').matches || !pickEl) return;
+    if (!window.matchMedia('(max-width: 880px)').matches) return;
     e.stopPropagation();
-    pickEl.classList.toggle('open');
-  });
-  document.addEventListener('click', (e) => {
-    if (pickEl && !pickEl.contains(e.target as Node) && e.target !== modelLabelEl) pickEl.classList.remove('open');
+    openSide(true);
   });
 
 // ── Atajos de teclado ───────────────────────────────────────────────
