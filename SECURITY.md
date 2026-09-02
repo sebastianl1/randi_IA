@@ -1,24 +1,33 @@
-# Politica de seguridad
+# Security Policy — RANDI Workspace
 
-RANDI es un proyecto local que ejecuta modelos de IA en tu propio dispositivo. Valoramos la seguridad.
+Thank you for helping keep RANDI Workspace safe. This is an open‑source
+project; we welcome responsible reports of vulnerabilities.
 
-## Reportar una vulnerabilidad
+## Scope
+- The public repository: web (landing/workspace), `randi web`, CLI/TUI, and
+  helper scripts.
+- Only vulnerabilities reachable from these components are in scope.
 
-**NO abras un issue publico** para vulnerabilidades. En su lugar, contacta a los mantenedores en privado por el canal de GitHub Security Advisories o por correo a los mantenedores del repositorio.
+## Reporting a vulnerability
+Please **do not** open a public issue for security bugs. Report them in private:
 
-Incluye en tu reporte:
+- Preferred: open a **confidential report** via a GitHub Security Advisory
+  (repo → Security → "Report a vulnerability").
+- Alternative: write to `sebasbele11@gmail.com` with subject
+  `[SECURITY] <short description>`. Include:
+  1. Affected component/endpoint and version/commit.
+  2. Steps to reproduce (minimal).
+  3. Impact and, if possible, a suggested fix.
 
-- Descripcion de la vulnerabilidad y su impacto.
-- Pasos para reproducirla.
-- Plataforma afectada (Termux, Linux, macOS, Windows, WSL2).
-- Version de RANDI afectada.
+We aim to acknowledge within **3 business days** and to address critical
+issues as soon as possible. Please keep details confidential until a fix is
+released.
 
-## Consideraciones de seguridad del proyecto
+## Out of scope
+- Tiers gratuitos / cuota de proveedores externos (rate limits, outages).
+- Account/API credentials of the owner (they are secret and not public).
+- Third‑party dependencies: report them to their respective projects.
 
-- **Local por diseno**: los modelos y datos nunca salen de tu dispositivo por defecto.
-- **Modelos**: descarga solo modelos oficiales de `https://ollama.com/library`. RANDI no ejecuta codigo de modelos de terceros.
-- **Endpoints locales**: `randi web` solo escucha en `localhost` y no debe exponerse a Internet.
-
-## Alcance
-
-Este proyecto se distribuye SIN GARANTIA (licencia MIT). Usalo bajo tu responsabilidad.
+## Coordinated disclosure
+We prefer coordinated, responsible disclosure. After a fix ships, we will
+credit the reporter unless they prefer to remain anonymous.

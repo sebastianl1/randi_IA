@@ -34,7 +34,7 @@ const guidesEs: OSGuide[] = [
     steps: [
       { title: '1. Instala Termux', body: ['Descargalo desde F-Droid (NO desde Google Play, está desactualizado).', 'Abre Termux y actualiza los paquetes.'] },
       { title: '2. Clona e instala RANDI', body: ['Estos comandos instalan herramientas, Ollama (nativo de Termux) y configuran tu shell. El wizard de instalación te guía.'] },
-      { title: '3. Onboarding por hardware', body: ['Analiza tu CPU/GPU/RAM y elige los modelos que corren en tu equipo.', `Elegí un modelo: se descarga y configura automáticamente, listo para chatear.`] },
+      { title: '3. Onboarding por hardware', body: ['Analiza tu CPU/GPU/RAM y elige los modelos que corren en tu equipo.', `Elige un modelo: se descarga y configura automáticamente, listo para chatear.`] },
       { title: '4. Usa RANDI', body: ['Listo. Sin internet, sin tokens, 100% privado.', 'Puedes abrir `randi web` para la interfaz en el navegador.'] },
     ],
     after: ['Tips: instala `pkg install espeak-ng` para voz y `ollama-backend-vulkan` para acelerar con la GPU Adreno/Mali.'],
@@ -152,8 +152,8 @@ export const content: Record<'es' | 'en', Landing> = {
   es: {
     nav: { models: 'Modelos', install: 'Instalación', github: 'GitHub', chat: 'Chatea', docs: 'Documentación', donar: 'Donar', redes: 'Redes', workspace: 'Workspace' },
     hero: {
-      badge: 'Ρ RANDI Workspace · tu espacio de trabajo con IA en el centro',
-      title: ['Tu espacio de trabajo', 'con IA en el centro'],
+      badge: 'Ρ RANDI Workspace · un ecosistema de trabajo impulsado por IA',
+      title: ['Un ecosistema de trabajo', 'impulsado por IA'],
       sub: 'RANDI detecta tu hardware y te recomienda los modelos que de verdad corren en tu dispositivo — texto, imagen y video — con instalación y configuración automáticas. En Windows se instala nativo (npm), sin WSL.',
       cta1: 'Instalar ahora',
       cta2: 'Ver la instalación',
@@ -219,7 +219,7 @@ export const content: Record<'es' | 'en', Landing> = {
   en: {
     nav: { models: 'Models', install: 'Installation', github: 'GitHub', chat: 'Chat', docs: 'Documentation', donar: 'Donate', redes: 'Networks', workspace: 'Workspace' },
     hero: {
-      badge: 'Ρ RANDI Workspace · your AI-first workspace',
+      badge: 'Ρ RANDI Workspace · an AI-first ecosystem',
       title: ['Local AI for your', 'actual device'],
       sub: 'RANDI detects your hardware and recommends models that actually run on your machine — text, image and video — with automatic install and configuration. On Windows it installs natively (npm), no WSL.',
       cta1: 'Install now',
@@ -290,7 +290,7 @@ export const installSteps: Record<OSKey, string[]> = {
   linux: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   macos: ['git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
   'windows-wsl': ['sudo apt-get update && sudo apt-get install -y git', 'git clone https://github.com/sebastianl1/randi_IA.git', 'cd randi_IA', 'bash install-ollama.sh', 'randi setup'],
-  'windows-gitbash': ['npm install -g randi-ai', 'randi ensure    # python + ollama nativos por winget', 'randi setup'],
+  'windows-gitbash': ['npm install -g randi-ai', 'randi ensure    # python + ollama natitú por winget', 'randi setup'],
 };
 
 export const osLabels: Record<OSKey, string> = {
