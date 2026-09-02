@@ -31,20 +31,22 @@ const t = { title: L.title, desc: L.desc };
 ---
 <Layout lang="en" title={t.title} description={t.desc}>
   <div id="chat-online" class="chat-app">
-    <header class="chat-header">
-      <a href={`${base}en/`} class="chat-brand">
+        <header class="chat-header">
+      <a href={base} class="chat-brand">
         <span class="greek-glyph nav">Ρ</span><span>{L.brand}</span>
       </a>
-      <button type="button" data-cd-open-side class="btn btn-dark text-xs !px-2.5 side-open-btn" aria-label="Menu">☰</button>
+      <button type="button" class="model-active" data-cd-model-label></button>
       <div class="grow"></div>
       <div class="chat-header-actions">
-        <button type="button" class="model-active" data-cd-model-label data-goto-models></button>
-        <span class="limit-pill" data-cd-limit></span>
         <span class="chat-online" title="online"><span class="dot-online"></span></span>
+        <span class="limit-pill" data-cd-limit></span>
         <a href={donarUrl} class="btn btn-dark text-xs !px-3 !py-1.5">{L.sponsor}</a>
       </div>
-      <div data-cd-models-pick class="model-pick"></div>
+      <button type="button" id="chatMenuBtn" data-cd-open-side class="side-open-btn md:hidden inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line" aria-label="Menú">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </header>
+
 
     <div class="chat-cols">
       <aside class="chat-sidebar">
@@ -99,7 +101,7 @@ const t = { title: L.title, desc: L.desc };
           <div class="composer">
             <div class="composer-box">
               <textarea data-cd-input rows="1" placeholder={L.placeholder}></textarea>
-              <button type="button" data-cd-send class="btn-send" aria-label={L.send}>{L.send} →</button>
+              <button type="button" data-cd-send class="btn-send" aria-label={L.send}>➤</button>
               <button type="button" data-cd-stop class="btn btn-dark text-xs !px-3 !py-1.5" hidden>{L.stop}</button>
             </div>
             <div class="composer-foot">
