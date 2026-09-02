@@ -5,86 +5,126 @@ const { lang } = Astro.props;
 const es = lang === 'es';
 const base = import.meta.env.BASE_URL;
 const WA = 'https://wa.me/573106197255';
+const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
+const agentesUrl = `${base}${lang === 'en' ? 'en/' : ''}agentes/`;
 const L = {
   eyebrow: es ? 'randi workspace' : 'randi workspace',
-  title: es ? 'Un ecosistema de trabajo impulsado por IA' : 'An AI-first working ecosystem',
-  sub: es ? 'Espacios, documentos, agentes y herramientas que irás agregando con el tiempo. Todo conectado.' :
-          'Spaces, documents, agents and tools you will keep adding over time. All connected.',
-  spacesL: es ? 'Espacios' : 'Spaces',
-  newS: es ? '+ Nuevo espacio' : '+ New space',
-  mods: es ? 'Módulos' : 'Modules',
-  ia: es ? 'IA (consola)' : 'AI (console)',
-  docsApp: es ? 'Documentos' : 'Documents',
-  mkt: es ? 'Marketplace · Agentes' : 'Marketplace · Agents',
-  soon: es ? 'Próximamente' : 'Coming soon',
-  soonTxt: es ? 'Módulos que se desarrollan e integran al workspace.' : 'Modules being developed and integrated into the workspace.',
-  baseKB: es ? 'Gestión documental y base de conocimiento' : 'Document management & knowledge base',
-  teams: es ? 'Equipos y cuentas' : 'Teams & accounts',
-  verTodos: es ? 'Ver todos →' : 'See all →',
-  solicitar: es ? 'Solicitar este agente' : 'Request this agent',
+  title: es ? 'Un ecosistema de trabajo impulsado por agentes' : 'An AI-first, agent-driven ecosystem',
+  sub: es ? 'Elegí una herramienta y empezá a trabajar. Todo se conecta dentro del espacio activo.' :
+          'Pick a tool and start working. Everything connects inside the active space.',
+  pickS: es ? 'Espacio' : 'Space',
+  newS: es ? 'Nuevo' : 'New',
+  delS: es ? 'Eliminar' : 'Delete',
+  tools: es ? 'Herramientas' : 'Tools',
+  home: es ? 'Inicio' : 'Home',
+  docs: es ? 'Documentos' : 'Documents',
+  ia: es ? 'IA · Consola' : 'AI · Console',
+  mkt: es ? 'Marketplace' : 'Marketplace',
+  mktDesc: es ? 'Agentes IA para tu trabajo.' : 'AI agents for your work.',
+  soonT: es ? 'Próximamente' : 'Coming soon',
+  available: es ? 'Disponibles para trabajar' : 'Ready to use',
+  launcherD: es ? 'Las herramientas se conectan entre sí: documentos, IA y agentes comparten el espacio.' :
+              'Tools connect with each other: documents, AI and agents share the space.',
+  docHeader: es ? 'Documentos' : 'Documents',
   exportB: es ? 'Exportar .txt' : 'Export .txt',
   clearB: es ? 'Limpiar' : 'Clear',
   sum: es ? 'Resumir con IA' : 'Summarize with AI',
-  ph: es ? 'Pegá o escribí tu documento…' : 'Paste or type your document…',
+  ph: es ? 'Pegá o escribí tu documento… se guarda automático en este espacio.' : 'Paste or type your document… auto-saved to this space.',
   sumLabel: es ? 'Resumen con IA' : 'AI summary',
-  docHeader: es ? 'Documentos' : 'Documents',
+  abrir: es ? 'Abrir' : 'Open',
+  verTodos: es ? 'Ver todos →' : 'See all →',
+  solicitar: es ? 'Solicitar' : 'Request',
 };
-const chatUrl = `${base}${lang === 'en' ? 'en/' : ''}chat/`;
-const agentesUrl = `${base}${lang === 'en' ? 'en/' : ''}agentes/`;
-const soonModules = [es ? 'Ingeniería' : 'Engineering', es ? 'Energía Solar' : 'Solar', es ? 'CAD' : 'CAD', es ? 'Educación' : 'Education', es ? 'Ciencia' : 'Science', es ? 'Salud' : 'Health', es ? 'Arte' : 'Art'];
 const preview = agents.slice(0, 3);
 const waTxt = (n: string) => `${WA}?text=${encodeURIComponent(es ? `Hola, quiero el agente «${n}».` : `Hi, I want the agent "${n}".`)}`;
+const soon = [es ? 'Ingeniería' : 'Engineering', es ? 'Energía Solar' : 'Solar', es ? 'CAD' : 'CAD', es ? 'Educación' : 'Education', es ? 'Ciencia' : 'Science', es ? 'Salud' : 'Health', es ? 'Arte' : 'Art'];
 ---
 <section class="mx-auto max-w-6xl px-4 pt-10 pb-12">
   <p class="mono text-xs uppercase tracking-widest text-muted text-center">{L.eyebrow}</p>
   <h1 class="mt-1 text-center text-3xl md:text-4xl font-black tracking-tight">{L.title}</h1>
   <p class="mx-auto mt-2 max-w-2xl text-center text-muted leading-relaxed text-sm">{L.sub}</p>
 
-  <div id="randi-workspace" class="ws-shell card p-0 mt-8 overflow-hidden">
-    <div class="grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <!-- Sidebar -->
-      <aside class="ws-side p-3 flex flex-col gap-4 border-b lg:border-b-0 lg:border-r border-line">
+  <div id="randi-workspace" class="ws-card card p-0 mt-7 overflow-hidden">
+    <!-- Top bar -->
+    <div class="ws-top flex flex-wrap items-center gap-3 px-4 py-3 border-b border-line">
+      <label class="flex items-center gap-2 text-xs text-muted">
+        {L.pickS}
+        <select data-ws-select class="ws-select"></select>
+      </label>
+      <div class="flex gap-2">
+        <button type="button" data-ws-new class="btn btn-primary text-xs !px-3 !py-1.5">+ {L.newS}</button>
+        <button type="button" data-ws-del class="btn btn-dark text-xs !px-3 !py-1.5" title={L.delS}>🗑</button>
+      </div>
+      <span data-ws-status class="mono text-[10px] text-muted ml-auto"></span>
+    </div>
+
+    <div class="grid lg:grid-cols-[210px_minmax(0,1fr)]">
+      <!-- Tools rail -->
+      <aside class="ws-rail p-3 flex flex-col gap-4 border-b lg:border-b-0 lg:border-r border-line">
         <div>
-          <p class="side-label mb-2">{L.spacesL}</p>
-          <div data-ws-list class="ws-list"></div>
-          <button type="button" data-ws-new class="btn btn-primary w-full !py-2 text-xs mt-2">+ {L.newS}</button>
-        </div>
-        <div>
-          <p class="side-label mb-2">{L.mods}</p>
+          <p class="side-label mb-2">{L.tools}</p>
           <div class="flex flex-col gap-1 text-sm">
-            <a href={chatUrl} class="ws-mod-link">✦ {L.ia} <span class="ml-auto mono text-[10px]">→</span></a>
-            <button type="button" class="ws-mod on" data-ws-pane="docs">📄 {L.docsApp}</button>
-            <button type="button" class="ws-mod" data-ws-pane="mkt">🛒 {L.mkt}</button>
+            <button type="button" class="ws-tool on" data-ws-tool="home">🏠 {L.home}</button>
+            <button type="button" class="ws-tool" data-ws-tool="docs">📄 {L.docs}</button>
+            <a href={chatUrl} class="ws-tool">✦ {L.ia} <span class="ml-auto mono text-[10px]">→</span></a>
+            <a href={agentesUrl} class="ws-tool">🛒 {L.mkt} <span class="ml-auto mono text-[10px]">→</span></a>
           </div>
         </div>
         <div>
-          <p class="side-label mb-1">{L.soonTxt}</p>
+          <p class="side-label mb-1">{L.soonT}</p>
           <div class="ws-soon">
-            {soonModules.map((m) => <span class="ws-soon-chip">{m}</span>)}
-            <span class="ws-soon-chip muted">{L.baseKB}</span>
-            <span class="ws-soon-chip muted">{L.teams}</span>
+            {soon.map((t) => <span class="ws-soon-chip">{t}</span>)}
           </div>
         </div>
       </aside>
 
-      <!-- Panes -->
-      <main class="ws-panes p-4 min-w-0">
-        <!-- Documentos -->
-        <section class="ws-pane on" data-ws-keys="docs">
+      <!-- Main -->
+      <main class="ws-main p-4 md:p-6 min-w-0">
+
+        <!-- VISTA HOME (launcher) -->
+        <section class="ws-view on" data-ws-view="home">
+          <h2 class="text-xl font-black">¡{es ? 'Hola' : 'Hi'}! <span data-ws-title class="text-accent"></span></h2>
+          <p class="text-sm text-muted mt-1">{L.launcherD}</p>
+
+          <p class="mono text-[10px] uppercase tracking-widest text-muted mt-6 mb-2">{L.available}</p>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <a href="#" class="ws-card-tool" data-goto="docs">
+              <span class="ws-tool-ic">📄</span>
+              <div><div class="font-bold">{L.docs}</div><div class="text-muted text-xs mt-0.5">{L.docs === 'Documentos' ? 'Documento por espacio, con IA.' : 'Per-space documents, with AI.'}</div></div>
+              <span class="ml-auto mono text-[10px] text-accent">→</span>
+            </a>
+            <a href={chatUrl} class="ws-card-tool">
+              <span class="ws-tool-ic">✦</span>
+              <div><div class="font-bold">{L.ia}</div><div class="text-muted text-xs mt-0.5">{L.ia === 'IA · Consola' ? 'Chat de bloques con streaming.' : 'Block chat with streaming.'}</div></div>
+              <span class="ml-auto mono text-[10px] text-accent">→</span>
+            </a>
+            <a href={agentesUrl} class="ws-card-tool">
+              <span class="ws-tool-ic">🛒</span>
+              <div><div class="font-bold">{L.mkt}</div><div class="text-muted text-xs mt-0.5">{L.mktDesc}</div></div>
+              <span class="ml-auto mono text-[10px] text-accent">→</span>
+            </a>
+          </div>
+
+          <p class="mono text-[10px] uppercase tracking-widest text-muted mt-6 mb-2">{L.soonT}</p>
+          <div class="flex flex-wrap gap-2">
+            {soon.map((t) => <span class="ws-soon-chip">{t}</span>)}
+          </div>
+        </section>
+
+        <!-- VISTA DOCUMENTOS -->
+        <section class="ws-view" data-ws-view="docs">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p class="side-label mb-1">{L.docHeader}</p>
-              <h2 data-ws-title class="text-lg font-bold truncate">—</h2>
-              <span data-ws-status class="mono text-[10px] text-muted"></span>
+              <h2 data-ws-title-doc class="text-lg font-bold truncate">—</h2>
             </div>
             <div class="flex gap-2">
               <button type="button" data-ws-export class="btn btn-dark text-xs !px-3 !py-1.5">{L.exportB}</button>
               <button type="button" data-ws-clear class="btn btn-dark text-xs !px-3 !py-1.5">{L.clearB}</button>
             </div>
           </div>
-          <textarea data-ws-doc class="ws-doc" rows="12" placeholder={L.ph}></textarea>
+          <textarea data-ws-doc class="ws-doc" rows="16" placeholder={L.ph}></textarea>
           <div class="flex items-center justify-between gap-2 flex-wrap mt-3">
-            <p class="text-[11px] text-muted">{L.sub}</p>
             <button type="button" data-ws-summarize class="btn btn-primary text-xs !px-3 !py-1.5">✦ {L.sum}</button>
           </div>
           <div class="ws-out-wrap">
@@ -92,78 +132,41 @@ const waTxt = (n: string) => `${WA}?text=${encodeURIComponent(es ? `Hola, quiero
             <div data-ws-out class="ws-out text-sm text-muted">—</div>
           </div>
         </section>
-
-        <!-- Marketplace (Agentes) -->
-        <section class="ws-pane" data-ws-keys="mkt">
-          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-            <div>
-              <p class="side-label mb-1">{L.mkt}</p>
-              <h2 class="text-lg font-bold">Agentes IA</h2>
-            </div>
-            <a href={agentesUrl} class="btn btn-primary text-xs !px-3 !py-1.5">{L.verTodos}</a>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {preview.map((a) => (
-              <div class="card p-4 flex flex-col gap-2">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{a.categoria}</span>
-                  <span class="pill" style="border-color:var(--color-line);color:var(--color-muted)">{a.version}</span>
-                </div>
-                <h3 class="font-bold text-sm">{a.nombre}</h3>
-                <p class="text-xs text-muted leading-relaxed flex-1">{a.desc}</p>
-                <a href={waTxt(a.nombre)} class="btn btn-dark justify-center text-xs !py-2">{L.solicitar}</a>
-              </div>
-            ))}
-          </div>
-          <p class="text-[11px] text-muted mt-4">{L.soonTxt}</p>
-        </section>
       </main>
     </div>
   </div>
 </section>
 
-<style>
+<style is:global>
   .side-label { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: var(--color-muted); font-family: var(--font-mono); }
-  .ws-list { display: flex; flex-direction: column; gap: .2rem; }
-  .ws-space {
-    display: flex; align-items: center; gap: .4rem; padding: .32rem .45rem; border-radius: .45rem;
-    font-size: .8rem; color: var(--color-muted); cursor: pointer; border: 1px solid transparent; transition: background .12s, color .12s, border-color .12s;
-  }
-  .ws-space:hover { background: color-mix(in srgb, var(--color-line) 35%, transparent); color: var(--color-ink); }
-  .ws-space.active { background: color-mix(in srgb, var(--color-accent) 13%, transparent); border-color: color-mix(in srgb, var(--color-accent) 40%, transparent); color: var(--color-ink); }
-  .ws-space-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ws-space-del { opacity: 0; background: none; border: 0; color: var(--color-muted); cursor: pointer; font-size: .85rem; line-height: 1; }
-  .ws-space:hover .ws-space-del { opacity: 1; }
-  .ws-space-del:hover { color: var(--color-bad); }
-  .ws-mod, .ws-mod-link {
-    display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left;
-    padding: .4rem .5rem; border-radius: .45rem; font-size: .85rem; color: var(--color-muted);
-    border: 1px solid transparent; background: none; cursor: pointer; transition: background .12s, color .12s, border-color .12s;
-  }
-  .ws-mod:hover, .ws-mod-link:hover { background: color-mix(in srgb, var(--color-line) 30%, transparent); color: var(--color-ink); }
-  .ws-mod.on { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 40%, transparent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+  .ws-select { background: var(--color-bg-soft); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: .5rem; padding: .32rem .5rem; font: inherit; font-size: .8rem; max-width: 15rem; }
+  .ws-rail { overflow-y: auto; }
+  .ws-tool { display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left; padding: .42rem .55rem; border-radius: .5rem; font-size: .85rem; color: var(--color-muted); border: 1px solid transparent; background: none; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+  .ws-tool:hover { background: color-mix(in srgb, var(--color-line) 32%, transparent); color: var(--color-ink); }
+  .ws-tool.on { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 45%, transparent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
   .ws-soon { display: flex; flex-wrap: wrap; gap: .3rem; }
   .ws-soon-chip { font-size: .68rem; color: var(--color-muted); border: 1px dashed var(--color-line); border-radius: 99px; padding: .2rem .55rem; }
-  .ws-soon-chip.muted { opacity: .6; border-style: solid; }
-  .ws-pane { display: none; }
-  .ws-pane.on { display: block; }
-  .ws-doc {
-    width: 100%; resize: vertical; min-height: 12rem; background: var(--color-bg-soft); color: var(--color-ink);
-    border: 1px solid var(--color-line); border-radius: .6rem; padding: .7rem .8rem; font: inherit; font-size: .9rem; line-height: 1.55; margin-top: .6rem;
-  }
+  .ws-view { display: none; }
+  .ws-view.on { display: block; }
+  .ws-card-tool { display: flex; align-items: center; gap: .75rem; padding: 1rem; border: 1px solid var(--color-line); border-radius: .8rem; background: var(--color-panel); transition: border-color .15s, transform .15s; }
+  .ws-card-tool:hover { border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-line)); transform: translateY(-1px); }
+  .ws-tool-ic { font-size: 1.4rem; flex: none; }
+  .ws-doc { width: 100%; resize: vertical; min-height: 22rem; background: var(--color-bg-soft); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: .6rem; padding: .9rem 1rem; font: inherit; font-size: .95rem; line-height: 1.6; }
   .ws-doc:focus { outline: 2px solid var(--color-accent); outline-offset: 0; }
-  .ws-out-wrap { border-top: 1px solid var(--color-line); padding-top: .6rem; margin-top: .6rem; }
+  .ws-out-wrap { border-top: 1px solid var(--color-line); padding-top: .7rem; margin-top: .8rem; }
   .ws-out { white-space: pre-wrap; min-height: 2rem; }
 </style>
 
 <script>
   import { mountWorkspace } from '../lib/workspace.js';
   void mountWorkspace();
-  const mods = Array.from(document.querySelectorAll<HTMLButtonElement>('.ws-mod'));
-  const panes = Array.from(document.querySelectorAll<HTMLElement>('.ws-pane'));
-  mods.forEach((b) => b.addEventListener('click', () => {
-    const k = b.dataset.wsPane || '';
-    mods.forEach((x) => x.classList.toggle('on', x === b));
-    panes.forEach((p) => p.classList.toggle('on', p.dataset.wsKeys === k));
-  }));
+  const tools = Array.from(document.querySelectorAll<HTMLElement>('.ws-tool'));
+  const views = Array.from(document.querySelectorAll<HTMLElement>('.ws-view'));
+  function setTool(k: string): void {
+    tools.forEach((t) => t.classList.toggle('on', t.dataset.wsTool === k && true));
+    views.forEach((v) => v.classList.toggle('on', v.dataset.wsView === k));
+  }
+  tools.forEach((t) => t.addEventListener('click', () => { const k = t.dataset.wsTool || 'home'; setTool(k); if (t.tagName === 'A' && k !== 'home') window.location.href = t.getAttribute('href') || '#'; if (k === 'home' || k === 'docs') setTool(k); }));
+  document.querySelectorAll<HTMLElement>('[data-goto]').forEach((el) => el.addEventListener('click', (e) => { e.preventDefault(); setTool(el.dataset.goto || 'docs'); }));
+  setTool('home');
 </script>

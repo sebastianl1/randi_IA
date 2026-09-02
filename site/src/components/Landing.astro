@@ -1,6 +1,5 @@
 ---
 import { content, installSteps } from '../i18n.js';
-import ModelGrid from './ModelGrid.astro';
 interface Props { lang: 'es' | 'en' }
 const { lang } = Astro.props;
 const t = content[lang];
@@ -19,11 +18,10 @@ const hrefMap: Record<string, string> = { 'IA · Consola': chatU, 'AI · Console
   <div class="relative mx-auto max-w-6xl">
     <div class="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
       <div class="text-center lg:text-left">
-        <span class="pill" style="border-color:var(--color-accent);color:var(--color-accent)">{t.hero.badge}</span>
-        <h1 class="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+        <h1 class="text-3xl md:text-6xl font-black tracking-tight leading-[1.05]">
           {t.hero.title[0]}<br /><span class="grad-text">{t.hero.title[1]}</span>
         </h1>
-        <p class="mx-auto mt-6 max-w-xl text-muted text-lg leading-relaxed">{t.hero.sub}</p>
+        <p class="mx-auto mt-4 max-w-xl text-muted text-base leading-relaxed">{t.hero.sub}</p>
         <div class="mt-7 flex flex-wrap justify-center lg:justify-start gap-3">
           <a class="btn btn-primary" href="#install">{t.hero.cta1} →</a>
           <a class="btn" href="#modes">{t.hero.cta2}</a>
@@ -95,9 +93,6 @@ const hrefMap: Record<string, string> = { 'IA · Consola': chatU, 'AI · Console
     <a href={agU} class="btn btn-primary">{lang === 'es' ? 'Explorar agentes →' : 'Explore agents →'}</a>
   </div>
 </section>
-
-<!-- Catálogo de modelos con scroll infinito (sección adquisición) -->
-<ModelGrid lang={lang} />
 
 <!-- Arquitectura: modelo + harness -->
 <section id="arch" class="mx-auto max-w-6xl px-4 py-16">
@@ -242,7 +237,9 @@ const hrefMap: Record<string, string> = { 'IA · Consola': chatU, 'AI · Console
             : { basic: 'Basic / no GPU', igpu: 'Integrated graphics', gpu: 'Dedicated GPU', pro: 'Powerful GPU', mobile: 'Mobile' }),
     vs: isEs ? 'detectado en' : 'detected in',
     more: isEs ? 'Se instala con npm en Windows nativo:  npm install -g randi-ai' : 'Native Windows install:  npm install -g randi-ai',
+    moreBtn: isEs ? 'Ver más modelos' : 'See more models',
   };
+  const ALLMODELS = `${BASE}${isEs ? '' : 'en/'}modelos/`;
   const LITS: Record<string, Array<[string, string, string]>> = {
     mobile: [['qwen3:0.6b', '0.4GB · Q4', 'chat'], ['qwen2.5-coder:0.5b', '0.4GB · Q4', 'código'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
     basic: [['qwen2.5-coder:1.5b', '0.9GB · Q4', 'código'], ['qwen3:1.7b', '1.3GB · Q4', 'chat'], ['gemma3:1b', '0.8GB · Q4', 'chat+visión'], ['deepseek-r1:1.5b', '1.1GB · Q4', 'razonamiento']],
@@ -322,6 +319,7 @@ const hrefMap: Record<string, string> = { 'IA · Consola': chatU, 'AI · Console
             </a>`).join('')}
         </div>
         <p class="mt-4 text-xs text-muted">💡 ${D.more}</p>
+        <a href="${ALLMODELS}" class="btn btn-dark text-xs !px-3 !py-1.5 mt-3">${D.moreBtn} →</a>
       </div>`;
     btn.disabled = false;
     btn.textContent = isEs ? '↻ Detectar de nuevo' : '↻ Detect again';

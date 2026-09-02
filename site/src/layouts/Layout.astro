@@ -50,11 +50,9 @@ const schema = {
           <a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="btn btn-primary text-xs !px-3.5 !py-1.5 font-semibold">{t.nav.chat}</a>
           <a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="hover:text-ink transition-colors">{t.nav.workspace}</a>
           <a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="hover:text-ink transition-colors">{t.nav.docs}</a>
-          <a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="hover:text-ink transition-colors">{t.nav.models}</a>
-          <a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="hover:text-ink transition-colors">{t.nav.agentes}</a>
+          <a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="hover:text-ink transition-colors">{t.nav.marketplace}</a>
         </nav>
         <div class="ml-auto flex items-center gap-2 md:gap-3 text-sm">
-          <a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="btn btn-primary text-[11px] !px-2.5 !py-1 md:hidden">{t.nav.chat}</a>
           <a href={lang === 'es' ? `${base}donar/` : `${base}en/donar/`} class="btn btn-dark text-xs !px-2.5 !py-1.5 md:!px-3 inline-flex items-center justify-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.3-9.3-8.6C.6 9.1 2.4 5 6.2 5c2.2 0 3.5 1.2 4.3 2.4.3.5 1 .5 1.3 0C12.6 6.2 13.9 5 16.1 5c3.8 0 5.6 4.1 3.2 7.4C16.7 16.7 12 21 12 21z"/></svg>
             <span class="hidden md:inline">{t.nav.donar}</span>
@@ -73,8 +71,7 @@ const schema = {
           <a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="py-2 font-semibold" style="color:var(--color-accent)">{t.nav.chat}</a>
           <a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="py-2 hover:text-ink">{t.nav.workspace}</a>
           <a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="py-2 hover:text-ink">{t.nav.docs}</a>
-          <a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="py-2 hover:text-ink">{t.nav.models}</a>
-          <a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="py-2 hover:text-ink">{t.nav.agentes}</a>
+          <a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="py-2 hover:text-ink">{t.nav.marketplace}</a>
           <a href={lang === 'es' ? `${base}donar/` : `${base}en/donar/`} class="py-2 hover:text-ink">{t.nav.donar}</a>
           <a href="#arch" class="py-2 hover:text-ink">{lang === 'es' ? 'En qué consiste' : 'About'}</a>
           <a href="#modes" class="py-2 hover:text-ink">{lang === 'es' ? 'Modos' : 'Modes'}</a>
@@ -110,10 +107,9 @@ const schema = {
             <ul class="mt-2.5 space-y-1.5 text-[11px] text-muted">
               <li><a href={lang === 'es' ? `${base}chat/` : `${base}en/chat/`} class="hover:text-ink">{t.nav.chat}</a></li>
               <li><a href={lang === 'es' ? `${base}docs/` : `${base}en/docs/`} class="hover:text-ink">{t.nav.docs}</a></li>
-              <li><a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="hover:text-ink">{t.nav.agentes}</a></li>
+              <li><a href={lang === 'es' ? `${base}agentes/` : `${base}en/agentes/`} class="hover:text-ink">{t.nav.marketplace}</a></li>
               <li><a href={lang === 'es' ? `${base}workspace/` : `${base}en/workspace/`} class="hover:text-ink">{t.nav.workspace}</a></li>
-              <li><a href={lang === 'es' ? `${base}#models` : `${base}en/#models`} class="hover:text-ink">{t.nav.models}</a></li>
-              <li><a href={lang === 'es' ? `${base}donar/` : `${base}en/donar/`} class="hover:text-ink">{t.nav.donar}</a></li>
+                            <li><a href={lang === 'es' ? `${base}donar/` : `${base}en/donar/`} class="hover:text-ink">{t.nav.donar}</a></li>
               <li><a href="#install" class="hover:text-ink">{t.nav.install}</a></li>
               <li><a href="#modes" class="hover:text-ink">{lang === 'es' ? 'Modos' : 'Modes'}</a></li>
               <li><a href="#traza" class="hover:text-ink">{lang === 'es' ? 'Trazabilidad' : 'Traceability'}</a></li>
