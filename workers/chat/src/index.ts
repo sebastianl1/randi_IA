@@ -68,29 +68,60 @@ async function handleChat(request: Request, env: Env, freeLimit: number): Promis
       try {
         if (model.provider === 'workers-ai') {
           const ai = env.AI;
-          if (!ai) { send('error', { message: 'Workers AI no está vinculado a este Worker (binding "AI").' }); controller.close(); return; }
-          const out = await ai.run(model.ref, { messages, stream: true, max_tokens: 4096 });
-          const s = out instanceof ReadableStream ? out : out?.response instanceof ReadableStream ? out.response : null;
-          if (!s) { send('error', { message: 'El modelo no devolvió un stream válido.' }); controller.close(); return; }
-          const reader = s.getReader();
-          const dec = new TextDecoder();
-          let buf = '';
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf += dec.decode(value, { stream: true });
-            let nl;
-            while ((nl = buf.indexOf('\n')) >= 0) {
-              let line = buf.slice(0, nl).trim();
-              buf = buf.slice(nl + 1);
-              if (line.startsWith('data:')) line = line.slice(5).trim();
-              if (!line) continue;
-              try {
-                const j = JSON.parse(line);
-                if (typeof j.response === 'string' && j.response) send('delta', j.response);
-              } catch { /* fragmento parcial */ }
+          let aiErr = '';
+          if (ai) {
+            try {
+              const out = await ai.run(model.ref, { messages, stream: true, max_tokens: 4096 });
+              const s = out instanceof ReadableStream ? out : out?.response instanceof ReadableStream ? out.response : null;
+              if (!s) throw new Error('El modelo no devolvió un stream válido.');
+              const reader = s.getReader();
+              const dec = new TextDecoder();
+              let buf = '';
+              let started = false;
+              for (;;) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                let nl;
+                while ((nl = buf.indexOf('\n')) >= 0) {
+                  let line = buf.slice(0, nl).trim();
+                  buf = buf.slice(nl + 1);
+                  if (line.startsWith('data:')) line = line.slice(5).trim();
+                  if (!line) continue;
+                  try {
+                    const j = JSON.parse(line);
+                    if (typeof j.response === 'string' && j.response) { started = true; send('delta', j.response); }
+                  } catch { /* fragmento parcial */ }
+                }
+              }
+              if (started) { controller.close(); return; }
+              throw new Error('respuesta vacía de Workers AI');
+            } catch (e1) {
+              aiErr = e1 instanceof Error ? e1.message : String(e1);
+            }
+          } else {
+            aiErr = 'Workers AI no está vinculado a este Worker (binding "AI").';
+          }
+          // Fallback: Workers AI falló → cadena :free de OpenRouter.
+          const fbQueue = MODELS.filter((m) => m.provider === 'openrouter' && modelReady(m, env));
+          let fbStarted = false;
+          let fbErr = aiErr;
+          for (const cand of fbQueue) {
+            try {
+              const it = streamModel(cand, messages, env);
+              const first = await it.next();
+              if (first.done) throw new Error('respuesta vacía del proveedor');
+              fbStarted = true;
+              send(first.value.kind === 'reason' ? 'reason' : 'delta', first.value.value);
+              for await (const piece of it) send(piece.kind === 'reason' ? 'reason' : 'delta', piece.value);
+              break;
+            } catch (e2) {
+              fbErr = e2 instanceof Error ? e2.message : String(e2);
             }
           }
+          if (!fbStarted) send('error', { message: `${aiErr} | Fallback OpenRouter: ${fbErr}` });
+          controller.close();
+          return;
         } else if (model.provider === 'openrouter') {
           // Fallback: si el modelo :free falla antes de producir texto, se
           // prueba el siguiente :free disponible (nemotron → gemma → glm).

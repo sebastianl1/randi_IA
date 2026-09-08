@@ -25,7 +25,7 @@ export const MODELS: ModelDef[] = [
   { id: 'llama-3.2-3b', label: 'Llama 3.2 3B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-3b-instruct', note: 'Ligero y veloz' },
   { id: 'llama-3.2-1b', label: 'Llama 3.2 1B', provider: 'workers-ai', ref: '@cf/meta/llama-3.2-1b-instruct', note: 'Ultraligero, corre hasta en una papa' },
   { id: 'nemotron-3-free', label: 'Nemotron 3 · Free', provider: 'openrouter', ref: 'nvidia/nemotron-3-super-120b-a12b:free', note: 'Potente, con cifras (estable)' },
-  { id: 'glm-5.2-free', label: 'GLM 5.2 · Free', provider: 'openrouter', ref: 'z-ai/glm-5.2:free', note: 'Chat, a veces limitado' },
+  { id: 'glm-5.2-free', label: 'Gemma 4 31B · Free', provider: 'openrouter', ref: 'google/gemma-4-31b-it:free', note: 'General, contexto amplio' },
   { id: 'gemma-4-26b-free', label: 'Gemma 4 26B · Free', provider: 'openrouter', ref: 'google/gemma-4-26b-a4b-it:free', note: 'General, a veces limitado' },
 ];
 
